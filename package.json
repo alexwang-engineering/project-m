@@ -1,0 +1,9 @@
+{
+  "name": "project-m",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "isomorphic-dompurify": "^2.26.0",
+    "jszip": "^3.10.1"
+  }
+}
