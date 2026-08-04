@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 
+import { isProtectedPath, safeNextPath } from '@/lib/auth/redirects';
+
 /** Refreshes Supabase auth cookies; authorization remains in RLS/server code. */
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -8,7 +10,15 @@ export async function proxy(request: NextRequest) {
   const publishableKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
 
-  if (!url || !publishableKey) return response;
+  if (!url || !publishableKey) {
+    if (!isProtectedPath(request.nextUrl.pathname)) return response;
+    const error = request.nextUrl.clone();
+    error.pathname = '/auth/error';
+    error.search = '?code=configuration';
+    return NextResponse.redirect(error, {
+      headers: { 'Cache-Control': 'private, no-store' },
+    });
+  }
 
   const supabase = createServerClient(url, publishableKey, {
     cookies: {
@@ -24,7 +34,19 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getClaims();
+  const { data } = await supabase.auth.getClaims();
+  if (isProtectedPath(request.nextUrl.pathname) && !data?.claims?.sub) {
+    const login = request.nextUrl.clone();
+    login.pathname = '/auth/login';
+    login.search = '';
+    login.searchParams.set(
+      'next',
+      safeNextPath(`${request.nextUrl.pathname}${request.nextUrl.search}`),
+    );
+    return NextResponse.redirect(login, {
+      headers: { 'Cache-Control': 'private, no-store' },
+    });
+  }
   return response;
 }
 

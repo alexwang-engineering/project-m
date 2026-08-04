@@ -20,6 +20,9 @@ additional_redirect_urls = ["http://localhost:3000/**"]
 [auth.email]
 enable_signup = false
 
+[auth.hook.before_user_created]
+uri = "pg-functions://postgres/public/before_user_created_institutional"
+
 [storage]
 enabled = true
 file_size_limit = "25MiB"

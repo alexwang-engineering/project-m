@@ -141,6 +141,30 @@ export type Database = {
           },
         ];
       };
+      institutional_auth_config: {
+        Row: {
+          email_domain: string;
+          enabled: boolean;
+          singleton: boolean;
+          tenant_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          email_domain?: string;
+          enabled?: boolean;
+          singleton?: boolean;
+          tenant_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          email_domain?: string;
+          enabled?: boolean;
+          singleton?: boolean;
+          tenant_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       page_editors: {
         Row: {
           created_at: string;
@@ -640,6 +664,10 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      before_user_created_institutional: {
+        Args: { event: Json };
+        Returns: Json;
       };
       can_edit_page: { Args: { target_page: string }; Returns: boolean };
       can_read_page: { Args: { target_page: string }; Returns: boolean };
