@@ -1,0 +1,920 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
+
+export type Database = {
+  public: {
+    Tables: {
+      audit_events: {
+        Row: {
+          action: string;
+          actor_id: string | null;
+          after_data: Json | null;
+          before_data: Json | null;
+          correlation_id: string | null;
+          created_at: string;
+          id: number;
+          source: string;
+          target_id: string | null;
+          target_type: string;
+        };
+        Insert: {
+          action: string;
+          actor_id?: string | null;
+          after_data?: Json | null;
+          before_data?: Json | null;
+          correlation_id?: string | null;
+          created_at?: string;
+          id?: never;
+          source: string;
+          target_id?: string | null;
+          target_type: string;
+        };
+        Update: {
+          action?: string;
+          actor_id?: string | null;
+          after_data?: Json | null;
+          before_data?: Json | null;
+          correlation_id?: string | null;
+          created_at?: string;
+          id?: never;
+          source?: string;
+          target_id?: string | null;
+          target_type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'audit_events_actor_id_fkey';
+            columns: ['actor_id'];
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      canonical_redirects: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          old_path: string;
+          page_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          old_path: string;
+          page_id: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          old_path?: string;
+          page_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'canonical_redirects_created_by_fkey';
+            columns: ['created_by'];
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'canonical_redirects_page_id_fkey';
+            columns: ['page_id'];
+            referencedRelation: 'pages';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      files: {
+        Row: {
+          archived_at: string | null;
+          bucket_id: string;
+          created_at: string;
+          id: string;
+          media_type: string;
+          object_name: string;
+          original_name: string;
+          owner_id: string;
+          sha256: string;
+          size_bytes: number;
+          state: Database['public']['Enums']['file_state'];
+          updated_at: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          bucket_id?: string;
+          created_at?: string;
+          id?: string;
+          media_type: string;
+          object_name: string;
+          original_name: string;
+          owner_id: string;
+          sha256: string;
+          size_bytes: number;
+          state?: Database['public']['Enums']['file_state'];
+          updated_at?: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          bucket_id?: string;
+          created_at?: string;
+          id?: string;
+          media_type?: string;
+          object_name?: string;
+          original_name?: string;
+          owner_id?: string;
+          sha256?: string;
+          size_bytes?: number;
+          state?: Database['public']['Enums']['file_state'];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'files_owner_id_fkey';
+            columns: ['owner_id'];
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      page_editors: {
+        Row: {
+          created_at: string;
+          granted_by: string;
+          page_id: string;
+          profile_id: string;
+          reason: string;
+          valid_until: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          granted_by: string;
+          page_id: string;
+          profile_id: string;
+          reason: string;
+          valid_until?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          granted_by?: string;
+          page_id?: string;
+          profile_id?: string;
+          reason?: string;
+          valid_until?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'page_editors_granted_by_fkey';
+            columns: ['granted_by'];
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'page_editors_page_id_fkey';
+            columns: ['page_id'];
+            referencedRelation: 'pages';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'page_editors_profile_id_fkey';
+            columns: ['profile_id'];
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      page_files: {
+        Row: {
+          added_by: string;
+          created_at: string;
+          file_id: string;
+          page_id: string;
+        };
+        Insert: {
+          added_by: string;
+          created_at?: string;
+          file_id: string;
+          page_id: string;
+        };
+        Update: {
+          added_by?: string;
+          created_at?: string;
+          file_id?: string;
+          page_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'page_files_added_by_fkey';
+            columns: ['added_by'];
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'page_files_file_id_fkey';
+            columns: ['file_id'];
+            referencedRelation: 'files';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'page_files_page_id_fkey';
+            columns: ['page_id'];
+            referencedRelation: 'pages';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      page_revisions: {
+        Row: {
+          actor_id: string;
+          content_json: Json;
+          content_schema_version: number;
+          created_at: string;
+          id: string;
+          lifecycle: Database['public']['Enums']['content_state'];
+          page_id: string;
+          title: string;
+          version: number;
+        };
+        Insert: {
+          actor_id: string;
+          content_json: Json;
+          content_schema_version: number;
+          created_at?: string;
+          id?: string;
+          lifecycle: Database['public']['Enums']['content_state'];
+          page_id: string;
+          title: string;
+          version: number;
+        };
+        Update: {
+          actor_id?: string;
+          content_json?: Json;
+          content_schema_version?: number;
+          created_at?: string;
+          id?: string;
+          lifecycle?: Database['public']['Enums']['content_state'];
+          page_id?: string;
+          title?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'page_revisions_actor_id_fkey';
+            columns: ['actor_id'];
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'page_revisions_page_id_fkey';
+            columns: ['page_id'];
+            referencedRelation: 'pages';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      page_tags: {
+        Row: {
+          added_by: string;
+          created_at: string;
+          page_id: string;
+          tag_id: string;
+        };
+        Insert: {
+          added_by: string;
+          created_at?: string;
+          page_id: string;
+          tag_id: string;
+        };
+        Update: {
+          added_by?: string;
+          created_at?: string;
+          page_id?: string;
+          tag_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'page_tags_added_by_fkey';
+            columns: ['added_by'];
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'page_tags_page_id_fkey';
+            columns: ['page_id'];
+            referencedRelation: 'pages';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'page_tags_tag_id_fkey';
+            columns: ['tag_id'];
+            referencedRelation: 'tags';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      pages: {
+        Row: {
+          archived_at: string | null;
+          author_id: string;
+          canonical_url: string;
+          content_json: Json;
+          content_schema_version: number;
+          created_at: string;
+          id: string;
+          is_public: boolean;
+          lifecycle: Database['public']['Enums']['content_state'];
+          parent_id: string | null;
+          published_at: string | null;
+          slug: string;
+          title: string;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          archived_at?: string | null;
+          author_id: string;
+          canonical_url: string;
+          content_json: Json;
+          content_schema_version?: number;
+          created_at?: string;
+          id?: string;
+          is_public?: boolean;
+          lifecycle?: Database['public']['Enums']['content_state'];
+          parent_id?: string | null;
+          published_at?: string | null;
+          slug: string;
+          title: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          archived_at?: string | null;
+          author_id?: string;
+          canonical_url?: string;
+          content_json?: Json;
+          content_schema_version?: number;
+          created_at?: string;
+          id?: string;
+          is_public?: boolean;
+          lifecycle?: Database['public']['Enums']['content_state'];
+          parent_id?: string | null;
+          published_at?: string | null;
+          slug?: string;
+          title?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'pages_author_id_fkey';
+            columns: ['author_id'];
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'pages_parent_id_fkey';
+            columns: ['parent_id'];
+            referencedRelation: 'pages';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      profiles: {
+        Row: {
+          admitted_at: string;
+          admitted_by: string | null;
+          created_at: string;
+          disabled_at: string | null;
+          email: string;
+          id: string;
+          kind: Database['public']['Enums']['principal_kind'];
+          state: Database['public']['Enums']['principal_state'];
+          updated_at: string;
+        };
+        Insert: {
+          admitted_at?: string;
+          admitted_by?: string | null;
+          created_at?: string;
+          disabled_at?: string | null;
+          email: string;
+          id: string;
+          kind: Database['public']['Enums']['principal_kind'];
+          state?: Database['public']['Enums']['principal_state'];
+          updated_at?: string;
+        };
+        Update: {
+          admitted_at?: string;
+          admitted_by?: string | null;
+          created_at?: string;
+          disabled_at?: string | null;
+          email?: string;
+          id?: string;
+          kind?: Database['public']['Enums']['principal_kind'];
+          state?: Database['public']['Enums']['principal_state'];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'profiles_admitted_by_fkey';
+            columns: ['admitted_by'];
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      role_assignments: {
+        Row: {
+          created_at: string;
+          granted_by: string | null;
+          profile_id: string;
+          reason: string;
+          role: Database['public']['Enums']['system_role'];
+          valid_from: string;
+          valid_until: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          granted_by?: string | null;
+          profile_id: string;
+          reason: string;
+          role: Database['public']['Enums']['system_role'];
+          valid_from?: string;
+          valid_until?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          granted_by?: string | null;
+          profile_id?: string;
+          reason?: string;
+          role?: Database['public']['Enums']['system_role'];
+          valid_from?: string;
+          valid_until?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'role_assignments_granted_by_fkey';
+            columns: ['granted_by'];
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'role_assignments_profile_id_fkey';
+            columns: ['profile_id'];
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      tag_memberships: {
+        Row: {
+          created_at: string;
+          granted_by: string | null;
+          membership_role: Database['public']['Enums']['membership_role'];
+          profile_id: string;
+          reason: string | null;
+          source: string;
+          tag_id: string;
+          valid_from: string;
+          valid_until: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          granted_by?: string | null;
+          membership_role?: Database['public']['Enums']['membership_role'];
+          profile_id: string;
+          reason?: string | null;
+          source: string;
+          tag_id: string;
+          valid_from?: string;
+          valid_until?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          granted_by?: string | null;
+          membership_role?: Database['public']['Enums']['membership_role'];
+          profile_id?: string;
+          reason?: string | null;
+          source?: string;
+          tag_id?: string;
+          valid_from?: string;
+          valid_until?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tag_memberships_granted_by_fkey';
+            columns: ['granted_by'];
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tag_memberships_profile_id_fkey';
+            columns: ['profile_id'];
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tag_memberships_tag_id_fkey';
+            columns: ['tag_id'];
+            referencedRelation: 'tags';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      tags: {
+        Row: {
+          archived_at: string | null;
+          created_at: string;
+          created_by: string;
+          display_name: string;
+          id: string;
+          is_active: boolean;
+          tag_name: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          created_at?: string;
+          created_by: string;
+          display_name: string;
+          id?: string;
+          is_active?: boolean;
+          tag_name: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          created_at?: string;
+          created_by?: string;
+          display_name?: string;
+          id?: string;
+          is_active?: boolean;
+          tag_name?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tags_created_by_fkey';
+            columns: ['created_by'];
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      assert_can_assign_tags: {
+        Args: { actor: string; tag_ids: string[] };
+        Returns: undefined;
+      };
+      assert_institution_admin: {
+        Args: { actor?: string };
+        Returns: undefined;
+      };
+      assert_valid_content: {
+        Args: { payload: Json; schema_version: number };
+        Returns: undefined;
+      };
+      assign_system_role: {
+        Args: {
+          assigned_role: Database['public']['Enums']['system_role'];
+          assignment_reason: string;
+          assignment_valid_until?: string;
+          correlation_id?: string;
+          target_profile: string;
+        };
+        Returns: undefined;
+      };
+      assign_tag_membership: {
+        Args: {
+          assigned_membership_role: Database['public']['Enums']['membership_role'];
+          assignment_reason?: string;
+          assignment_source: string;
+          assignment_valid_until?: string;
+          correlation_id?: string;
+          target_profile: string;
+          target_tag: string;
+        };
+        Returns: undefined;
+      };
+      begin_file_upload: {
+        Args: {
+          correlation_id?: string;
+          declared_media_type: string;
+          declared_sha256: string;
+          declared_size_bytes: number;
+          original_filename: string;
+        };
+        Returns: {
+          archived_at: string | null;
+          bucket_id: string;
+          created_at: string;
+          id: string;
+          media_type: string;
+          object_name: string;
+          original_name: string;
+          owner_id: string;
+          sha256: string;
+          size_bytes: number;
+          state: Database['public']['Enums']['file_state'];
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'files';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      can_edit_page: { Args: { target_page: string }; Returns: boolean };
+      can_read_page: { Args: { target_page: string }; Returns: boolean };
+      create_page: {
+        Args: {
+          audience_tag_ids: string[];
+          correlation_id?: string;
+          page_content: Json;
+          page_content_schema_version: number;
+          page_parent_id: string;
+          page_slug: string;
+          page_title: string;
+        };
+        Returns: {
+          archived_at: string | null;
+          author_id: string;
+          canonical_url: string;
+          content_json: Json;
+          content_schema_version: number;
+          created_at: string;
+          id: string;
+          is_public: boolean;
+          lifecycle: Database['public']['Enums']['content_state'];
+          parent_id: string | null;
+          published_at: string | null;
+          slug: string;
+          title: string;
+          updated_at: string;
+          version: number;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'pages';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      current_principal_is_active: { Args: never; Returns: boolean };
+      current_principal_is_admin: { Args: never; Returns: boolean };
+      grant_page_editor: {
+        Args: {
+          correlation_id?: string;
+          grant_reason: string;
+          grant_valid_until?: string;
+          target_page: string;
+          target_profile: string;
+        };
+        Returns: undefined;
+      };
+      has_system_role: {
+        Args: {
+          required_role: Database['public']['Enums']['system_role'];
+          target_id?: string;
+        };
+        Returns: boolean;
+      };
+      has_tag_membership: {
+        Args: {
+          allowed_roles: Database['public']['Enums']['membership_role'][];
+          target_id?: string;
+          target_tag: string;
+        };
+        Returns: boolean;
+      };
+      is_active_principal: { Args: { target_id?: string }; Returns: boolean };
+      page_path: {
+        Args: { target_parent: string; target_slug: string };
+        Returns: string;
+      };
+      set_page_lifecycle: {
+        Args: {
+          correlation_id?: string;
+          expected_version: number;
+          make_public?: boolean;
+          next_state: Database['public']['Enums']['content_state'];
+          target_page_id: string;
+        };
+        Returns: {
+          archived_at: string | null;
+          author_id: string;
+          canonical_url: string;
+          content_json: Json;
+          content_schema_version: number;
+          created_at: string;
+          id: string;
+          is_public: boolean;
+          lifecycle: Database['public']['Enums']['content_state'];
+          parent_id: string | null;
+          published_at: string | null;
+          slug: string;
+          title: string;
+          updated_at: string;
+          version: number;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'pages';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      set_profile_state: {
+        Args: {
+          change_reason: string;
+          correlation_id?: string;
+          next_state: Database['public']['Enums']['principal_state'];
+          target_profile: string;
+        };
+        Returns: undefined;
+      };
+      update_page: {
+        Args: {
+          audience_tag_ids: string[];
+          correlation_id?: string;
+          expected_version: number;
+          page_content: Json;
+          page_content_schema_version: number;
+          page_parent_id: string;
+          page_slug: string;
+          page_title: string;
+          target_page_id: string;
+        };
+        Returns: {
+          archived_at: string | null;
+          author_id: string;
+          canonical_url: string;
+          content_json: Json;
+          content_schema_version: number;
+          created_at: string;
+          id: string;
+          is_public: boolean;
+          lifecycle: Database['public']['Enums']['content_state'];
+          parent_id: string | null;
+          published_at: string | null;
+          slug: string;
+          title: string;
+          updated_at: string;
+          version: number;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'pages';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+    };
+    Enums: {
+      content_state: 'draft' | 'published' | 'archived';
+      file_state: 'pending' | 'ready' | 'quarantined' | 'failed' | 'archived';
+      membership_role: 'member' | 'teacher' | 'manager';
+      principal_kind: 'institutional' | 'guardian' | 'service';
+      principal_state: 'active' | 'disabled';
+      system_role: 'institution_admin' | 'teacher' | 'student';
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
+};
+
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>;
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<
+  keyof Database,
+  'public'
+>];
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+      Row: infer R;
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
+        DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] &
+        DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R;
+      }
+      ? R
+      : never
+    : never;
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Insert: infer I;
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I;
+      }
+      ? I
+      : never
+    : never;
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Update: infer U;
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U;
+      }
+      ? U
+      : never
+    : never;
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    keyof DefaultSchema['Enums'] | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    : never) = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+    : never;
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema['CompositeTypes']
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    : never) = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+    : never;
+
+export const Constants = {
+  public: {
+    Enums: {
+      content_state: ['draft', 'published', 'archived'],
+      file_state: ['pending', 'ready', 'quarantined', 'failed', 'archived'],
+      membership_role: ['member', 'teacher', 'manager'],
+      principal_kind: ['institutional', 'guardian', 'service'],
+      principal_state: ['active', 'disabled'],
+      system_role: ['institution_admin', 'teacher', 'student'],
+    },
+  },
+} as const;
