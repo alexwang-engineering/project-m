@@ -22,7 +22,7 @@ State machine: `PLANNED → READY → ACTIVE → REVIEW → MERGED`, with `BLOCK
 | Package E | Content contracts and authorized read layer | Codex | `codex/package-e-content` | `../project-m-content` | `main` after Package D closeout | `lib/content/**`, content-contract tests, canonical resolver tests; compilation-only route wiring; one append-only content-contract migration, matching DB tests, regenerated DB types | MERGED | None | `a6644af` |
 | Package F | Hardened MPX interchange | Codex | `codex/package-f-mpx` | `../project-m-mpx` | `main` after Package E closeout | `lib/mpx-packager.ts`, MPX contract/tests/docs only | MERGED | None; authoritative imports must repeat validation server-side | `2e8d571` |
 | Package G | Authorized page mutation actions | Codex | `codex/package-g-mutations` | `../project-m-mpx` (reused after Package F merge) | `main` after Package F closeout | `lib/content/mutations.ts`, `app/actions/pages.ts`, mutation tests only | MERGED | None | `b911404` |
-| Package H | Private file service contracts | Codex | `codex/package-h-files` | `../project-m-files` | `main` after Package G closeout | `lib/files/**`, `app/actions/files.ts`, file-service tests only | ACTIVE | Trusted malware/checksum completion worker and staging configuration remain separate deployment work | — |
+| Package H | Private file service contracts | Codex | `codex/package-h-files` | `../project-m-mpx` (reused; branch pointer assigned at handoff) | `main` after Package G closeout | `lib/files/**`, `app/actions/files.ts`, file-service tests; one append-only file-access RPC migration, matching DB tests, regenerated DB types | ACTIVE | Trusted malware/checksum completion worker and staging configuration remain separate deployment work | — |
 
 ## Change log
 
