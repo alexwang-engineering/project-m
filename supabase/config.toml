@@ -1,0 +1,25 @@
+project_id = "project-m"
+
+[api]
+enabled = true
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+
+[db]
+major_version = 17
+
+[db.seed]
+enabled = false
+
+[auth]
+enabled = true
+enable_signup = false
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/**"]
+
+[auth.email]
+enable_signup = false
+
+[storage]
+enabled = true
+file_size_limit = "25MiB"
