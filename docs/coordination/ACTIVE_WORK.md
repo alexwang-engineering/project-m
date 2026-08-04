@@ -21,7 +21,7 @@ State machine: `PLANNED → READY → ACTIVE → REVIEW → MERGED`, with `BLOCK
 | Package D | Database migration and policy hardening | Codex | `codex/package-d-database` | `../project-m-database` | `main` after Package B closeout | `supabase/migrations/**`, `supabase/tests/**`, generated DB types | MERGED | None; real Supabase Docker execution remains a CI/staging repetition of the committed matrix | `811a241` |
 | Package E | Content contracts and authorized read layer | Codex | `codex/package-e-content` | `../project-m-content` | `main` after Package D closeout | `lib/content/**`, content-contract tests, canonical resolver tests; compilation-only route wiring; one append-only content-contract migration, matching DB tests, regenerated DB types | MERGED | None | `a6644af` |
 | Package F | Hardened MPX interchange | Codex | `codex/package-f-mpx` | `../project-m-mpx` | `main` after Package E closeout | `lib/mpx-packager.ts`, MPX contract/tests/docs only | MERGED | None; authoritative imports must repeat validation server-side | `2e8d571` |
-| Package G | Authorized page mutation actions | Codex | `codex/package-g-mutations` | `../project-m-mutations` | `main` after Package F closeout | `lib/content/mutations.ts`, `app/actions/pages.ts`, mutation tests only | ACTIVE | None | — |
+| Package G | Authorized page mutation actions | Codex | `codex/package-g-mutations` | `../project-m-mpx` (reused after Package F merge) | `main` after Package F closeout | `lib/content/mutations.ts`, `app/actions/pages.ts`, mutation tests only | ACTIVE | None | — |
 
 ## Change log
 
