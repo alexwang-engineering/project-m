@@ -1,6 +1,6 @@
 # ADR-006: Lifecycle, Revisions, and Release
 
-Status: Accepted  
+Status: Accepted
 Date: 2026-08-04
 
 ## Decision

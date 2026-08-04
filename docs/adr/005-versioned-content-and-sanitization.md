@@ -1,6 +1,6 @@
 # ADR-005: Versioned Content and Sanitization
 
-Status: Accepted  
+Status: Accepted
 Date: 2026-08-04
 
 ## Decision

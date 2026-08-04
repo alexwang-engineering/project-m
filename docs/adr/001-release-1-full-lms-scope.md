@@ -1,6 +1,6 @@
 # ADR-001: Release-1 Full LMS Scope
 
-Status: Accepted  
+Status: Accepted
 Date: 2026-08-04
 
 ## Decision

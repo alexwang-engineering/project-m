@@ -1,6 +1,6 @@
 # ADR-009: External Integrations and Migration
 
-Status: Accepted  
+Status: Accepted
 Date: 2026-08-04
 
 ## Decision

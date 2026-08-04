@@ -1,6 +1,6 @@
 # ADR-008: Assessment-Domain Separation
 
-Status: Accepted  
+Status: Accepted
 Date: 2026-08-04
 
 ## Decision

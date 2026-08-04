@@ -1,6 +1,6 @@
 # ADR-003: Authorization Boundaries
 
-Status: Accepted  
+Status: Accepted
 Date: 2026-08-04
 
 ## Decision

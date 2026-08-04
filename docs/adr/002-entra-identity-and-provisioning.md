@@ -1,6 +1,6 @@
 # ADR-002: Entra Identity and Provisioning
 
-Status: Accepted; tenant facts pending  
+Status: Accepted; tenant facts pending
 Date: 2026-08-04
 
 ## Decision

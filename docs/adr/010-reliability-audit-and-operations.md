@@ -1,6 +1,6 @@
 # ADR-010: Reliability, Audit, and Operations
 
-Status: Accepted; school targets pending  
+Status: Accepted; school targets pending
 Date: 2026-08-04
 
 ## Decision

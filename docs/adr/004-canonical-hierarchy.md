@@ -1,6 +1,6 @@
 # ADR-004: Canonical Hierarchy Separate from Tags
 
-Status: Accepted  
+Status: Accepted
 Date: 2026-08-04
 
 ## Decision
