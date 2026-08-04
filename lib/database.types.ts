@@ -751,6 +751,15 @@ export type Database = {
         Args: { target_parent: string; target_slug: string };
         Returns: string;
       };
+      restore_page_revision: {
+        Args: {
+          correlation_id?: string;
+          expected_version: number;
+          target_page_id: string;
+          target_revision_id: string;
+        };
+        Returns: Database['public']['Tables']['pages']['Row'];
+      };
       set_page_lifecycle: {
         Args: {
           correlation_id?: string;
