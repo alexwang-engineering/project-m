@@ -21,19 +21,21 @@ The system must preserve five invariants:
 
 “Replace Moodle” is not yet a bounded requirement. The current repository implements a tagged content portal, not a complete LMS. Before feature development, the human product owner must classify each capability as `Launch`, `Later`, `Integrate externally`, or `Out of scope`:
 
-| Capability | Decision required |
+| Capability | Decision (recorded 2026-08-04) |
 |---|---|
-| Tagged pages and PDFs | Expected launch scope |
-| Assignments and student submissions | Undecided |
-| Quizzes and question banks | Undecided |
-| Gradebook, marking, and feedback | Undecided |
-| Deadlines, timetable, and calendar | Undecided |
-| Announcements and messaging | Undecided |
-| SCORM/LTI/external learning tools | Undecided |
-| Parent/guardian access | Undecided |
-| MIS/SIS roster synchronization | Undecided |
-| Legacy Moodle content/user migration | Undecided |
-| Reporting and compliance exports | Undecided |
+| Tagged pages and PDFs | **Launch** |
+| Assignments and student submissions | **Launch** |
+| Quizzes and question banks | **Launch** |
+| Gradebook, marking, and feedback | **Launch** |
+| Deadlines, timetable, and calendar | **Launch** |
+| Announcements and messaging | **Launch** |
+| SCORM/LTI/external learning tools | **Launch** |
+| Parent/guardian access | **Launch** |
+| MIS/SIS roster synchronization | **Launch** |
+| Legacy Moodle content/user migration | **Launch** |
+| Reporting and compliance exports | **Launch** |
+
+**PM-01 decision, recorded verbatim:** the human product owner confirmed — after an explicit reconsider prompt naming the tradeoff — that all eleven capabilities are release-1 scope simultaneously, not phased. This supersedes this document's framing of “the smallest safe, useful school product” and its Phase 0–7 roadmap below, which only defines work packages for the tagged-content-portal slice (auth, pages, dashboard, editor, MPX files, tags/admin, notifications/search). Assignments, quizzes, gradebook, calendar, messaging, SCORM/LTI, parent access, MIS/SIS sync, migration tooling, and compliance reporting each need their own work packages, contracts, and phase placement before PM-05 (ADRs) and Package A (baseline integration) can be considered unblocked. That expansion has not been done yet — see the ledger at `docs/coordination/ACTIVE_WORK.md` for current status.
 
 No agent should invent an undecided capability. Architecture should retain extension points without building speculative subsystems.
 
