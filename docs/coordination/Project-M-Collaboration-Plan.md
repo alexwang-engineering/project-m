@@ -43,6 +43,43 @@ No agent should invent an undecided capability. Architecture should retain exten
 
 Before Phase 1, the human owner must approve targets for: median page-load time on school hardware, maximum acceptable interaction latency, availability/support hours, maximum recovery time and data loss, expected user/content/storage scale, accessibility conformance, pilot success criteria, and the top five student/teacher/admin journeys.
 
+**PM-02 decisions, recorded 2026-08-04:**
+
+| Dimension | Target |
+|---|---|
+| School scale | Medium — 800–2,500 users (single school or small multi-site) |
+| Peak usage pattern | Staggered across the school day; design for occasional class-time bursts, not sustained high concurrency |
+| Content/storage scale (2–3yr) | Medium — ~500GB (regular PDF/worksheet uploads, some images, not primarily video) |
+| Device/network baseline | Mixed BYOD devices, variable WiFi quality by building — design for the low end, not managed/uniform hardware |
+| Median page-load (LCP) | Under 2.5s on representative hardware, matching Core Web Vitals "good" |
+| Availability / support | School-hours support and active monitoring (term-time, e.g. 7am–6pm); best-effort outside that — not 24/7 on-call |
+| Recovery (RTO/RPO) | Hours, using Supabase standard backups; tighten to under 1 hour before the staged launch in Phase 7 |
+| Accessibility conformance | WCAG 2.2 AA (UK public-sector / Equality Act 2010 expectation) |
+| Pilot success criteria | Both quantitative and qualitative — see scorecard below |
+
+**Top five priority journeys** (structure: one per role + one cross-cutting):
+
+1. **Student** — logs in, sees this week's work across their tagged classes (pages, assignments, quizzes), and submits an assignment or completes a quiz before its deadline.
+2. **Teacher** — creates/edits a page or assignment tagged to their class, sets a deadline, and reviews/marks submissions with feedback.
+3. **Admin** — provisions or updates a user's role/tag assignment (or runs a CSV roster import) and reviews an audit log entry for a sensitive action.
+4. **Parent/guardian** — logs in and sees their child's upcoming deadlines, recent grades/feedback, and announcements, read-only.
+5. **Cross-cutting** — any authenticated user clicks a tag pill, search result, or notification link and lands on exactly the right content for their authorization level, at a stable canonical URL.
+
+**Pilot success scorecard:**
+
+*Quantitative*
+- ≥70% of invited teachers and ≥60% of invited students take a meaningful action at least twice during the pilot window
+- ≥90% completion rate (no abandonment) across the five journeys above
+- <1% error rate (5xx / unhandled exceptions)
+- 2.5s LCP target met on ≥90% of real pilot sessions
+- Zero open critical/high security findings at pilot end
+- Zero data-isolation incidents (anyone seeing/mutating content outside their authorization)
+
+*Qualitative*
+- Structured feedback survey per role group; no more than a small minority rate their top journey as harder than the Moodle equivalent
+- At least one feedback session per role group (student/teacher/admin/parent)
+- No safeguarding or accessibility complaint left unresolved at pilot close
+
 ## 1. Current Baseline
 
 | Area | Current state | Location |
