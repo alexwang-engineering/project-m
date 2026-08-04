@@ -3,7 +3,7 @@
 Version: 1.1 — first-principles audit  
 Product: Merchant Taylors' Learning Management System  
 Stack: Next.js App Router, React, TypeScript, Tailwind CSS, Supabase/Postgres  
-Purpose: Deliver the smallest safe, useful school product while giving Claude and Codex independent, conflict-free work packages with explicit handoff boundaries.
+Purpose: Deliver the approved full release-1 LMS scope safely while giving Claude and Codex independent, conflict-free work packages with explicit handoff boundaries.
 
 ## 0. First-Principles Product Frame
 
@@ -35,7 +35,7 @@ The system must preserve five invariants:
 | Legacy Moodle content/user migration | **Launch** |
 | Reporting and compliance exports | **Launch** |
 
-**PM-01 decision, recorded verbatim:** the human product owner confirmed — after an explicit reconsider prompt naming the tradeoff — that all eleven capabilities are release-1 scope simultaneously, not phased. This supersedes this document's framing of “the smallest safe, useful school product” and its Phase 0–7 roadmap below, which only defines work packages for the tagged-content-portal slice (auth, pages, dashboard, editor, MPX files, tags/admin, notifications/search). Assignments, quizzes, gradebook, calendar, messaging, SCORM/LTI, parent access, MIS/SIS sync, migration tooling, and compliance reporting each need their own work packages, contracts, and phase placement before PM-05 (ADRs) and Package A (baseline integration) can be considered unblocked. That expansion has not been done yet — see the ledger at `docs/coordination/ACTIVE_WORK.md` for current status.
+**PM-01 decision:** the human product owner confirmed — after an explicit reconsider prompt naming the tradeoff — that all eleven capabilities are release-1 scope. Delivery still uses internal increments and gates; “same release” does not mean simultaneous changes to shared files or one big-bang merge. The expanded work packages below cover the full decision.
 
 No agent should invent an undecided capability. Architecture should retain extension points without building speculative subsystems.
 
@@ -217,6 +217,8 @@ For writes, the safe default is that a teacher must own **all** tags on the page
 
 *Decision authority note:* PM-03 is specified as "human product owner advised by Codex." These four decisions were made by Claude, following the plan's own stated reasoning and prior default choices, while the product owner was unavailable and had explicitly instructed work to continue without stopping. They should be treated as provisional until the product owner reviews them — flagged in the ledger accordingly.
 
+**PM-04/PM-05 security resolution:** the provisional Entra staging decision above is superseded by ADR-002 and the threat model. Tenant/issuer validation is required before any real-user pilot, not deferred to final Phase 6 hardening. The global domain trigger must not be applied unchanged because release-1 parent/guardian identities are expected to use non-school addresses. Package D must design separate server-verifiable institutional and guardian admission routes; user-controlled metadata cannot authorize either route.
+
 ### Identity contract
 
 An email suffix alone is not sufficient proof of the intended Microsoft Entra tenant. Production authentication must restrict enabled providers, validate the Entra tenant/issuer and verified email claims, and retain the database trigger as defence in depth. The exact tenant identifier belongs in protected environment configuration, not source code.
@@ -233,11 +235,11 @@ Roadmap status values are `PLANNED`, `READY`, `ACTIVE`, `BLOCKED`, `REVIEW`, `ME
 
 | ID | Work package | Owner | Dependencies | Status |
 |---|---|---|---|---|
-| PM-01 | Classify Moodle capabilities as Launch/Later/External/Out and define the first release boundary | Human product owner; agents facilitate | None | READY |
-| PM-02 | Document primary user journeys, scale assumptions, service targets, and pilot success measures | Human product owner with school stakeholders | PM-01 | PLANNED |
-| PM-03 | Decide write authorization semantics, canonical hierarchy model, Entra tenant policy, and page lifecycle | Human product owner advised by Codex | PM-01 | PLANNED |
-| PM-04 | Produce an initial threat model and data classification before schema/API stabilization | Codex; human review | PM-01 | PLANNED |
-| PM-05 | Record architecture decisions as version-controlled ADRs | Codex/integration | PM-02, PM-03, PM-04 | PLANNED |
+| PM-01 | Classify Moodle capabilities as Launch/Later/External/Out and define the first release boundary | Human product owner; agents facilitate | None | DONE |
+| PM-02 | Document primary user journeys, scale assumptions, service targets, and pilot success measures | Human product owner with school stakeholders | PM-01 | REVIEW |
+| PM-03 | Decide write authorization semantics, canonical hierarchy model, Entra tenant policy, and page lifecycle | Human product owner advised by Codex | PM-01 | REVIEW |
+| PM-04 | Produce an initial threat model and data classification before schema/API stabilization | Codex; human review | PM-01 | REVIEW |
+| PM-05 | Record architecture decisions as version-controlled ADRs and expand the roadmap | Codex/integration | PM-02, PM-03, PM-04 | ACTIVE |
 
 Acceptance gate: release scope, invariants, measurable targets, core policies, data classes, and irreversible architecture choices have named human approval. This gate prevents agents from building incompatible interpretations of “LMS.”
 
@@ -321,11 +323,106 @@ Acceptance gate: admins can safely manage access at scale, preview bulk changes,
 
 Acceptance gate: notifications and search never disclose unauthorized page titles or snippets; keyboard and screen-reader behavior is tested.
 
+### Phase 5A — Assignments and Submissions
+
+| ID | Work package | Owner | Dependencies | Status |
+|---|---|---|---|---|
+| A1-01 | Define assignment, rubric, submission, attachment, extension, deadline, and receipt contracts | Codex contract; Claude UX review | P1-05, P1-06 | PLANNED |
+| A1-02 | Implement assignment/submission migrations, RLS, storage policies, atomic operations, and audit events | Codex | A1-01 | PLANNED |
+| A1-03 | Build teacher assignment creation, scheduling, audience, rubric, and submission-review UI | Claude | A1-01 contract | PLANNED |
+| A1-04 | Build student assignment detail, draft, upload, submit, resubmit, and receipt UI | Claude | A1-01 contract | PLANNED |
+| A1-05 | Implement deadline/extension policy, malware/file validation boundary, quotas, and idempotent submission | Codex | A1-02 | PLANNED |
+| A1-06 | Test cross-class access, ownership, deadlines, duplicate submission, storage leakage, and concurrency | Codex | A1-02, A1-05 | PLANNED |
+| A1-07 | Integrate and run teacher/student end-to-end submission journeys | Serial integration | A1-03, A1-04, A1-06 | PLANNED |
+
+Acceptance gate: a submission has an immutable server receipt; students can access only their own submissions; authorized teachers can access only assigned cohorts; deadline/extension/resubmission behavior is deterministic and tested.
+
+### Phase 5B — Quizzes and Question Banks
+
+| ID | Work package | Owner | Dependencies | Status |
+|---|---|---|---|---|
+| Q1-01 | Define versioned question, bank, quiz, attempt, answer, timing, randomization, and grading contracts | Codex contract; Claude UX review | P1-06 | PLANNED |
+| Q1-02 | Implement question/quiz migrations, authoring policies, delivery projections, attempts, and audit | Codex | Q1-01 | PLANNED |
+| Q1-03 | Build accessible question-bank and quiz-authoring UI | Claude | Q1-01 contract | PLANNED |
+| Q1-04 | Build resilient student attempt UI with autosave, reconnect, timer, review, and submit states | Claude | Q1-01 contract | PLANNED |
+| Q1-05 | Implement server-side grading, attempt state machine, accommodations, feedback release, and idempotency | Codex | Q1-02 | PLANNED |
+| Q1-06 | Test answer secrecy, timing, randomization, replay, concurrent attempts, grading, and cross-cohort access | Codex | Q1-05 | PLANNED |
+| Q1-07 | Integrate and run authoring/attempt/grading end-to-end journeys | Serial integration | Q1-03, Q1-04, Q1-06 | PLANNED |
+
+Acceptance gate: correct answers and unreleased feedback cannot be obtained early; attempt and timer behavior survives reconnects; grading is deterministic, versioned, and auditable.
+
+### Phase 5C — Gradebook, Marking, and Feedback
+
+| ID | Work package | Owner | Dependencies | Status |
+|---|---|---|---|---|
+| G1-01 | Define grade item, mark, rubric result, moderation, override, calculation, and release contracts | Codex contract; school assessment owner review | A1-01, Q1-01 | PLANNED |
+| G1-02 | Implement gradebook migrations, calculation service, permissions, release snapshots, and audit | Codex | G1-01 | PLANNED |
+| G1-03 | Build teacher marking, rubric, bulk workflow, moderation, and gradebook UI | Claude | G1-01 contract | PLANNED |
+| G1-04 | Build student released-grade and feedback UI | Claude | G1-01 contract | PLANNED |
+| G1-05 | Implement export, correction, override-reason, recalculation, and release operations | Codex | G1-02 | PLANNED |
+| G1-06 | Test precision, weighting, missing/exempt work, moderation, premature release, and cross-class access | Codex | G1-05 | PLANNED |
+| G1-07 | Integrate full mark-to-release end-to-end journeys | Serial integration | G1-03, G1-04, G1-06 | PLANNED |
+
+Acceptance gate: saving and releasing marks are separate; every override and release is attributable; students/parents see only released projections; calculation policies are documented and reproducible.
+
+### Phase 5D — Calendar, Announcements, and Messaging
+
+| ID | Work package | Owner | Dependencies | Status |
+|---|---|---|---|---|
+| C1-01 | Define event, deadline, recurrence, announcement, thread, audience, read-state, retention, and moderation contracts | Codex contract; Claude UX review | P1-05 | PLANNED |
+| C1-02 | Implement calendar/deadline aggregation and authorized audience queries | Codex | C1-01 | PLANNED |
+| C1-03 | Implement announcement/messaging persistence, policies, delivery jobs, rate limits, and audit | Codex | C1-01 | PLANNED |
+| C1-04 | Build accessible calendar, deadline, announcement, inbox/thread, and reporting UI | Claude | C1-01 contract | PLANNED |
+| C1-05 | Define and implement safeguarding report/escalation boundary with named school stakeholders | Human safeguarding owner with Codex support | C1-01 | PLANNED |
+| C1-06 | Test audience leakage, recurrence/time zones, rate limits, reporting, retention, and disabled users | Codex | C1-02, C1-03, C1-05 | PLANNED |
+| C1-07 | Integrate calendar and communication end-to-end journeys | Serial integration | C1-04, C1-06 | PLANNED |
+
+Acceptance gate: event and message audiences are enforced at source queries; UK time/DST behavior is tested; abuse reporting and escalation have human-approved ownership.
+
+### Phase 5E — Parent and Guardian Access
+
+| ID | Work package | Owner | Dependencies | Status |
+|---|---|---|---|---|
+| R1-01 | Define parent identity, verified pupil relationship, consent, field-release, revocation, and multi-child contracts | Codex contract; privacy/safeguarding owner approval | PM-04, G1-01 | PLANNED |
+| R1-02 | Implement parent identities/links, restricted projections, RLS, revocation, and audit | Codex | R1-01 | PLANNED |
+| R1-03 | Build parent onboarding, child switcher, released progress, deadlines, and communication UI | Claude | R1-01 contract | PLANNED |
+| R1-04 | Test unrelated/expired/disputed links, multi-child isolation, unreleased grades, and sensitive-field exclusion | Codex | R1-02 | PLANNED |
+| R1-05 | Integrate parent end-to-end journeys with privacy review | Serial integration plus human review | R1-03, R1-04 | PLANNED |
+
+Acceptance gate: no parent relationship is self-asserted; links are sourced/verified, revocable, and audited; projections exclude teacher-only, safeguarding, and unreleased data.
+
+### Phase 5F — LTI, SCORM, MIS/SIS, and Legacy Migration
+
+| ID | Work package | Owner | Dependencies | Status |
+|---|---|---|---|---|
+| I1-01 | Define connector framework, secret boundary, idempotency, job state, retry, reconciliation, and audit contracts | Codex | P0-04, PM-04 | PLANNED |
+| I1-02 | Implement LTI 1.3 registration, OIDC launch, deployment allow-list, key rotation, and result contracts | Codex | I1-01 | PLANNED |
+| I1-03 | Implement isolated SCORM ingestion/runtime with sandbox, CSP, package limits, and progress contract | Codex backend; Claude runtime shell | I1-01 | PLANNED |
+| I1-04 | Implement MIS/SIS roster sync adapters with dry-run, mapping, reconciliation, and reversible deactivation | Codex | I1-01 | PLANNED |
+| I1-05 | Inventory legacy Moodle and implement resumable staged migration with checksums and exception reports | Codex; human content validation | I1-01 | PLANNED |
+| I1-06 | Build admin connector, sync, migration, job-progress, and failure-remediation UI | Claude | I1-01 contract | PLANNED |
+| I1-07 | Add connector contract/security tests, replay tests, failure injection, and migration sampling | Codex | I1-02, I1-03, I1-04, I1-05 | PLANNED |
+| I1-08 | Run staged integration and migration rehearsal without production mutation | Serial integration plus system owners | I1-06, I1-07 | PLANNED |
+
+Acceptance gate: connectors are allow-listed and observable; secrets are isolated; sync/migration is resumable and never silently deletes data; legacy remains read-only until signed acceptance.
+
+### Phase 5G — Reporting and Compliance Exports
+
+| ID | Work package | Owner | Dependencies | Status |
+|---|---|---|---|---|
+| X1-01 | Define report catalogue, metric semantics, authorization, suppression, export, retention, and audit contracts | Codex contract; human reporting/privacy review | G1-01, PM-04 | PLANNED |
+| X1-02 | Implement authorized reporting views/materialization, export jobs, row limits, and audit | Codex | X1-01 | PLANNED |
+| X1-03 | Build report catalogue, filter, preview, export-progress, and accessible table/chart UI | Claude | X1-01 contract | PLANNED |
+| X1-04 | Validate metric correctness, small-cohort/privacy leakage, formula injection, access, and export limits | Codex plus human data owner | X1-02 | PLANNED |
+| X1-05 | Integrate priority reports and obtain named stakeholder sign-off | Serial integration | X1-03, X1-04 | PLANNED |
+
+Acceptance gate: every report has an owner and definition; source authorization is preserved; exports resist spreadsheet formula injection and excessive disclosure; compliance claims receive human approval.
+
 ### Phase 6 — Quality, Security, Compliance, and Performance
 
 | ID | Work package | Owner | Dependencies | Status |
 |---|---|---|---|---|
-| P6-01 | Re-audit and update the initial threat model after authentication, uploads, editor content, and Supabase configuration are implemented | Codex | PM-04, Phases 1–5 | PLANNED |
+| P6-01 | Re-audit and update the threat model across identity, content, assessment, communications, parent, integrations, migration, and reporting | Codex | PM-04, Phases 1–5G | PLANNED |
 | P6-02 | Add rate limits, request-size limits, security headers, CSRF/origin checks where applicable, and safe error handling | Codex | P6-01 | PLANNED |
 | P6-03 | Conduct WCAG 2.2 AA audit and remediate dashboard, editor, dialogs, and navigation | Claude | UI feature completion | PLANNED |
 | P6-04 | Define UK GDPR data map, retention/deletion procedures, privacy controls, and processor review checklist with school stakeholders | Human owner with agent support | Data model stable | PLANNED |
@@ -342,7 +439,7 @@ Acceptance gate: no critical/high security findings remain; accessibility review
 |---|---|---|---|---|
 | P7-01 | Create preview, staging, and production environments with isolated Supabase projects | Codex | P0-04 | PLANNED |
 | P7-02 | Configure secrets, custom domain, email redirects, CSP, monitoring, and deployment protections | Codex | P7-01 | PLANNED |
-| P7-03 | Prepare seeded UAT scenarios for admin, teacher, and student roles | Split by layer | Phases 1–6 | PLANNED |
+| P7-03 | Prepare seeded UAT scenarios for admin, teacher, student, parent, and integration-service roles | Split by layer | Phases 1–6 | PLANNED |
 | P7-04 | Conduct staff/student pilot and record prioritized feedback | Human product owner | P7-03 | PLANNED |
 | P7-05 | Fix release blockers and complete regression testing | Claude UI / Codex backend in separate packages | P7-04 | PLANNED |
 | P7-06 | Produce admin guide, teacher guide, support runbook, and incident contacts | Claude drafts; humans approve | P7-05 | PLANNED |
@@ -362,8 +459,14 @@ PM-01 Release scope
   → P1-01 Migrations
   → P1-05 RLS hardening
   → P1-07 Authorization tests
-  → P2-01 Canonical URL rules
-  → P3-03 Secure write path
+  ├→ Content: P2-01 → P3-03 → P3-06
+  ├→ Assessment: A1-01 → A1-07 → G1-01 → G1-07
+  ├→ Quizzes: Q1-01 → Q1-07 → G1-07
+  ├→ Communications: C1-01 → C1-07
+  ├→ Parent: G1-01 → R1-01 → R1-05
+  ├→ Integrations: I1-01 → I1-08
+  └→ Reporting: G1-01 → X1-01 → X1-05
+        ↓ all release domains converge
   → P6-01 Security review
   → P7-03 UAT
   → P7-07 Launch
@@ -373,13 +476,14 @@ PM-01 Release scope
 
 ## 7. Immediate Work Queue
 
-Only Package 0 should be assigned now. Packages A–D remain queued until its decisions are recorded.
+Package 0 is active in its documentation worktree. Packages A–D remain queued until its handoff is reviewed and PM-05 is merged.
 
 ### Package 0 — Product boundary and irreversible decisions
 
-Owner: Human product owner, with Claude facilitating user journeys/UI scope and Codex facilitating security/data/architecture choices  
-Branch: none until decisions are ready; final ADR writing occurs in a dedicated integration worktree  
-Owned files: this planning document initially; later `docs/product/**` and `docs/adr/**` in a serial documentation package  
+Owner: Codex integration, with human product-owner approval and Claude review of future UI scope  
+Branch: `integration/package-0`  
+Worktree: `../project-m-package-0`  
+Owned files: `docs/coordination/**`, `docs/product/**`, and `docs/adr/**`  
 Objective: Complete PM-01 through PM-05 without implementing features.  
 Acceptance: every Moodle capability is classified; launch journeys and measurable targets are approved; all-vs-any tag writes, hierarchy, Entra tenant, lifecycle, scale, data classification, and initial threat model are decided; ADRs are committed.  
 Out of scope: production code and visual polish.
