@@ -239,7 +239,7 @@ Roadmap status values are `PLANNED`, `READY`, `ACTIVE`, `BLOCKED`, `REVIEW`, `ME
 | PM-02 | Document primary user journeys, scale assumptions, service targets, and pilot success measures | Human product owner with school stakeholders | PM-01 | REVIEW |
 | PM-03 | Decide write authorization semantics, canonical hierarchy model, Entra tenant policy, and page lifecycle | Human product owner advised by Codex | PM-01 | REVIEW |
 | PM-04 | Produce an initial threat model and data classification before schema/API stabilization | Codex; human review | PM-01 | REVIEW |
-| PM-05 | Record architecture decisions as version-controlled ADRs and expand the roadmap | Codex/integration | PM-02, PM-03, PM-04 | ACTIVE |
+| PM-05 | Record architecture decisions as version-controlled ADRs and expand the roadmap | Codex/integration | PM-02, PM-03, PM-04 | REVIEW |
 
 Acceptance gate: release scope, invariants, measurable targets, core policies, data classes, and irreversible architecture choices have named human approval. This gate prevents agents from building incompatible interpretations of “LMS.”
 
@@ -480,10 +480,10 @@ Package 0 is active in its documentation worktree. Packages A–D remain queued 
 
 ### Package 0 — Product boundary and irreversible decisions
 
-Owner: Codex integration, with human product-owner approval and Claude review of future UI scope  
-Branch: `integration/package-0`  
-Worktree: `../project-m-package-0`  
-Owned files: `docs/coordination/**`, `docs/product/**`, and `docs/adr/**`  
+Owner: Codex integration, with human product-owner approval and Claude review of future UI scope
+Branch: `integration/package-0`
+Worktree: `../project-m-package-0`
+Owned files: `docs/coordination/**`, `docs/product/**`, and `docs/adr/**`
 Objective: Complete PM-01 through PM-05 without implementing features.  
 Acceptance: every Moodle capability is classified; launch journeys and measurable targets are approved; all-vs-any tag writes, hierarchy, Entra tenant, lifecycle, scale, data classification, and initial threat model are decided; ADRs are committed.  
 Out of scope: production code and visual polish.
