@@ -5,19 +5,24 @@ Modern LMS replacing a legacy Moodle platform for Merchant Taylors' School.
 **Stack:** Next.js (App Router) + React + Tailwind CSS + Supabase (Postgres).
 **Core model:** content is addressed by **tags**, not nested folders (e.g. `Y9MA1` = Year 9 Maths Set 1). A page can carry multiple tags; a user's assigned tags determine what they can see/edit.
 
-## Status: Phase 1
+## Status: Architecture baseline (Packages 0/A)
 
 - [x] `supabase/schema.sql` — tables (`users`, `tags`, `user_tags`, `pages`, `page_tags`) + RLS. Students are read-only by policy omission; teachers can only `UPDATE` pages sharing a tag with them (enforced via `user_matches_page()`).
 - [x] `app/[...slug]/page.tsx` — canonical routing engine. Resolves purely against `pages.canonical_url`; any other path (id-based deep links from notifications, old bookmarks) 307-redirects to the canonical hierarchy path instead of rendering in place.
 - [x] `components/Dashboard.tsx` — main dashboard: top nav (logo, notifications dropdown, Outlook-style role chip), horizontal tag-pill rail, page/file card grid with breadcrumbs, FAB with an "Upload page" / "Edit current page" menu.
 - [x] `dashboard-preview.html` — static HTML/CSS/JS mirror of `Dashboard.tsx` for previewing the interaction design without spinning up Next.js. Open it directly in a browser.
+- [x] `docs/adr/` and `docs/product/` — approved/provisional release-1 architecture, service targets, data classification, and full-LMS roadmap.
+- [x] `lib/mpx-packager.ts` / `lib/security.ts` — reconciled experimental utilities with explicit production limitations; see `lib/README.md`.
+- [x] Phase 3 auth-domain trigger reviewed but intentionally withheld from executable migrations because parent access and tenant validation require a combined admission design.
 
 ## Not yet built
 
 - `lib/supabase/server.ts` / `lib/supabase/client.ts` — Supabase client factories referenced by `page.tsx`.
 - `components/page-renderer.tsx` — renders `content_json` for a resolved page.
-- Auth flow, `content_json` block schema, tag admin UI, upload handling for `.mpx`/PDF.
+- Complete Next.js package/config foundation (Package B).
+- Auth flow, guardian admission, `content_json` block schema, tag admin UI, and authoritative upload handling for `.mpx`/PDF.
 - The trigger/job that (re)computes `canonical_url` when a page's tags or parent change — `page.tsx` assumes this is already correct in the DB.
+- Assignments/submissions, quizzes, gradebook, calendar/messaging, parent projections, LTI/SCORM, MIS/SIS sync, migration, and reporting listed in the release-1 roadmap.
 
 ## Design constraints (Dashboard)
 
