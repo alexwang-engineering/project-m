@@ -4,7 +4,7 @@ The files in this directory were reconciled from `codex/phase1` during Package A
 
 ## `mpx-packager.ts`
 
-The browser utility performs useful extension, MIME, PDF-signature, filename, count, and size checks. It remains experimental because JSZip buffers archives in memory and the draft format lacks ADR-007's versioned manifest, stable attachment IDs, SHA-256 checksums, schema validation, and authoritative server import checks. No production route may persist its output until P3-06 is complete.
+The browser utility implements MPX v1 with an exact-entry manifest, content-addressed attachment IDs, SHA-256 checksums, PDF signatures, normalized flat filenames, CRC validation, and compressed/uncompressed size and count limits. JSZip still buffers archives in browser memory, so authoritative server import must repeat these checks and validate the page block contract before persistence.
 
 ## `security.ts`
 
