@@ -574,6 +574,10 @@ export type Database = {
         Args: { actor?: string };
         Returns: undefined;
       };
+      assert_safe_rich_html: {
+        Args: { field_path: string; value: Json };
+        Returns: undefined;
+      };
       assert_valid_content: {
         Args: { payload: Json; schema_version: number };
         Returns: undefined;
@@ -693,6 +697,10 @@ export type Database = {
         Returns: boolean;
       };
       is_active_principal: { Args: { target_id?: string }; Returns: boolean };
+      jsonb_has_only_keys: {
+        Args: { allowed: string[]; value: Json };
+        Returns: boolean;
+      };
       page_path: {
         Args: { target_parent: string; target_slug: string };
         Returns: string;

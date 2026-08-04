@@ -42,7 +42,7 @@ select set_config('request.jwt.claim.role', 'authenticated', true);
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000002', true);
 select lives_ok(
-  $$ select public.create_page('Mechanisms', 'mechanisms', null, '{"blocks":[]}'::jsonb, 1,
+  $$ select public.create_page('Mechanisms', 'mechanisms', null, '{"schemaVersion":1,"blocks":[]}'::jsonb, 1,
     array['10000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000002']::uuid[]) $$,
   'teacher owning every proposed tag can create atomically'
 );
@@ -54,7 +54,7 @@ select lives_ok(
   'authorized teacher can publish content'
 );
 select lives_ok(
-  $$ select public.create_page('School news', 'school-news', null, '{"blocks":[]}'::jsonb, 1,
+  $$ select public.create_page('School news', 'school-news', null, '{"schemaVersion":1,"blocks":[]}'::jsonb, 1,
     array['10000000-0000-0000-0000-000000000001']::uuid[]) $$,
   'teacher can create a second page for public visibility testing'
 );
@@ -85,7 +85,7 @@ select throws_ok(
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000003', true);
 select throws_ok(
   $$ select public.update_page((select id from public.pages where canonical_url = '/mechanisms'), 2, 'Spoofed', 'mechanisms', null,
-    '{"blocks":[]}'::jsonb, 1,
+    '{"schemaVersion":1,"blocks":[]}'::jsonb, 1,
     array['10000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000002']::uuid[]) $$,
   '42501', 'page edit not permitted',
   'teacher owning only one of two tags cannot update'
@@ -99,7 +99,7 @@ select lives_ok(
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000003', true);
 select lives_ok(
   $$ select public.update_page((select id from public.pages where canonical_url = '/mechanisms'), 2, 'Approved edit', 'mechanisms', null,
-    '{"blocks":[]}'::jsonb, 1,
+    '{"schemaVersion":1,"blocks":[]}'::jsonb, 1,
     array['10000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000002']::uuid[]) $$,
   'explicit editor grant permits the reviewed cross-tag update'
 );
@@ -109,7 +109,7 @@ select is(
   'direct table update cannot bypass transactional mutation functions'
 );
 select throws_ok(
-  $$ select public.create_page('Cross-tag', 'cross-tag', null, '{"blocks":[]}'::jsonb, 1,
+  $$ select public.create_page('Cross-tag', 'cross-tag', null, '{"schemaVersion":1,"blocks":[]}'::jsonb, 1,
     array['10000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000002']::uuid[]) $$,
   '42501', 'actor does not manage every audience tag',
   'teacher owning only one tag cannot create across both'
@@ -127,7 +127,7 @@ select throws_ok(
   'nominal client claim cannot self-assign administrator authority'
 );
 select throws_ok(
-  $$ select public.create_page('Student spoof', 'student-spoof', null, '{}'::jsonb, 1,
+  $$ select public.create_page('Student spoof', 'student-spoof', null, '{"schemaVersion":1,"blocks":[]}'::jsonb, 1,
     array['10000000-0000-0000-0000-000000000001']::uuid[]) $$,
   '42501', 'teacher or administrator role required',
   'student cannot create content through RPC'
@@ -156,7 +156,7 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000005', true);
 select is(public.current_principal_is_active(), false, 'disabled principal fails active check');
 select throws_ok(
-  $$ select public.create_page('Disabled spoof', 'disabled-spoof', null, '{}'::jsonb, 1,
+  $$ select public.create_page('Disabled spoof', 'disabled-spoof', null, '{"schemaVersion":1,"blocks":[]}'::jsonb, 1,
     array['10000000-0000-0000-0000-000000000001']::uuid[]) $$,
   '42501', 'active principal required',
   'disabled teacher cannot use stale membership'

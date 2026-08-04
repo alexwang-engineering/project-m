@@ -6,8 +6,12 @@
 // database over the request path, and redirects when they disagree.
 
 import { notFound, redirect } from 'next/navigation';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServerClient } from '@/lib/supabase/server';
 import { PageRenderer } from '@/components/page-renderer';
+import { canonicalPathFromSegments } from '@/lib/content/canonical';
+import { resolvePage } from '@/lib/content/repository';
+import type { Database } from '@/lib/database.types';
 
 interface RouteParams {
   params: Promise<{ slug: string[] }>;
@@ -15,34 +19,16 @@ interface RouteParams {
 
 export default async function CanonicalPage({ params }: RouteParams) {
   const { slug } = await params;
-  const requestedPath = '/' + slug.join('/');
-  const supabase = await createServerClient();
-
-  // Primary lookup: does a page's canonical_url exactly match what was requested?
-  const { data: page } = await supabase
-    .from('pages')
-    .select('id, canonical_url, title, content_json, is_public')
-    .eq('canonical_url', requestedPath)
-    .maybeSingle();
-
-  if (page) {
-    // requestedPath === page.canonical_url — this IS the hierarchy position.
-    return <PageRenderer page={page} />;
+  const requestedPath = canonicalPathFromSegments(slug);
+  if (!requestedPath) notFound();
+  const supabase = (await createServerClient()) as SupabaseClient<Database>;
+  const lastSegment = slug.at(-1);
+  if (!lastSegment) notFound();
+  const resolution = await resolvePage(supabase, requestedPath, lastSegment);
+  if (resolution.kind === 'page') {
+    const { id, title, content } = resolution.page;
+    return <PageRenderer page={{ id, title, content_json: content }} />;
   }
-
-  // Fallback: the last slug segment might be a page id, not a hierarchy path —
-  // this is how notification links and old bookmarks reach a page. Resolve the
-  // id, then force-redirect to where the page actually lives in the tag hierarchy.
-  const lastSegment = slug[slug.length - 1];
-  const { data: byId } = await supabase
-    .from('pages')
-    .select('canonical_url')
-    .eq('id', lastSegment)
-    .maybeSingle();
-
-  if (byId?.canonical_url) {
-    redirect(byId.canonical_url); // 307 — browser URL bar updates to the canonical path
-  }
-
-  notFound();
+  if (resolution.kind === 'redirect') redirect(resolution.destination);
+  return notFound();
 }
