@@ -1,7 +1,7 @@
 # Package A Preflight — Phase 3 Integration Review
 
-Status: Complete, read-only review; Package A remains blocked by independent Package 0 review/merge.  
-Reviewed source: `codex/phase1` at `a920262` against `integration/package-0` architecture decisions.  
+Status: Complete, read-only review; Package A remains blocked by independent Package 0 review/merge.
+Reviewed source: `codex/phase1` at `a920262` against `integration/package-0` architecture decisions.
 Purpose: Define how to reconcile the existing Phase 3 commits without treating prototype controls as production-ready full-LMS infrastructure.
 
 ## Executive disposition
