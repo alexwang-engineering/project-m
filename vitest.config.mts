@@ -1,0 +1,24 @@
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vitest/config';
+import { fileURLToPath } from 'node:url';
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('.', import.meta.url)),
+      'server-only': fileURLToPath(
+        new URL('./test/server-only.ts', import.meta.url),
+      ),
+    },
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./test/setup.ts'],
+    exclude: ['e2e/**', 'node_modules/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+    },
+  },
+});

@@ -1,0 +1,15 @@
+.next
+coverage
+node_modules
+package-lock.json
+playwright-report
+test-results
+dashboard-preview.html
+components/Dashboard.tsx
+docs
+lib/README.md
+lib/mpx-packager.ts
+lib/security.ts
+next-env.d.ts
+README.md
+supabase

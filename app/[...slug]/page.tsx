@@ -10,12 +10,13 @@ import { createServerClient } from '@/lib/supabase/server';
 import { PageRenderer } from '@/components/page-renderer';
 
 interface RouteParams {
-  params: { slug: string[] };
+  params: Promise<{ slug: string[] }>;
 }
 
 export default async function CanonicalPage({ params }: RouteParams) {
-  const requestedPath = '/' + params.slug.join('/');
-  const supabase = createServerClient();
+  const { slug } = await params;
+  const requestedPath = '/' + slug.join('/');
+  const supabase = await createServerClient();
 
   // Primary lookup: does a page's canonical_url exactly match what was requested?
   const { data: page } = await supabase
@@ -32,7 +33,7 @@ export default async function CanonicalPage({ params }: RouteParams) {
   // Fallback: the last slug segment might be a page id, not a hierarchy path —
   // this is how notification links and old bookmarks reach a page. Resolve the
   // id, then force-redirect to where the page actually lives in the tag hierarchy.
-  const lastSegment = params.slug[params.slug.length - 1];
+  const lastSegment = slug[slug.length - 1];
   const { data: byId } = await supabase
     .from('pages')
     .select('canonical_url')
