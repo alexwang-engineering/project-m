@@ -1,6 +1,6 @@
 import 'server-only';
 
-import sanitizeHtml from 'sanitize-html';
+import DOMPurify, { type Config } from 'isomorphic-dompurify';
 
 export type SanitizableJson =
   | null
@@ -12,40 +12,21 @@ export type SanitizableJson =
 
 const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
-const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
-  allowedTags: [
+const SANITIZE_OPTIONS: Config = {
+  ALLOWED_TAGS: [
     'p', 'br', 'strong', 'em', 'u', 's', 'blockquote', 'pre', 'code',
     'h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'a', 'table', 'thead',
     'tbody', 'tr', 'th', 'td', 'hr', 'span', 'sub', 'sup',
   ],
-  allowedAttributes: {
-    a: ['href', 'title', 'target', 'rel'],
-    th: ['colspan', 'rowspan', 'scope'],
-    td: ['colspan', 'rowspan'],
-    span: ['class'],
-    code: ['class'],
-  },
-  allowedClasses: {
-    span: ['text-left', 'text-center', 'text-right'],
-    code: [/^language-[a-z0-9-]+$/],
-  },
-  allowedSchemes: ['http', 'https', 'mailto'],
-  allowedSchemesAppliedToAttributes: ['href'],
-  allowProtocolRelative: false,
-  disallowedTagsMode: 'discard',
-  enforceHtmlBoundary: true,
-  parser: { lowerCaseAttributeNames: true },
-  transformTags: {
-    a: (_tagName, attributes) => ({
-      tagName: 'a',
-      attribs: {
-        ...attributes,
-        ...(attributes.target === '_blank'
-          ? { rel: 'noopener noreferrer', target: '_blank' }
-          : {}),
-      },
-    }),
-  },
+  ALLOWED_ATTR: ['href', 'title', 'colspan', 'rowspan', 'scope'],
+  ALLOW_DATA_ATTR: false,
+  ALLOW_ARIA_ATTR: false,
+  ALLOW_UNKNOWN_PROTOCOLS: false,
+  FORBID_TAGS: ['script', 'style', 'svg', 'math', 'iframe', 'object', 'embed'],
+  FORBID_ATTR: ['style', 'srcset', 'formaction', 'target'],
+  RETURN_DOM: false,
+  RETURN_DOM_FRAGMENT: false,
+  RETURN_TRUSTED_TYPE: false,
 };
 
 /** Sanitises an HTML fragment using Project M's WYSIWYG allow-list. */
@@ -54,7 +35,7 @@ export function sanitizeEditorHtml(html: string): string {
     throw new TypeError('Editor HTML must be a string.');
   }
 
-  return sanitizeHtml(html, SANITIZE_OPTIONS);
+  return DOMPurify.sanitize(html, SANITIZE_OPTIONS);
 }
 
 /**

@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "isomorphic-dompurify": "^2.26.0",
-    "jszip": "^3.10.1"
+    "jszip": "^3.10.1",
+    "server-only": "^0.0.1"
   }
 }

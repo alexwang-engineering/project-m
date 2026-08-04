@@ -3,8 +3,7 @@ import JSZip from 'jszip';
 const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024;
 const MAX_ATTACHMENT_COUNT = 100;
 const MAX_PAGE_JSON_BYTES = 5 * 1024 * 1024;
-const MAX_ARCHIVE_BYTES =
-  MAX_PAGE_JSON_BYTES + MAX_ATTACHMENT_COUNT * MAX_ATTACHMENT_BYTES;
+const MAX_ARCHIVE_BYTES = 500 * 1024 * 1024;
 const PAGE_FILE_NAME = 'page.json';
 const ATTACHMENTS_DIRECTORY = 'attachments/';
 
@@ -82,6 +81,11 @@ export async function packageMpx<TPage extends JsonValue>(
     throw new Error(`An MPX file can contain at most ${MAX_ATTACHMENT_COUNT} attachments.`);
   }
 
+  const totalAttachmentBytes = attachments.reduce((total, file) => total + file.size, 0);
+  if (totalAttachmentBytes > MAX_ARCHIVE_BYTES - MAX_PAGE_JSON_BYTES) {
+    throw new Error('The combined attachments exceed the 500 MB archive limit.');
+  }
+
   let pageJson: string;
   try {
     pageJson = JSON.stringify(page);
@@ -104,7 +108,7 @@ export async function packageMpx<TPage extends JsonValue>(
   for (const attachment of attachments) {
     assertPdf(attachment);
     const name = uniqueName(safeAttachmentName(attachment.name), usedNames);
-    zip.file(`${ATTACHMENTS_DIRECTORY}${name}`, attachment, {
+    zip.file(`${ATTACHMENTS_DIRECTORY}${name}`, await attachment.arrayBuffer(), {
       binary: true,
       createFolders: false,
     });
@@ -139,7 +143,7 @@ export async function unpackMpx<TPage extends JsonValue = JsonValue>(
 
   let zip: JSZip;
   try {
-    zip = await JSZip.loadAsync(archive, {
+    zip = await JSZip.loadAsync(await archive.arrayBuffer(), {
       checkCRC32: true,
       createFolders: false,
     });
@@ -153,7 +157,10 @@ export async function unpackMpx<TPage extends JsonValue = JsonValue>(
   }
 
   for (const entry of entries) {
-    if (entry.unsafeOriginalName !== entry.name || entry.name.includes('\\')) {
+    if (
+      (entry.unsafeOriginalName !== undefined && entry.unsafeOriginalName !== entry.name) ||
+      entry.name.includes('\\')
+    ) {
       throw new Error(`Unsafe archive path: ${entry.name}`);
     }
   }
@@ -197,8 +204,20 @@ export async function unpackMpx<TPage extends JsonValue = JsonValue>(
     if (bytes.byteLength > MAX_ATTACHMENT_BYTES || extractedBytes > MAX_ARCHIVE_BYTES) {
       throw new Error(`Attachment "${name}" exceeds the permitted size.`);
     }
+    if (
+      bytes.byteLength < 5 ||
+      bytes[0] !== 0x25 ||
+      bytes[1] !== 0x50 ||
+      bytes[2] !== 0x44 ||
+      bytes[3] !== 0x46 ||
+      bytes[4] !== 0x2d
+    ) {
+      throw new Error(`Attachment "${name}" does not contain a valid PDF signature.`);
+    }
 
-    const file = new File([bytes], name, { type: 'application/pdf' });
+    const file = new File([new Uint8Array(bytes).buffer], name, {
+      type: 'application/pdf',
+    });
     assertPdf(file);
     attachments.push(file);
   }
