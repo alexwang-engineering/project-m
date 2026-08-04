@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(26);
+select plan(30);
 
 insert into auth.users (id, email, aud, role) values
   ('00000000-0000-0000-0000-000000000001', 'admin@merchanttaylors.com', 'authenticated', 'authenticated'),
@@ -76,6 +76,25 @@ select lives_ok(
 );
 select is((select count(*) from storage.objects)::bigint, 0::bigint, 'pending object is not readable before trusted verification');
 select throws_ok(
+  $$ select public.attach_ready_file_to_page(
+    (select id from public.pages where canonical_url = '/mechanisms'),
+    (select id from public.files where original_name = 'lesson.pdf')) $$,
+  '55000', 'file has not passed verification',
+  'browser cannot attach a pending file before trusted verification'
+);
+reset role;
+update public.files set state = 'ready' where original_name = 'lesson.pdf';
+select set_config('test.file_id', (select id::text from public.files where original_name = 'lesson.pdf'), true);
+set local role authenticated;
+select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000002', true);
+select lives_ok(
+  $$ select public.attach_ready_file_to_page(
+    (select id from public.pages where canonical_url = '/mechanisms'),
+    (select id from public.files where original_name = 'lesson.pdf')) $$,
+  'verified owner can attach a file to an editable page'
+);
+select throws_ok(
   $$ insert into storage.objects (bucket_id, name, owner_id)
     values ('learning-content', 'arbitrary/path.pdf', auth.uid()) $$,
   '42501', 'new row violates row-level security policy for table "objects"',
@@ -121,6 +140,12 @@ select is(
   0::bigint,
   'student outside the audience cannot read the private page'
 );
+select is(
+  (select count(*) from public.get_file_download_target(
+    current_setting('test.file_id')::uuid))::bigint,
+  0::bigint,
+  'student outside the audience cannot resolve the private object path'
+);
 select throws_ok(
   $$ select public.assign_system_role('00000000-0000-0000-0000-000000000004', 'institution_admin', 'self spoof') $$,
   '42501', 'institution administrator role required',
@@ -145,6 +170,12 @@ select is(
   1::bigint,
   'student with a matching current tag can read the published private page'
 );
+select is(
+  (select count(*) from public.get_file_download_target(
+    current_setting('test.file_id')::uuid))::bigint,
+  1::bigint,
+  'student with page access can resolve only the authorized ready object target'
+);
 
 reset role;
 set local role anon;
@@ -163,7 +194,7 @@ select throws_ok(
 );
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
-select is((select count(*) from public.audit_events)::bigint, 7::bigint, 'administrator can read append-only audit events');
+select is((select count(*) from public.audit_events)::bigint, 8::bigint, 'administrator can read append-only audit events');
 
 select * from finish();
 rollback;

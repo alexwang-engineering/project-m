@@ -604,6 +604,14 @@ export type Database = {
         };
         Returns: undefined;
       };
+      attach_ready_file_to_page: {
+        Args: {
+          correlation_id?: string;
+          target_file_id: string;
+          target_page_id: string;
+        };
+        Returns: undefined;
+      };
       begin_file_upload: {
         Args: {
           correlation_id?: string;
@@ -680,6 +688,16 @@ export type Database = {
           target_profile: string;
         };
         Returns: undefined;
+      };
+      get_file_download_target: {
+        Args: { target_file_id: string };
+        Returns: {
+          bucket_id: string;
+          media_type: string;
+          object_name: string;
+          original_name: string;
+          size_bytes: number;
+        }[];
       };
       has_system_role: {
         Args: {
