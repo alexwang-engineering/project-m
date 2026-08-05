@@ -26,3 +26,22 @@ export function getPublicSupabaseEnvironment(): PublicSupabaseEnvironment {
     ),
   };
 }
+
+export interface ServiceRoleSupabaseEnvironment {
+  url: string;
+  serviceRoleKey: string;
+}
+
+/** Reads the service-role secret. Callers must never expose this to a client bundle. */
+export function getServiceRoleSupabaseEnvironment(): ServiceRoleSupabaseEnvironment {
+  return {
+    url: requireEnvironment(
+      'NEXT_PUBLIC_SUPABASE_URL',
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+    ),
+    serviceRoleKey: requireEnvironment(
+      'SUPABASE_SERVICE_ROLE_KEY',
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+    ),
+  };
+}

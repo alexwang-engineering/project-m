@@ -45,6 +45,7 @@ export interface FileDownload {
 export type UploadTicketResult = UploadTicket | FileServiceFailure;
 export type FileDownloadResult = FileDownload | FileServiceFailure;
 export type AttachFileResult = { readonly ok: true } | FileServiceFailure;
+export type CompleteUploadResult = { readonly ok: true } | FileServiceFailure;
 
 function failure(error: unknown): FileServiceFailure {
   const code =
@@ -168,6 +169,68 @@ export async function beginFileUpload(
       maximumBytes: MAX_FILE_BYTES,
     },
   };
+}
+
+/**
+ * Verifies a direct-to-storage upload actually landed, then marks it ready.
+ *
+ * There is no `files.state` UPDATE policy for ordinary users by design -
+ * self-approving your own upload would defeat the point of verification.
+ * This is the one narrowly-scoped place a service-role client is used: it
+ * re-reads the object's real size from Storage (bypassing RLS, which is
+ * fine here because the caller was already authenticated and confirmed to
+ * own a matching `pending` row via the normal client before this runs) and
+ * only flips state to `ready` when it matches what was declared at
+ * `beginFileUpload` time. This is a size/existence check, not malware
+ * scanning - a real content-scanning worker remains separate future work.
+ */
+export async function completeFileUpload(
+  authClient: Client,
+  serviceClient: Client,
+  fileId: unknown,
+): Promise<CompleteUploadResult> {
+  if (typeof fileId !== 'string' || !UUID.test(fileId))
+    return invalid('File ID is invalid.');
+
+  const { data: file, error: readError } = await authClient
+    .from('files')
+    .select('id, bucket_id, object_name, size_bytes, state')
+    .eq('id', fileId)
+    .maybeSingle();
+  if (readError) return failure(readError);
+  if (!file)
+    return { ok: false, code: 'not_found', message: 'The file was not found.' };
+  if (file.state === 'ready') return { ok: true };
+  if (file.state !== 'pending') {
+    return {
+      ok: false,
+      code: 'not_ready',
+      message: 'This file is no longer awaiting verification.',
+    };
+  }
+
+  const folder = file.object_name.split('/').slice(0, -1).join('/');
+  const objectBasename = file.object_name.split('/').at(-1) ?? '';
+  const { data: listing, error: listError } = await serviceClient.storage
+    .from(file.bucket_id)
+    .list(folder, { search: objectBasename, limit: 1 });
+  if (listError) return failure(listError);
+  const uploaded = listing?.find((entry) => entry.name === objectBasename);
+  if (!uploaded || uploaded.metadata?.size !== file.size_bytes) {
+    return {
+      ok: false,
+      code: 'not_ready',
+      message: 'The uploaded file does not match what was declared.',
+    };
+  }
+
+  const { error: updateError } = await serviceClient
+    .from('files')
+    .update({ state: 'ready' })
+    .eq('id', fileId)
+    .eq('state', 'pending');
+  if (updateError) return failure(updateError);
+  return { ok: true };
 }
 
 /** Attaches a verified, actor-owned file to a page the actor may edit. */

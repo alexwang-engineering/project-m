@@ -6,12 +6,15 @@ import type { Database } from '@/lib/database.types';
 import {
   attachFileToPage,
   beginFileUpload,
+  completeFileUpload,
   createFileDownload,
   type AttachFileResult,
+  type CompleteUploadResult,
   type FileDownloadResult,
   type UploadTicketResult,
 } from '@/lib/files/service';
 import { createServerClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
 
 async function authenticatedClient(): Promise<SupabaseClient<Database> | null> {
   const client = (await createServerClient()) as SupabaseClient<Database>;
@@ -31,6 +34,16 @@ export async function beginFileUploadAction(
 ): Promise<UploadTicketResult> {
   const client = await authenticatedClient();
   return client ? beginFileUpload(client, input) : signedOut;
+}
+
+/** Verifies a direct-to-storage upload landed and marks it ready for use. */
+export async function completeFileUploadAction(
+  fileId: unknown,
+): Promise<CompleteUploadResult> {
+  const client = await authenticatedClient();
+  return client
+    ? completeFileUpload(client, createServiceRoleClient(), fileId)
+    : signedOut;
 }
 
 /** Attaches a trusted-verifier-approved upload to an editable page. */

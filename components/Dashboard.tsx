@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState, useRef, useEffect } from 'react';
 import {
   Bell,
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react';
 
 import { EmptyState } from '@/components/ui/EmptyState';
+import { formatRelativeTime } from '@/lib/relative-time';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -70,26 +72,6 @@ const NOTIFICATIONS: UrgentNotification[] = [
   { id: '2', tag: 'Y9MA1', message: 'New resource added — Trigonometry Revision Pack', timeRelative: '2 hours ago', urgent: false },
   { id: '3', tag: 'U6PH1', message: 'Practical write-up returned with feedback', timeRelative: 'Yesterday', urgent: true },
 ];
-
-const RELATIVE_TIME = new Intl.RelativeTimeFormat('en-GB', { numeric: 'auto' });
-const RELATIVE_UNITS: readonly [Intl.RelativeTimeFormatUnit, number][] = [
-  ['year', 60 * 60 * 24 * 365],
-  ['month', 60 * 60 * 24 * 30],
-  ['week', 60 * 60 * 24 * 7],
-  ['day', 60 * 60 * 24],
-  ['hour', 60 * 60],
-  ['minute', 60],
-];
-
-function formatRelativeTime(iso: string): string {
-  const deltaSeconds = (new Date(iso).getTime() - Date.now()) / 1000;
-  for (const [unit, unitSeconds] of RELATIVE_UNITS) {
-    if (Math.abs(deltaSeconds) >= unitSeconds) {
-      return RELATIVE_TIME.format(Math.round(deltaSeconds / unitSeconds), unit);
-    }
-  }
-  return RELATIVE_TIME.format(Math.round(deltaSeconds), 'second');
-}
 
 /** Derives the breadcrumb from the one authoritative canonical path (ADR-004). */
 function breadcrumbFromCanonicalUrl(canonicalUrl: string): string[] {
@@ -154,6 +136,14 @@ function TopNav() {
         <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">
           Project <span className="text-[#254889]">M</span>
         </span>
+        <nav className="ml-6 hidden items-center gap-1 sm:flex">
+          <Link
+            href="/assignments"
+            className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+          >
+            Assignments
+          </Link>
+        </nav>
       </div>
 
       <div className="flex items-center gap-2">
