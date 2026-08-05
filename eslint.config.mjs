@@ -11,5 +11,7 @@ export default defineConfig([
     'playwright-report/**',
     'test-results/**',
     'dashboard-preview.html',
+    'supabase/.temp/**',
+    'supabase/.branches/**',
   ]),
 ]);

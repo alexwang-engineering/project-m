@@ -122,9 +122,9 @@ select lives_ok(
     array['10000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000002']::uuid[]) $$,
   'explicit editor grant permits the reviewed cross-tag update'
 );
-select is(
-  (with changed as (update public.pages set title = 'Direct bypass' returning 1) select count(*) from changed)::bigint,
-  0::bigint,
+select throws_ok(
+  $$ update public.pages set title = 'Direct bypass' $$,
+  '42501', 'permission denied for table pages',
   'direct table update cannot bypass transactional mutation functions'
 );
 select throws_ok(
