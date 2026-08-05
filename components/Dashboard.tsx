@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import {
   Bell,
   ChevronDown,
@@ -12,16 +12,21 @@ import {
   X,
 } from 'lucide-react';
 
+import { EmptyState } from '@/components/ui/EmptyState';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 type Role = 'admin' | 'teacher' | 'student';
 
-interface TagSummary {
+/** Matches `PageSummary` from lib/content/dashboard.ts (Codex's typed loader). */
+export interface DashboardPage {
   id: string;
-  name: string;
-  pageCount: number;
+  title: string;
+  canonicalUrl: string;
+  updatedAt: string;
+  tags: readonly { name: string; displayName: string }[];
 }
 
 interface PageCard {
@@ -31,7 +36,7 @@ interface PageCard {
   fileType: 'page' | 'pdf' | 'doc';
   breadcrumb: string[];
   tags: string[];
-  authorInitials: string;
+  authorInitials?: string;
   updatedRelative: string;
 }
 
@@ -43,9 +48,14 @@ interface UrgentNotification {
   urgent: boolean;
 }
 
+interface DashboardProps {
+  pages: readonly DashboardPage[];
+}
+
 // ---------------------------------------------------------------------------
-// Placeholder data — replace with Supabase queries against
-// `pages` / `page_tags` / `user_tags` (see schema, Task 1)
+// Pending contracts — no loader exists yet for the signed-in profile or for
+// tag-targeted notifications (Phase 5). Kept as explicit placeholders rather
+// than invented queries, same pattern as components/page-renderer.tsx.
 // ---------------------------------------------------------------------------
 
 const CURRENT_USER = {
@@ -55,31 +65,56 @@ const CURRENT_USER = {
   initials: 'JD',
 };
 
-const TAGS: TagSummary[] = [
-  { id: 'all', name: 'All pages', pageCount: 32 },
-  { id: 'Y9MA1', name: 'Y9MA1', pageCount: 8 },
-  { id: 'Y9MA2', name: 'Y9MA2', pageCount: 5 },
-  { id: 'L6CH2', name: 'L6CH2', pageCount: 11 },
-  { id: 'L6CH3', name: 'L6CH3', pageCount: 4 },
-  { id: 'U6PH1', name: 'U6PH1', pageCount: 6 },
-  { id: 'U6BI1', name: 'U6BI1', pageCount: 9 },
-  { id: 'Y8EN3', name: 'Y8EN3', pageCount: 3 },
-];
-
 const NOTIFICATIONS: UrgentNotification[] = [
   { id: '1', tag: 'L6CH2', message: 'Organic Mechanisms homework due tomorrow, 9:00am', timeRelative: '42 minutes ago', urgent: true },
   { id: '2', tag: 'Y9MA1', message: 'New resource added — Trigonometry Revision Pack', timeRelative: '2 hours ago', urgent: false },
   { id: '3', tag: 'U6PH1', message: 'Practical write-up returned with feedback', timeRelative: 'Yesterday', urgent: true },
 ];
 
-const PAGES: PageCard[] = [
-  { id: 'p1', title: 'Organic Mechanisms — Nucleophilic Substitution', kind: 'page', fileType: 'page', breadcrumb: ['Chemistry', 'Organic Chemistry', 'Mechanisms'], tags: ['L6CH2'], authorInitials: 'JD', updatedRelative: '2h ago' },
-  { id: 'p2', title: 'Trigonometry Revision Pack.pdf', kind: 'file', fileType: 'pdf', breadcrumb: ['Maths', 'Year 9', 'Set 1', 'Trigonometry'], tags: ['Y9MA1'], authorInitials: 'SK', updatedRelative: '5h ago' },
-  { id: 'p3', title: 'Practical Write-Up Guidance', kind: 'page', fileType: 'page', breadcrumb: ['Physics', 'Upper Sixth', 'Coursework'], tags: ['U6PH1'], authorInitials: 'RH', updatedRelative: '1d ago' },
-  { id: 'p4', title: 'Cell Respiration — Lecture Notes.docx', kind: 'file', fileType: 'doc', breadcrumb: ['Biology', 'Upper Sixth', 'Unit 1'], tags: ['U6BI1'], authorInitials: 'EM', updatedRelative: '1d ago' },
-  { id: 'p5', title: 'Macbeth: Ambition & Guilt — Reading Guide', kind: 'page', fileType: 'page', breadcrumb: ['English', 'Year 8', 'Set 3', 'Macbeth'], tags: ['Y8EN3'], authorInitials: 'CL', updatedRelative: '2d ago' },
-  { id: 'p6', title: 'Equilibrium & Le Chatelier’s Principle', kind: 'page', fileType: 'page', breadcrumb: ['Chemistry', 'Organic Chemistry', 'Equilibria'], tags: ['L6CH3'], authorInitials: 'JD', updatedRelative: '2d ago' },
+const RELATIVE_TIME = new Intl.RelativeTimeFormat('en-GB', { numeric: 'auto' });
+const RELATIVE_UNITS: readonly [Intl.RelativeTimeFormatUnit, number][] = [
+  ['year', 60 * 60 * 24 * 365],
+  ['month', 60 * 60 * 24 * 30],
+  ['week', 60 * 60 * 24 * 7],
+  ['day', 60 * 60 * 24],
+  ['hour', 60 * 60],
+  ['minute', 60],
 ];
+
+function formatRelativeTime(iso: string): string {
+  const deltaSeconds = (new Date(iso).getTime() - Date.now()) / 1000;
+  for (const [unit, unitSeconds] of RELATIVE_UNITS) {
+    if (Math.abs(deltaSeconds) >= unitSeconds) {
+      return RELATIVE_TIME.format(Math.round(deltaSeconds / unitSeconds), unit);
+    }
+  }
+  return RELATIVE_TIME.format(Math.round(deltaSeconds), 'second');
+}
+
+/** Derives the breadcrumb from the one authoritative canonical path (ADR-004). */
+function breadcrumbFromCanonicalUrl(canonicalUrl: string): string[] {
+  return canonicalUrl
+    .split('/')
+    .filter(Boolean)
+    .map((segment) =>
+      segment
+        .split('-')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' '),
+    );
+}
+
+function toPageCard(page: DashboardPage): PageCard {
+  return {
+    id: page.id,
+    title: page.title,
+    kind: 'page',
+    fileType: 'page',
+    breadcrumb: breadcrumbFromCanonicalUrl(page.canonicalUrl),
+    tags: page.tags.map((tag) => tag.name),
+    updatedRelative: formatRelativeTime(page.updatedAt),
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Shared: click-outside hook for dropdowns / FAB menu
@@ -214,12 +249,26 @@ function TopNav() {
 // Tag rail
 // ---------------------------------------------------------------------------
 
-function TagRail({ activeTag, onSelect }: { activeTag: string; onSelect: (id: string) => void }) {
+interface TagSummary {
+  id: string;
+  name: string;
+  pageCount: number;
+}
+
+function TagRail({
+  tags,
+  activeTag,
+  onSelect,
+}: {
+  tags: readonly TagSummary[];
+  activeTag: string;
+  onSelect: (id: string) => void;
+}) {
   return (
     <div className="mb-8">
       <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">Your tags</p>
       <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
-        {TAGS.map((tag) => {
+        {tags.map((tag) => {
           const active = tag.id === activeTag;
           return (
             <button
@@ -285,9 +334,11 @@ function PageCardItem({ page }: { page: PageCard }) {
 
       <div className="mt-auto flex items-center justify-between border-t border-slate-200 pt-2.5 text-[11.5px] text-slate-400">
         <span className="flex items-center gap-1.5">
-          <span className="flex h-[17px] w-[17px] items-center justify-center rounded-full bg-[#dfe7f7] text-[8px] font-bold text-[#254889]">
-            {page.authorInitials}
-          </span>
+          {page.authorInitials && (
+            <span className="flex h-[17px] w-[17px] items-center justify-center rounded-full bg-[#dfe7f7] text-[8px] font-bold text-[#254889]">
+              {page.authorInitials}
+            </span>
+          )}
           {page.updatedRelative}
         </span>
         <span className="capitalize">{page.kind}</span>
@@ -344,10 +395,25 @@ function FloatingActionButton() {
 // Dashboard
 // ---------------------------------------------------------------------------
 
-export default function Dashboard() {
+export default function Dashboard({ pages }: DashboardProps) {
   const [activeTag, setActiveTag] = useState('all');
 
-  const visiblePages = PAGES.filter((p) => activeTag === 'all' || p.tags.includes(activeTag));
+  const cards = useMemo(() => pages.map(toPageCard), [pages]);
+
+  const tags = useMemo<TagSummary[]>(() => {
+    const counts = new Map<string, number>();
+    for (const card of cards) {
+      for (const tag of card.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+    }
+    return [
+      { id: 'all', name: 'All pages', pageCount: cards.length },
+      ...Array.from(counts, ([name, pageCount]) => ({ id: name, name, pageCount })).sort(
+        (a, b) => a.name.localeCompare(b.name),
+      ),
+    ];
+  }, [cards]);
+
+  const visiblePages = cards.filter((p) => activeTag === 'all' || p.tags.includes(activeTag));
 
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
@@ -361,17 +427,29 @@ export default function Dashboard() {
           <p className="mt-0.5 text-[13px] text-slate-500">Here&rsquo;s what&rsquo;s moving across your tags today.</p>
         </div>
 
-        <TagRail activeTag={activeTag} onSelect={setActiveTag} />
+        <TagRail tags={tags} activeTag={activeTag} onSelect={setActiveTag} />
 
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-[14.5px] font-bold text-slate-900">Pages &amp; files</h2>
         </div>
 
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
-          {visiblePages.map((page) => (
-            <PageCardItem key={page.id} page={page} />
-          ))}
-        </div>
+        {visiblePages.length === 0 ? (
+          <EmptyState
+            icon={<FileText size={20} strokeWidth={2} />}
+            title={cards.length === 0 ? 'No pages yet' : 'No pages match this tag'}
+            description={
+              cards.length === 0
+                ? 'Published pages you can access will appear here once teachers start publishing content.'
+                : 'Try a different tag, or select "All pages" to see everything you have access to.'
+            }
+          />
+        ) : (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
+            {visiblePages.map((page) => (
+              <PageCardItem key={page.id} page={page} />
+            ))}
+          </div>
+        )}
       </main>
 
       <FloatingActionButton />
