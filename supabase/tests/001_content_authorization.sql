@@ -157,11 +157,10 @@ select throws_ok(
   '42501', 'teacher or administrator role required',
   'student cannot create content through RPC'
 );
-select throws_ok(
+select lives_ok(
   $$ select public.begin_file_upload('student.pdf', 'application/pdf', 1024,
     'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb') $$,
-  '42501', 'content upload role required',
-  'student cannot start a learning-content upload'
+  'student can start a learning-content upload for their own assignment submission'
 );
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000006', true);
@@ -194,7 +193,7 @@ select throws_ok(
 );
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
-select is((select count(*) from public.audit_events)::bigint, 8::bigint, 'administrator can read append-only audit events');
+select is((select count(*) from public.audit_events)::bigint, 9::bigint, 'administrator can read append-only audit events');
 
 select * from finish();
 rollback;

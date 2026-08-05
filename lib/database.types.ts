@@ -34,6 +34,146 @@ export type Database = {
   }
   public: {
     Tables: {
+      assignment_submissions: {
+        Row: {
+          assignment_id: string
+          file_id: string
+          id: string
+          note: string | null
+          student_id: string
+          submitted_at: string
+        }
+        Insert: {
+          assignment_id: string
+          file_id: string
+          id?: string
+          note?: string | null
+          student_id: string
+          submitted_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          file_id?: string
+          id?: string
+          note?: string | null
+          student_id?: string
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_submissions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_submissions_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_submissions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assignment_tags: {
+        Row: {
+          added_by: string
+          assignment_id: string
+          created_at: string
+          tag_id: string
+        }
+        Insert: {
+          added_by: string
+          assignment_id: string
+          created_at?: string
+          tag_id: string
+        }
+        Update: {
+          added_by?: string
+          assignment_id?: string
+          created_at?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_tags_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_tags_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assignments: {
+        Row: {
+          allow_resubmission: boolean
+          archived_at: string | null
+          created_at: string
+          created_by: string
+          due_at: string | null
+          id: string
+          instructions_page_id: string | null
+          title: string
+        }
+        Insert: {
+          allow_resubmission?: boolean
+          archived_at?: string | null
+          created_at?: string
+          created_by: string
+          due_at?: string | null
+          id?: string
+          instructions_page_id?: string | null
+          title: string
+        }
+        Update: {
+          allow_resubmission?: boolean
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string
+          due_at?: string | null
+          id?: string
+          instructions_page_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_instructions_page_id_fkey"
+            columns: ["instructions_page_id"]
+            isOneToOne: false
+            referencedRelation: "pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_events: {
         Row: {
           action: string
@@ -716,7 +856,41 @@ export type Database = {
         }
       }
       can_edit_page: { Args: { target_page: string }; Returns: boolean }
+      can_manage_assignment: {
+        Args: { target_assignment: string }
+        Returns: boolean
+      }
+      can_read_assignment: {
+        Args: { target_assignment: string }
+        Returns: boolean
+      }
       can_read_page: { Args: { target_page: string }; Returns: boolean }
+      create_assignment: {
+        Args: {
+          assignment_due_at: string
+          assignment_title: string
+          audience_tag_ids: string[]
+          correlation_id?: string
+          instructions_page: string
+          resubmission_allowed: boolean
+        }
+        Returns: {
+          allow_resubmission: boolean
+          archived_at: string | null
+          created_at: string
+          created_by: string
+          due_at: string | null
+          id: string
+          instructions_page_id: string | null
+          title: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "assignments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_page: {
         Args: {
           audience_tag_ids: string[]
@@ -868,6 +1042,28 @@ export type Database = {
           target_profile: string
         }
         Returns: undefined
+      }
+      submit_assignment: {
+        Args: {
+          correlation_id?: string
+          submission_note?: string
+          target_assignment_id: string
+          target_file_id: string
+        }
+        Returns: {
+          assignment_id: string
+          file_id: string
+          id: string
+          note: string | null
+          student_id: string
+          submitted_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "assignment_submissions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       update_page: {
         Args: {
