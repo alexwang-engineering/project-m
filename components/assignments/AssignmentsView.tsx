@@ -92,7 +92,9 @@ function AssignmentCard({
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[14px] font-semibold leading-snug tracking-tight text-slate-900">
-            {assignment.title}
+            <Link href={`/assignments/${assignment.id}`} className="transition hover:text-brand-600">
+              {assignment.title}
+            </Link>
           </p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {assignment.tags.map((tag) => (

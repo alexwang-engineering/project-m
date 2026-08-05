@@ -60,6 +60,60 @@ export async function listAssignments(
   }));
 }
 
+export interface SubmissionSummary {
+  readonly id: string;
+  readonly submittedAt: string;
+  readonly note: string | null;
+  readonly studentEmail: string | null;
+  readonly fileId: string;
+}
+
+export interface AssignmentDetail {
+  readonly id: string;
+  readonly title: string;
+  readonly dueAt: string | null;
+  readonly submissions: readonly SubmissionSummary[];
+}
+
+/**
+ * Loads one assignment plus whatever submissions RLS permits the caller to
+ * see - a student sees only their own row, a teacher/manager who can manage
+ * the assignment sees every submission against it. No role check happens
+ * here; the query result itself is already the authorized answer.
+ */
+export async function getAssignmentDetail(
+  client: Client,
+  assignmentId: string,
+): Promise<AssignmentDetail | null> {
+  const { data: assignment, error: assignmentError } = await client
+    .from('assignments')
+    .select('id, title, due_at')
+    .eq('id', assignmentId)
+    .maybeSingle();
+  if (assignmentError) throw assignmentError;
+  if (!assignment) return null;
+
+  const { data: submissions, error: submissionsError } = await client
+    .from('assignment_submissions')
+    .select('id, submitted_at, note, file_id, profiles(email)')
+    .eq('assignment_id', assignmentId)
+    .order('submitted_at', { ascending: false });
+  if (submissionsError) throw submissionsError;
+
+  return {
+    id: assignment.id,
+    title: assignment.title,
+    dueAt: assignment.due_at,
+    submissions: (submissions ?? []).map((submission) => ({
+      id: submission.id,
+      submittedAt: submission.submitted_at,
+      note: submission.note,
+      studentEmail: submission.profiles?.email ?? null,
+      fileId: submission.file_id,
+    })),
+  };
+}
+
 export type SubmitAssignmentResult =
   | { readonly ok: true }
   | {
