@@ -118,7 +118,10 @@ function AssignmentCard({
       <div className="flex items-center gap-1.5 text-[12px] text-slate-500">
         <Clock size={13} strokeWidth={2} />
         {assignment.dueAt ? (
-          <span className={overdue && !assignment.hasSubmitted ? 'font-semibold text-[#c2483a]' : ''}>
+          <span
+            className={overdue && !assignment.hasSubmitted ? 'font-semibold text-[#c2483a]' : ''}
+            suppressHydrationWarning
+          >
             Due {formatRelativeTime(assignment.dueAt)}
           </span>
         ) : (

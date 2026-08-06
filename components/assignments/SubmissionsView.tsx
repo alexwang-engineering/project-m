@@ -39,7 +39,9 @@ function SubmissionRow({ fileId, submittedAt, note, studentEmail }: AssignmentDe
           <p className="truncate text-[13.5px] font-semibold text-slate-900">
             {studentEmail ?? 'Unknown student'}
           </p>
-          <p className="text-[11.5px] text-slate-500">Submitted {formatRelativeTime(submittedAt)}</p>
+          <p className="text-[11.5px] text-slate-500" suppressHydrationWarning>
+            Submitted {formatRelativeTime(submittedAt)}
+          </p>
           {note && <p className="mt-1 text-[12px] text-slate-600">{note}</p>}
           {error && <p className="mt-1 text-[11.5px] text-[#c2483a]">{error}</p>}
         </div>
@@ -82,7 +84,9 @@ export default function SubmissionsView({ assignment }: SubmissionsViewProps) {
             {assignment.submissions.length === 1
               ? '1 submission'
               : `${assignment.submissions.length} submissions`}
-            {assignment.dueAt && ` — due ${formatRelativeTime(assignment.dueAt)}`}
+            {assignment.dueAt && (
+              <span suppressHydrationWarning> — due {formatRelativeTime(assignment.dueAt)}</span>
+            )}
           </p>
         </div>
 

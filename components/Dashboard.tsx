@@ -329,7 +329,7 @@ function PageCardItem({ page }: { page: PageCard }) {
               {page.authorInitials}
             </span>
           )}
-          {page.updatedRelative}
+          <span suppressHydrationWarning>{page.updatedRelative}</span>
         </span>
         <span className="capitalize">{page.kind}</span>
       </div>
