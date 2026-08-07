@@ -74,13 +74,21 @@ export default function QuizzesView({ quizzes }: QuizzesViewProps) {
           </Link>
           <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">Quizzes</span>
         </div>
-        <Link
-          href="/quizzes/new"
-          className="flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 text-[12.5px] font-semibold text-white transition hover:bg-brand-700"
-        >
-          <Plus size={14} strokeWidth={2.4} />
-          New quiz
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/question-bank"
+            className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-3.5 text-[12.5px] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+          >
+            Question bank
+          </Link>
+          <Link
+            href="/quizzes/new"
+            className="flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 text-[12.5px] font-semibold text-white transition hover:bg-brand-700"
+          >
+            <Plus size={14} strokeWidth={2.4} />
+            New quiz
+          </Link>
+        </div>
       </header>
 
       <main className="mx-auto max-w-[900px] px-8 pb-24 pt-9">

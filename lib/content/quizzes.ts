@@ -203,7 +203,17 @@ export async function createQuiz(client: Client, input: unknown): Promise<Create
   }
   for (const question of value.questions) {
     const q = record(question);
-    if (!q || typeof q.prompt !== 'string' || !q.prompt.trim()) {
+    if (!q) return { ok: false, code: 'invalid_input', message: 'Every question must be an object.' };
+    // A bank-sourced question (ADR-014) carries only a bankItemId - its
+    // prompt/choices/correct answer are resolved server-side from the bank
+    // item's current row, not from anything sent here.
+    if (typeof q.bankItemId === 'string') {
+      if (!UUID.test(q.bankItemId)) {
+        return { ok: false, code: 'invalid_input', message: 'bankItemId must be a UUID.' };
+      }
+      continue;
+    }
+    if (typeof q.prompt !== 'string' || !q.prompt.trim()) {
       return { ok: false, code: 'invalid_input', message: 'Every question needs a prompt.' };
     }
     if (!Array.isArray(q.choices) || q.choices.length < 2 || q.choices.length > 8) {

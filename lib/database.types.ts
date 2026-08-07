@@ -476,6 +476,7 @@ export type Database = {
           position: number
           prompt: string
           quiz_id: string
+          sourced_from_bank_item_id: string | null
         }
         Insert: {
           choices: Json
@@ -483,6 +484,7 @@ export type Database = {
           position: number
           prompt: string
           quiz_id: string
+          sourced_from_bank_item_id?: string | null
         }
         Update: {
           choices?: Json
@@ -490,6 +492,7 @@ export type Database = {
           position?: number
           prompt?: string
           quiz_id?: string
+          sourced_from_bank_item_id?: string | null
         }
         Relationships: [
           {
@@ -497,6 +500,87 @@ export type Database = {
             columns: ["quiz_id"]
             isOneToOne: false
             referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_questions_sourced_from_bank_item_id_fkey"
+            columns: ["sourced_from_bank_item_id"]
+            isOneToOne: false
+            referencedRelation: "question_bank_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_bank_items: {
+        Row: {
+          archived_at: string | null
+          choices: Json
+          correct_choice_id: string
+          created_at: string
+          created_by: string
+          id: string
+          prompt: string
+        }
+        Insert: {
+          archived_at?: string | null
+          choices: Json
+          correct_choice_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          prompt: string
+        }
+        Update: {
+          archived_at?: string | null
+          choices?: Json
+          correct_choice_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          prompt?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_bank_items_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_bank_item_tags: {
+        Row: {
+          added_by: string
+          created_at: string
+          item_id: string
+          tag_id: string
+        }
+        Insert: {
+          added_by: string
+          created_at?: string
+          item_id: string
+          tag_id: string
+        }
+        Update: {
+          added_by?: string
+          created_at?: string
+          item_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_bank_item_tags_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "question_bank_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_bank_item_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
             referencedColumns: ["id"]
           },
         ]
@@ -1263,6 +1347,7 @@ export type Database = {
         Args: { target_event: string }
         Returns: boolean
       }
+      can_access_bank_item: { Args: { target_item: string }; Returns: boolean }
       can_manage_quiz: { Args: { target_quiz: string }; Returns: boolean }
       can_read_announcement: {
         Args: { target_announcement: string }
@@ -1402,6 +1487,48 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "calendar_events"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      create_bank_item: {
+        Args: {
+          audience_tag_ids: string[]
+          correlation_id?: string
+          item_choices: Json
+          item_correct_choice_id: string
+          item_prompt: string
+        }
+        Returns: {
+          archived_at: string | null
+          choices: Json
+          correct_choice_id: string
+          created_at: string
+          created_by: string
+          id: string
+          prompt: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "question_bank_items"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      archive_bank_item: {
+        Args: { correlation_id?: string; target_item_id: string }
+        Returns: {
+          archived_at: string | null
+          choices: Json
+          correct_choice_id: string
+          created_at: string
+          created_by: string
+          id: string
+          prompt: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "question_bank_items"
           isOneToOne: true
           isSetofReturn: false
         }
