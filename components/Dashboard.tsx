@@ -156,6 +156,12 @@ function TopNav() {
           >
             Gradebook
           </Link>
+          <Link
+            href="/admin"
+            className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+          >
+            Admin
+          </Link>
         </nav>
       </div>
 
