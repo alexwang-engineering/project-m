@@ -52,6 +52,7 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
   const [pageId, setPageId] = useState(initial.id);
   const [version, setVersion] = useState(initial.version);
   const [lifecycle, setLifecycle] = useState(initial.lifecycle);
+  const [makePublic, setMakePublic] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<{ code: string; message: string } | null>(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
@@ -161,7 +162,7 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
       pageId,
       expectedVersion: version,
       nextState,
-      makePublic: nextState === 'published',
+      makePublic: nextState === 'published' && makePublic,
     });
     if (!result.ok) {
       setError({ code: result.code, message: result.message });
@@ -213,6 +214,12 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
             {saving && <Loader2 size={13} className="animate-spin" />}
             {pageId === null ? 'Create draft' : 'Save'}
           </button>
+          {pageId !== null && lifecycle !== 'published' && (
+            <label className="flex items-center gap-1.5 text-[12px] text-slate-500">
+              <input type="checkbox" checked={makePublic} onChange={(e) => setMakePublic(e.target.checked)} />
+              Public (visible to everyone, not just your tags)
+            </label>
+          )}
           {pageId !== null && (
             <button
               type="button"

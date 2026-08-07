@@ -82,14 +82,23 @@ select is(
   'an institution admin can read any bank item'
 );
 
+-- Capture the bank item's real id while still in a session that can see it
+-- (institution_admin, system-wide read tier) - re-querying it later under
+-- the unauthorized teacher's own session would return no rows at all under
+-- RLS, not the real-but-forbidden id the next test needs to simulate
+-- someone guessing another department's bank item id.
+select id::text as bank_item_id from public.question_bank_items where prompt = 'What gas do plants absorb?' \gset
+
 -- A teacher on an unrelated tag cannot import a bank item they cannot access
 -- (defense against guessing another department's bank item id).
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000803', true);
 select throws_ok(
-  $$ select public.create_quiz('Cross-department import attempt', null,
-    array['90000000-0000-0000-0000-000000000002']::uuid[],
-    jsonb_build_array(jsonb_build_object('bankItemId',
-      (select id::text from public.question_bank_items limit 1)))) $$,
+  format(
+    $$ select public.create_quiz('Cross-department import attempt', null,
+      array['90000000-0000-0000-0000-000000000002']::uuid[],
+      jsonb_build_array(jsonb_build_object('bankItemId', %L))) $$,
+    :'bank_item_id'
+  ),
   'P0002', 'bank item not found',
   'a teacher without access to the bank item cannot import it into a quiz'
 );

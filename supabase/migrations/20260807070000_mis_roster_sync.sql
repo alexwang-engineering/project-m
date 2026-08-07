@@ -75,17 +75,25 @@ begin
   end if;
 
   -- Explicit pg_temp. qualification throughout, not relying on search_path
-  -- (deliberately '' on this function) to resolve the temp schema.
+  -- (deliberately '' on this function) to resolve the temp schema. Dropped
+  -- explicitly rather than relying on ON COMMIT DROP - that only fires when
+  -- the enclosing transaction actually commits, which is true for a normal
+  -- one-call-per-transaction production RPC invocation but not for two
+  -- calls inside one transaction (found via pgTAP, which wraps an entire
+  -- test file in a single transaction to roll back - the second sync_roster
+  -- call in a dry-run-then-apply sequence hit "relation already exists").
+  drop table if exists pg_temp.roster_valid_people;
   create temporary table roster_valid_people (
     email text primary key,
     granted_role public.system_role not null
-  ) on commit drop;
+  );
+  drop table if exists pg_temp.roster_valid_memberships;
   create temporary table roster_valid_memberships (
     email text not null,
     tag_id uuid not null,
     tag_name text not null,
     membership_role public.membership_role not null
-  ) on commit drop;
+  );
 
   for entry in select * from jsonb_array_elements(rows) loop
     row_email := lower(btrim(entry ->> 'email'));
