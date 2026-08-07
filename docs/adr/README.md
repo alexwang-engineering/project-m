@@ -14,3 +14,4 @@ ADRs capture decisions that constrain multiple work packages. Status `Accepted` 
 | 008 | Assessment-domain separation | Accepted |
 | 009 | External integrations and migration | Accepted |
 | 010 | Reliability, audit, and operations | Accepted with school targets pending |
+| 011 | Calendar scope (launch slice) | Accepted |
