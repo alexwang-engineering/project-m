@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { AdminRoster } from '@/components/admin/AdminRoster';
+import { CreateTagForm } from '@/components/admin/CreateTagForm';
 import { createServerClient } from '@/lib/supabase/server';
 import { listTags, listUsers } from '@/lib/content/admin';
 import type { Database } from '@/lib/database.types';
@@ -41,6 +42,8 @@ export default async function AdminPage() {
       </header>
 
       <main className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
+        <CreateTagForm />
+
         <div className="mb-6">
           <h1 className="text-[20px] font-bold tracking-tight text-slate-900">Roster</h1>
           <p className="mt-0.5 text-[13px] text-slate-500">

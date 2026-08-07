@@ -7,8 +7,10 @@ import type { Database } from '@/lib/database.types';
 import {
   assignSystemRole,
   assignTagMembership,
+  createTag,
   setProfileState,
   type AdminActionResult,
+  type CreateTagResult,
 } from '@/lib/content/admin';
 import { createServerClient } from '@/lib/supabase/server';
 
@@ -47,6 +49,21 @@ export async function setProfileStateAction(input: unknown): Promise<AdminAction
   const client = await authenticatedClient();
   if (!client) return signedOut;
   const result = await setProfileState(client, input);
+  if (result.ok) revalidatePath('/admin');
+  return result;
+}
+
+const signedOutTag: CreateTagResult = {
+  ok: false,
+  code: 'forbidden',
+  message: 'You must sign in to perform this action.',
+};
+
+/** Creates a tag and refreshes the admin page (and anywhere else tag pickers are rendered). */
+export async function createTagAction(input: unknown): Promise<CreateTagResult> {
+  const client = await authenticatedClient();
+  if (!client) return signedOutTag;
+  const result = await createTag(client, input);
   if (result.ok) revalidatePath('/admin');
   return result;
 }

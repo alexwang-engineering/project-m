@@ -190,3 +190,52 @@ export async function setProfileState(client: Client, input: unknown): Promise<A
   });
   return error ? failure(error) : { ok: true };
 }
+
+export type CreateTagResult =
+  | { readonly ok: true; readonly tag: { readonly id: string; readonly name: string } }
+  | {
+      readonly ok: false;
+      readonly code: 'invalid_input' | 'forbidden' | 'conflict' | 'failed';
+      readonly message: string;
+    };
+
+/** Creates a tag via the audited RPC. Institution-admin only, per explicit product owner decision. */
+export async function createTag(client: Client, input: unknown): Promise<CreateTagResult> {
+  const value = record(input);
+  if (!value || typeof value.name !== 'string' || !value.name.trim()) {
+    return { ok: false, code: 'invalid_input', message: 'Tag name is required.' };
+  }
+  if (typeof value.displayName !== 'string' || !value.displayName.trim()) {
+    return { ok: false, code: 'invalid_input', message: 'Display name is required.' };
+  }
+  const reason = typeof value.reason === 'string' && value.reason.trim() ? value.reason.trim() : undefined;
+
+  const { data, error } = await client.rpc('create_tag', {
+    new_tag_name: value.name.trim(),
+    new_display_name: value.displayName.trim(),
+    creation_reason: reason,
+    correlation_id: crypto.randomUUID(),
+  });
+  if (error || !data) {
+    const code =
+      error !== null && typeof error === 'object' && 'code' in error && typeof error.code === 'string'
+        ? error.code
+        : undefined;
+    if (code === '23505') return { ok: false, code: 'conflict', message: 'A tag with this name already exists.' };
+    if (code === '42501') {
+      return { ok: false, code: 'forbidden', message: 'You must be an institution administrator to do this.' };
+    }
+    if (code === '22023') {
+      return {
+        ok: false,
+        code: 'invalid_input',
+        message:
+          error !== null && typeof error === 'object' && 'message' in error
+            ? String((error as { message: unknown }).message)
+            : 'Invalid tag name or display name.',
+      };
+    }
+    return { ok: false, code: 'failed', message: 'The tag could not be created.' };
+  }
+  return { ok: true, tag: { id: data.id, name: data.tag_name } };
+}

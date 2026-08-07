@@ -5,8 +5,10 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/lib/database.types';
 import {
+  createAssignment,
   gradeSubmission,
   submitAssignment,
+  type CreateAssignmentResult,
   type GradeSubmissionResult,
   type SubmitAssignmentResult,
 } from '@/lib/content/assignments';
@@ -50,5 +52,20 @@ export async function gradeSubmissionAction(
   if (!client) return signedOutGrade;
   const result = await gradeSubmission(client, input);
   if (result.ok) revalidatePath(`/assignments/${assignmentId}`);
+  return result;
+}
+
+const signedOutCreate: CreateAssignmentResult = {
+  ok: false,
+  code: 'forbidden',
+  message: 'You must sign in to create an assignment.',
+};
+
+/** Creates an assignment and refreshes the assignments list. */
+export async function createAssignmentAction(input: unknown): Promise<CreateAssignmentResult> {
+  const client = await authenticatedClient();
+  if (!client) return signedOutCreate;
+  const result = await createAssignment(client, input);
+  if (result.ok) revalidatePath('/assignments');
   return result;
 }

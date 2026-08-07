@@ -1,12 +1,13 @@
--- Package K: adversarial coverage for the four audited admin RPCs
--- (20260804192000_audited_administration.sql). These existed since Package D
--- but had only two incidental negative-path spot checks in
--- 001_content_authorization.sql - this is the first dedicated, comprehensive
--- pass covering the happy path, the self-disable guard, and audit logging
--- for all four.
+-- Package K: adversarial coverage for the four audited admin RPCs from
+-- 20260804192000_audited_administration.sql (existed since Package D but
+-- had only two incidental negative-path spot checks in
+-- 001_content_authorization.sql - this is the first dedicated,
+-- comprehensive pass covering the happy path, the self-disable guard, and
+-- audit logging for all four) plus create_tag, added in the same package's
+-- follow-up work (20260807020000_create_tag.sql).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(18);
+select plan(24);
 
 insert into auth.users (id, email, aud, role) values
   ('00000000-0000-0000-0000-000000000401', 'admin.verify@merchanttaylors.com', 'authenticated', 'authenticated'),
@@ -138,6 +139,39 @@ select is(
    where page_id = '50000000-0000-0000-0000-000000000002'
      and profile_id = '00000000-0000-0000-0000-000000000403')::bigint,
   1::bigint, 'the page-editor grant row was created'
+);
+
+-- create_tag: institution-admin only, per explicit product owner decision.
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000402', true);
+select throws_ok(
+  $$ select public.create_tag('Y99XX1', 'Bogus Tag', 'spoof attempt') $$,
+  '42501', 'institution administrator role required',
+  'a non-admin teacher cannot create a tag'
+);
+
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000401', true);
+select throws_ok(
+  $$ select public.create_tag('bad name!', 'Bad Tag') $$,
+  '22023', null,
+  'a malformed tag name is rejected'
+);
+select lives_ok(
+  $$ select public.create_tag('y12ad2', 'Year 12 Admin Test 2', 'new class group') $$,
+  'admin can create a tag (lowercase input is normalized to uppercase)'
+);
+select is(
+  (select tag_name from public.tags where tag_name = 'Y12AD2'),
+  'Y12AD2', 'the tag name was stored upper-cased'
+);
+select is(
+  (select count(*) from public.audit_events where action = 'tag.created'
+   and after_data->>'tag_name' = 'Y12AD2')::bigint,
+  1::bigint, 'creating a tag writes an audit event'
+);
+select throws_ok(
+  $$ select public.create_tag('Y12AD2', 'Duplicate') $$,
+  '23505', 'a tag with this name already exists',
+  'creating a tag with a name that already exists (case-insensitively) is rejected'
 );
 
 select * from finish();

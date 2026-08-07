@@ -1050,6 +1050,29 @@ export type Database = {
       }
       can_read_quiz: { Args: { target_quiz: string }; Returns: boolean }
       can_read_page: { Args: { target_page: string }; Returns: boolean }
+      create_tag: {
+        Args: {
+          correlation_id?: string
+          creation_reason?: string | null
+          new_display_name: string
+          new_tag_name: string
+        }
+        Returns: {
+          archived_at: string | null
+          created_at: string
+          created_by: string
+          display_name: string
+          id: string
+          is_active: boolean
+          tag_name: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "tags"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_quiz: {
         Args: {
           audience_tag_ids: string[]

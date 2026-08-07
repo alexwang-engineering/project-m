@@ -232,3 +232,74 @@ export async function gradeSubmission(client: Client, input: unknown): Promise<G
   });
   return error ? gradeFailure(error) : { ok: true };
 }
+
+export type CreateAssignmentResult =
+  | { readonly ok: true; readonly assignment: { readonly id: string } }
+  | {
+      readonly ok: false;
+      readonly code: 'invalid_input' | 'forbidden' | 'failed';
+      readonly message: string;
+    };
+
+// postgres-meta cannot express nullable RPC parameters, although PostgreSQL
+// timestamptz/uuid parameters accept NULL - same generator mismatch already
+// localized in lib/content/mutations.ts for create_page's nullable parent.
+type NullableDueDateArgs = Omit<
+  Database['public']['Functions']['create_assignment']['Args'],
+  'assignment_due_at' | 'instructions_page'
+> & {
+  assignment_due_at: string | null;
+  instructions_page: string | null;
+};
+
+async function createAssignmentRpc(client: Client, args: NullableDueDateArgs) {
+  return client.rpc(
+    'create_assignment',
+    args as Database['public']['Functions']['create_assignment']['Args'],
+  );
+}
+
+/** Validates and creates an assignment via the audited RPC. Teacher/manager on every audience tag, enforced server-side. */
+export async function createAssignment(client: Client, input: unknown): Promise<CreateAssignmentResult> {
+  const value =
+    input !== null && typeof input === 'object' && !Array.isArray(input)
+      ? (input as Record<string, unknown>)
+      : null;
+  if (!value) return { ok: false, code: 'invalid_input', message: 'Assignment input must be an object.' };
+  const title = typeof value.title === 'string' ? value.title.trim() : '';
+  if (!title || title.length > 240) {
+    return { ok: false, code: 'invalid_input', message: 'Title must be between 1 and 240 characters.' };
+  }
+  const dueAt = value.dueAt === null || value.dueAt === undefined ? null : value.dueAt;
+  if (dueAt !== null && typeof dueAt !== 'string') {
+    return { ok: false, code: 'invalid_input', message: 'Due date must be a string or null.' };
+  }
+  if (typeof value.allowResubmission !== 'boolean') {
+    return { ok: false, code: 'invalid_input', message: 'Resubmission setting must be a boolean.' };
+  }
+  if (!Array.isArray(value.tagIds) || value.tagIds.length < 1 || value.tagIds.length > 100) {
+    return { ok: false, code: 'invalid_input', message: 'Between 1 and 100 audience tags are required.' };
+  }
+  const tagIds = value.tagIds.filter((tag): tag is string => typeof tag === 'string' && UUID.test(tag));
+  if (tagIds.length !== value.tagIds.length) {
+    return { ok: false, code: 'invalid_input', message: 'Every audience tag ID must be a UUID.' };
+  }
+
+  const { data, error } = await createAssignmentRpc(client, {
+    assignment_title: title,
+    instructions_page: null,
+    assignment_due_at: dueAt,
+    resubmission_allowed: value.allowResubmission,
+    audience_tag_ids: tagIds,
+    correlation_id: crypto.randomUUID(),
+  });
+  if (error || !data) {
+    const code =
+      error !== null && typeof error === 'object' && 'code' in error && typeof error.code === 'string'
+        ? error.code
+        : undefined;
+    if (code === '42501') return { ok: false, code: 'forbidden', message: 'You do not manage every selected tag.' };
+    return { ok: false, code: 'failed', message: 'The assignment could not be created.' };
+  }
+  return { ok: true, assignment: { id: data.id } };
+}
