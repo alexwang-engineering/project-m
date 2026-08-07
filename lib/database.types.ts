@@ -1533,6 +1533,34 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_migration_import: {
+        Args: { ext_id: string; ext_source: string }
+        Returns: {
+          content_checksum: string | null
+          external_id: string | null
+          external_source: string | null
+          id: string | null
+          imported_at: string | null
+          imported_by: string | null
+          internal_id: string | null
+          internal_type: string | null
+          original_author: string | null
+          run_id: string | null
+        }
+      }
+      record_migration_import: {
+        Args: {
+          author_note?: string | null
+          checksum: string
+          content_id: string
+          content_type: string
+          correlation_id?: string | null
+          ext_id: string
+          ext_source: string
+          migration_run_id: string
+        }
+        Returns: { existing_internal_id: string; status: string }[]
+      }
       sync_roster: {
         Args: { correlation_id?: string; dry_run?: boolean; rows: Json }
         Returns: Json
