@@ -6,6 +6,7 @@ import { AdminRoster } from '@/components/admin/AdminRoster';
 import { CreateTagForm } from '@/components/admin/CreateTagForm';
 import { createServerClient } from '@/lib/supabase/server';
 import { isInstitutionAdmin, listTags, listUsers } from '@/lib/content/admin';
+import { listGuardianLinks } from '@/lib/content/guardians';
 import type { Database } from '@/lib/database.types';
 
 export default async function AdminPage() {
@@ -16,7 +17,11 @@ export default async function AdminPage() {
   const admin = await isInstitutionAdmin(supabase);
   if (!admin) redirect('/');
 
-  const [users, tags] = await Promise.all([listUsers(supabase), listTags(supabase)]);
+  const [users, tags, guardianLinks] = await Promise.all([
+    listUsers(supabase),
+    listTags(supabase),
+    listGuardianLinks(supabase),
+  ]);
 
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
@@ -37,7 +42,7 @@ export default async function AdminPage() {
             change here is audited.
           </p>
         </div>
-        <AdminRoster users={users} tags={tags} />
+        <AdminRoster users={users} tags={tags} guardianLinks={guardianLinks} />
       </main>
     </div>
   );

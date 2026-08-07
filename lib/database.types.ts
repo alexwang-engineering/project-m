@@ -186,6 +186,64 @@ export type Database = {
           },
         ]
       }
+      guardian_links: {
+        Row: {
+          activated_at: string | null
+          created_at: string
+          created_by: string
+          guardian_email: string
+          guardian_profile_id: string | null
+          id: string
+          pupil_id: string
+          reason: string
+          revoked_at: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          created_at?: string
+          created_by: string
+          guardian_email: string
+          guardian_profile_id?: string | null
+          id?: string
+          pupil_id: string
+          reason: string
+          revoked_at?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          created_at?: string
+          created_by?: string
+          guardian_email?: string
+          guardian_profile_id?: string | null
+          id?: string
+          pupil_id?: string
+          reason?: string
+          revoked_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guardian_links_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guardian_links_guardian_profile_id_fkey"
+            columns: ["guardian_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guardian_links_pupil_id_fkey"
+            columns: ["pupil_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       announcements: {
         Row: {
           archived_at: string | null
@@ -1220,12 +1278,80 @@ export type Database = {
       }
       can_read_quiz: { Args: { target_quiz: string }; Returns: boolean }
       can_read_page: { Args: { target_page: string }; Returns: boolean }
+      assert_guardian_of: {
+        Args: { target_pupil_id: string }
+        Returns: undefined
+      }
       cancel_announcement: {
         Args: { correlation_id?: string; target_announcement_id: string }
         Returns: undefined
       }
       cancel_calendar_event: {
         Args: { correlation_id?: string; target_event_id: string }
+        Returns: undefined
+      }
+      guardian_view_calendar: {
+        Args: { target_pupil_id: string }
+        Returns: {
+          item_id: string
+          item_kind: string
+          title: string
+          occurs_at: string
+          ends_at: string | null
+          is_broadcast: boolean
+        }[]
+      }
+      guardian_view_announcements: {
+        Args: { target_pupil_id: string }
+        Returns: {
+          item_id: string
+          title: string
+          body: string
+          is_broadcast: boolean
+          created_at: string
+        }[]
+      }
+      guardian_view_grades: {
+        Args: { target_pupil_id: string }
+        Returns: {
+          submission_id: string
+          assignment_title: string
+          grade: number | null
+          grade_feedback: string | null
+          graded_at: string | null
+        }[]
+      }
+      link_guardian: {
+        Args: {
+          correlation_id?: string
+          guardian_email: string
+          link_reason: string
+          target_pupil_id: string
+        }
+        Returns: {
+          activated_at: string | null
+          created_at: string
+          created_by: string
+          guardian_email: string
+          guardian_profile_id: string | null
+          id: string
+          pupil_id: string
+          reason: string
+          revoked_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "guardian_links"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      list_my_pupils: {
+        Args: Record<PropertyKey, never>
+        Returns: { pupil_id: string; pupil_email: string }[]
+      }
+      revoke_guardian_link: {
+        Args: { correlation_id?: string; target_link_id: string }
         Returns: undefined
       }
       create_announcement: {
