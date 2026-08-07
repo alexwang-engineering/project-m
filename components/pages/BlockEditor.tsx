@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, FileUp, ImageUp, Loader2, Trash2 } from 'lucide-react';
 
 import { beginFileUploadAction, completeFileUploadAction, attachFileToPageAction } from '@/app/actions/files';
@@ -12,6 +12,8 @@ import type { BlockDraft } from '@/components/pages/block-draft';
 interface BlockEditorProps {
   block: BlockDraft;
   pageId: string | null;
+  /** An MPX-imported PDF still awaiting upload for this block, if any - see the auto-upload effect below. */
+  pendingImportFile?: File;
   onChange: (block: BlockDraft) => void;
   onRemove: () => void;
   onMove: (direction: -1 | 1) => void;
@@ -98,6 +100,7 @@ function BlockShell({
 export function BlockEditor({
   block,
   pageId,
+  pendingImportFile,
   onChange,
   onRemove,
   onMove,
@@ -105,6 +108,50 @@ export function BlockEditor({
   canMoveDown,
 }: BlockEditorProps) {
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-uploads an MPX-imported PDF once the page exists (the same
+  // two-phase constraint every file/image block already has). Reads
+  // block/onChange through refs, not the dependency array, so this only
+  // re-runs when pendingImportFile or pageId actually change - the block
+  // object itself gets a new reference on every keystroke elsewhere in the
+  // editor, which would otherwise re-trigger this on every render.
+  const blockRef = useRef(block);
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    blockRef.current = block;
+    onChangeRef.current = onChange;
+  });
+  useEffect(() => {
+    if (!pendingImportFile || pageId === null) return;
+    const initial = blockRef.current;
+    if (initial.type !== 'file' || initial.fileId !== '' || initial.uploading) return;
+    let cancelled = false;
+    (async () => {
+      const startingBlock = blockRef.current;
+      if (startingBlock.type !== 'file') return;
+      onChangeRef.current({ ...startingBlock, uploading: true });
+      const mediaType = pendingImportFile.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'application/zip';
+      const result = await uploadFile(pendingImportFile, mediaType, pageId);
+      if (cancelled) return;
+      const latest = blockRef.current;
+      if (latest.type !== 'file') return;
+      if (result.ok) {
+        onChangeRef.current({
+          ...latest,
+          uploading: false,
+          fileId: result.fileId,
+          label: latest.label || pendingImportFile.name,
+        });
+      } else {
+        setError(result.message);
+        onChangeRef.current({ ...latest, uploading: false });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pendingImportFile, pageId]);
+
   const shell = (content: React.ReactNode) => (
     <BlockShell canMoveUp={canMoveUp} canMoveDown={canMoveDown} onMove={onMove} onRemove={onRemove}>
       {content}
@@ -256,7 +303,11 @@ export function BlockEditor({
     case 'file':
       return shell(
         pageId === null ? (
-          <p className="text-[12.5px] text-slate-400">Save this page first to attach files.</p>
+          <p className="text-[12.5px] text-slate-400">
+            {pendingImportFile
+              ? `"${pendingImportFile.name}" will upload once you create this page.`
+              : 'Save this page first to attach files.'}
+          </p>
         ) : (
           <div className="flex flex-col gap-2">
             <label className="flex h-10 w-fit cursor-pointer items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 text-[12.5px] font-medium text-slate-600 hover:border-brand-400 hover:text-brand-700">

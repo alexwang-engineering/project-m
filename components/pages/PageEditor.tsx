@@ -3,11 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ChevronDown, Loader2, Plus } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Download, Loader2, Plus, Upload } from 'lucide-react';
 
 import { createPageAction, updatePageAction, setPageLifecycleAction } from '@/app/actions/pages';
+import { createFileDownloadAction } from '@/app/actions/files';
 import { BlockEditor } from '@/components/pages/BlockEditor';
 import { BLOCK_LABEL, isBlockReady, newBlock, serializeBlock, type BlockDraft } from '@/components/pages/block-draft';
+import { exportPageAsMpx, importMpxFile } from '@/components/pages/mpx-transfer';
 
 export interface EditorTag {
   readonly id: string;
@@ -51,8 +53,11 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
   const [version, setVersion] = useState(initial.version);
   const [lifecycle, setLifecycle] = useState(initial.lifecycle);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ code: string; message: string } | null>(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const [pendingImportFiles, setPendingImportFiles] = useState<Map<string, File>>(new Map());
+  const [mpxBusy, setMpxBusy] = useState(false);
+  const [mpxError, setMpxError] = useState<string | null>(null);
 
   const canSave = title.trim() !== '' && slug.trim() !== '' && tagIds.size > 0 && !saving;
 
@@ -78,6 +83,43 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
     });
   }
 
+  async function resolveBlockFile(
+    fileId: string,
+  ): Promise<{ ok: true; file: File } | { ok: false; message: string }> {
+    const download = await createFileDownloadAction(fileId);
+    if (!download.ok) return { ok: false, message: download.message };
+    const response = await fetch(download.download.url);
+    if (!response.ok) return { ok: false, message: 'Could not download this file for export.' };
+    const bytes = await response.arrayBuffer();
+    return {
+      ok: true,
+      file: new File([bytes], download.download.filename, { type: download.download.mediaType }),
+    };
+  }
+
+  async function handleExport() {
+    setMpxBusy(true);
+    setMpxError(null);
+    const result = await exportPageAsMpx({ title, blocks, resolveFile: resolveBlockFile });
+    setMpxBusy(false);
+    if (!result.ok) setMpxError(result.message);
+  }
+
+  async function handleImportFile(file: File) {
+    setMpxBusy(true);
+    setMpxError(null);
+    const result = await importMpxFile(file);
+    setMpxBusy(false);
+    if (!result.ok) {
+      setMpxError(result.message);
+      return;
+    }
+    setTitle(result.title);
+    if (!slugTouched) setSlug(slugify(result.title));
+    setBlocks([...result.blocks]);
+    setPendingImportFiles(new Map(result.pendingFiles));
+  }
+
   async function handleSave() {
     setSaving(true);
     setError(null);
@@ -91,7 +133,7 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
     if (pageId === null) {
       const result = await createPageAction(input);
       if (!result.ok) {
-        setError(result.message);
+        setError({ code: result.code, message: result.message });
         setSaving(false);
         return;
       }
@@ -101,7 +143,7 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
     } else {
       const result = await updatePageAction({ pageId, expectedVersion: version, ...input });
       if (!result.ok) {
-        setError(result.message);
+        setError({ code: result.code, message: result.message });
         setSaving(false);
         return;
       }
@@ -122,7 +164,7 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
       makePublic: nextState === 'published',
     });
     if (!result.ok) {
-      setError(result.message);
+      setError({ code: result.code, message: result.message });
       setSaving(false);
       return;
     }
@@ -147,7 +189,21 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          {error && <p className="max-w-[280px] truncate text-[12px] text-red-600">{error}</p>}
+          {error &&
+            (error.code === 'conflict' ? (
+              <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-1.5 text-[12px] text-amber-800">
+                <span>Someone else changed this page since you started editing.</span>
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="font-semibold underline underline-offset-2 hover:text-amber-900"
+                >
+                  Reload latest version
+                </button>
+              </div>
+            ) : (
+              <p className="max-w-[280px] truncate text-[12px] text-red-600">{error.message}</p>
+            ))}
           <button
             type="button"
             onClick={handleSave}
@@ -223,12 +279,45 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
           </div>
         </div>
 
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          {pageId !== null && (
+            <button
+              type="button"
+              onClick={handleExport}
+              disabled={mpxBusy}
+              className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 hover:border-brand-400 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {mpxBusy ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} strokeWidth={2.4} />}
+              Export MPX
+            </button>
+          )}
+          {pageId === null && (
+            <label className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-slate-300 px-3 text-[12px] font-semibold text-slate-600 hover:border-brand-400 hover:text-brand-700">
+              {mpxBusy ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} strokeWidth={2.4} />}
+              Import MPX
+              <input
+                type="file"
+                accept=".mpx"
+                className="hidden"
+                disabled={mpxBusy}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImportFile(file);
+                  e.target.value = '';
+                }}
+              />
+            </label>
+          )}
+          {mpxError && <p className="text-[12px] text-red-600">{mpxError}</p>}
+        </div>
+
         <div className="flex flex-col gap-3">
           {blocks.map((block, index) => (
             <BlockEditor
               key={block.id}
               block={block}
               pageId={pageId}
+              pendingImportFile={pendingImportFiles.get(block.id)}
               onChange={(updated) => updateBlock(index, updated)}
               onRemove={() => removeBlock(index)}
               onMove={(direction) => moveBlock(index, direction)}
