@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { AdminRoster } from '@/components/admin/AdminRoster';
 import { CreateTagForm } from '@/components/admin/CreateTagForm';
+import { RosterSyncPanel } from '@/components/admin/RosterSyncPanel';
 import { createServerClient } from '@/lib/supabase/server';
 import { isInstitutionAdmin, listTags, listUsers } from '@/lib/content/admin';
 import { listGuardianLinks } from '@/lib/content/guardians';
@@ -34,6 +35,7 @@ export default async function AdminPage() {
 
       <main className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
         <CreateTagForm />
+        <RosterSyncPanel />
 
         <div className="mb-6">
           <h1 className="text-[20px] font-bold tracking-tight text-slate-900">Roster</h1>

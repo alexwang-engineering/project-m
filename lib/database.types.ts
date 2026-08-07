@@ -1533,6 +1533,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      sync_roster: {
+        Args: { correlation_id?: string; dry_run?: boolean; rows: Json }
+        Returns: Json
+      }
       create_tag: {
         Args: {
           correlation_id?: string
