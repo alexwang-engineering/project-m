@@ -31,6 +31,12 @@ export default async function AdminPage() {
           Dashboard
         </Link>
         <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">Admin</span>
+        <Link
+          href="/reports"
+          className="ml-auto rounded-lg border border-slate-200 px-3 py-1.5 text-[12.5px] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+        >
+          Reports
+        </Link>
       </header>
 
       <main className="mx-auto max-w-[900px] px-8 pb-24 pt-9">

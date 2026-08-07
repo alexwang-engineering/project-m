@@ -20,3 +20,4 @@ ADRs capture decisions that constrain multiple work packages. Status `Accepted` 
 | 014 | Question bank scope | Accepted |
 | 015 | MIS/SIS roster sync scope (file-based reconciliation; live connector deferred) | Accepted |
 | 016 | Search scope (RLS-scoped full-text search, no new authorization logic) | Accepted |
+| 017 | Operational reporting scope (audit log/roster/content summaries; compliance reporting deferred pending human reviewer) | Accepted |
