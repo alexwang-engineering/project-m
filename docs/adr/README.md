@@ -17,3 +17,4 @@ ADRs capture decisions that constrain multiple work packages. Status `Accepted` 
 | 011 | Calendar scope (launch slice) | Accepted |
 | 012 | Announcements scope; threaded messaging blocked on a safeguarding owner | Accepted (Announcements) / Blocked (Messaging) |
 | 013 | Parent/guardian access scope | Accepted; DPIA and verification policy pending before production use |
+| 014 | Question bank scope | Accepted |
