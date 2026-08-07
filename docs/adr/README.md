@@ -19,3 +19,4 @@ ADRs capture decisions that constrain multiple work packages. Status `Accepted` 
 | 013 | Parent/guardian access scope | Accepted; DPIA and verification policy pending before production use |
 | 014 | Question bank scope | Accepted |
 | 015 | MIS/SIS roster sync scope (file-based reconciliation; live connector deferred) | Accepted |
+| 016 | Search scope (RLS-scoped full-text search, no new authorization logic) | Accepted |

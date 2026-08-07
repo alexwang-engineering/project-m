@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState, useRef, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Bell,
   ChevronDown,
@@ -16,6 +16,8 @@ import {
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { formatRelativeTime } from '@/lib/relative-time';
+import { useClickOutside } from '@/lib/use-click-outside';
+import { SearchBox } from '@/components/search/SearchBox';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -103,18 +105,6 @@ function toPageCard(page: DashboardPage): PageCard {
 // Shared: click-outside hook for dropdowns / FAB menu
 // ---------------------------------------------------------------------------
 
-function useClickOutside<T extends HTMLElement>(onOutside: () => void) {
-  const ref = useRef<T>(null);
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) onOutside();
-    }
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [onOutside]);
-  return ref;
-}
-
 // ---------------------------------------------------------------------------
 // Top navigation
 // ---------------------------------------------------------------------------
@@ -178,6 +168,7 @@ function TopNav() {
       </div>
 
       <div className="flex items-center gap-2">
+        <SearchBox />
         {/* Notifications */}
         <div className="relative" ref={notifRef}>
           <button
