@@ -23,3 +23,4 @@ ADRs capture decisions that constrain multiple work packages. Status `Accepted` 
 | 017 | Operational reporting scope (audit log/roster/content summaries; compliance reporting deferred pending human reviewer) | Accepted |
 | 018 | Accessibility scope (Launch v1) | Accepted |
 | 019 | Moodle migration scope (staged import engine; real .mbz reader deferred) | Accepted |
+| 020 | SCORM/LTI scope (design only; sandbox-isolation build deferred pending real browser-security verification) | Accepted (design) |
