@@ -186,6 +186,80 @@ export type Database = {
           },
         ]
       }
+      announcements: {
+        Row: {
+          archived_at: string | null
+          body: string
+          created_at: string
+          created_by: string
+          id: string
+          is_broadcast: boolean
+          title: string
+        }
+        Insert: {
+          archived_at?: string | null
+          body: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_broadcast?: boolean
+          title: string
+        }
+        Update: {
+          archived_at?: string | null
+          body?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_broadcast?: boolean
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      announcement_tags: {
+        Row: {
+          added_by: string
+          announcement_id: string
+          created_at: string
+          tag_id: string
+        }
+        Insert: {
+          added_by: string
+          announcement_id: string
+          created_at?: string
+          tag_id: string
+        }
+        Update: {
+          added_by?: string
+          announcement_id?: string
+          created_at?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_tags_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_events: {
         Row: {
           archived_at: string | null
@@ -1123,11 +1197,19 @@ export type Database = {
         Args: { target_assignment: string }
         Returns: boolean
       }
+      can_manage_announcement: {
+        Args: { target_announcement: string }
+        Returns: boolean
+      }
       can_manage_calendar_event: {
         Args: { target_event: string }
         Returns: boolean
       }
       can_manage_quiz: { Args: { target_quiz: string }; Returns: boolean }
+      can_read_announcement: {
+        Args: { target_announcement: string }
+        Returns: boolean
+      }
       can_read_assignment: {
         Args: { target_assignment: string }
         Returns: boolean
@@ -1138,9 +1220,37 @@ export type Database = {
       }
       can_read_quiz: { Args: { target_quiz: string }; Returns: boolean }
       can_read_page: { Args: { target_page: string }; Returns: boolean }
+      cancel_announcement: {
+        Args: { correlation_id?: string; target_announcement_id: string }
+        Returns: undefined
+      }
       cancel_calendar_event: {
         Args: { correlation_id?: string; target_event_id: string }
         Returns: undefined
+      }
+      create_announcement: {
+        Args: {
+          announcement_body: string
+          announcement_title: string
+          audience_tag_ids: string[]
+          broadcast: boolean
+          correlation_id?: string
+        }
+        Returns: {
+          archived_at: string | null
+          body: string
+          created_at: string
+          created_by: string
+          id: string
+          is_broadcast: boolean
+          title: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "announcements"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       create_calendar_event: {
         Args: {

@@ -157,6 +157,12 @@ function TopNav() {
             Calendar
           </Link>
           <Link
+            href="/announcements"
+            className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+          >
+            Announcements
+          </Link>
+          <Link
             href="/gradebook"
             className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
           >
