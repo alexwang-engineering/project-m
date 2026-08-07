@@ -57,6 +57,7 @@ function GradeControl({
     <div className="mt-2 flex flex-col gap-1.5 border-t border-slate-100 pt-2.5">
       <div className="flex items-center gap-2">
         <input
+          aria-label="Grade out of 100"
           type="number"
           min={0}
           max={100}
@@ -70,6 +71,7 @@ function GradeControl({
         />
         <span className="text-[11.5px] text-slate-400">/ 100</span>
         <input
+          aria-label="Feedback"
           value={feedback}
           onChange={(e) => {
             setFeedback(e.target.value);

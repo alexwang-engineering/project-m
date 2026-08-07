@@ -174,6 +174,7 @@ export function BlockEditor({
       return shell(
         <div className="flex flex-col gap-2">
           <select
+            aria-label="Heading level"
             value={block.level}
             onChange={(e) => onChange({ ...block, level: Number(e.target.value) as 2 | 3 | 4 })}
             className={`${fieldClass} w-28`}
@@ -206,6 +207,7 @@ export function BlockEditor({
           {block.items.map((item, index) => (
             <div key={index} className="flex items-center gap-2">
               <input
+                aria-label={`List item ${index + 1}`}
                 value={item}
                 onChange={(e) => {
                   const items = [...block.items];
@@ -246,6 +248,7 @@ export function BlockEditor({
             placeholder="Quote text..."
           />
           <input
+            aria-label="Quote attribution"
             value={block.attribution}
             onChange={(e) => onChange({ ...block, attribution: e.target.value })}
             placeholder="Attribution (optional)"
@@ -258,12 +261,14 @@ export function BlockEditor({
       return shell(
         <div className="flex flex-col gap-2">
           <input
+            aria-label="Code language"
             value={block.language}
             onChange={(e) => onChange({ ...block, language: e.target.value })}
             placeholder="Language (optional, e.g. python)"
             className={`${fieldClass} font-mono`}
           />
           <textarea
+            aria-label="Code"
             value={block.code}
             onChange={(e) => onChange({ ...block, code: e.target.value })}
             placeholder="Code..."
@@ -277,6 +282,7 @@ export function BlockEditor({
       return shell(
         <div className="flex flex-col gap-2">
           <select
+            aria-label="Callout tone"
             value={block.tone}
             onChange={(e) => onChange({ ...block, tone: e.target.value as 'neutral' | 'info' | 'warning' })}
             className={`${fieldClass} w-32`}
@@ -286,6 +292,7 @@ export function BlockEditor({
             <option value="warning">Warning</option>
           </select>
           <input
+            aria-label="Callout title"
             value={block.title}
             onChange={(e) => onChange({ ...block, title: e.target.value })}
             placeholder="Title (optional)"
@@ -340,6 +347,7 @@ export function BlockEditor({
               />
             </label>
             <input
+              aria-label="File link label"
               value={block.label}
               onChange={(e) => onChange({ ...block, label: e.target.value })}
               placeholder="Link label"
@@ -392,12 +400,14 @@ export function BlockEditor({
               />
             </label>
             <input
+              aria-label="Image alt text"
               value={block.alt}
               onChange={(e) => onChange({ ...block, alt: e.target.value })}
               placeholder="Alt text (required)"
               className={fieldClass}
             />
             <input
+              aria-label="Image caption"
               value={block.captionHtml}
               onChange={(e) => onChange({ ...block, captionHtml: e.target.value })}
               placeholder="Caption (optional)"

@@ -137,6 +137,7 @@ function ManageUserPanel({
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-[11.5px] font-semibold text-slate-500">Grant role</span>
         <select
+          aria-label="Role to grant"
           value={role}
           onChange={(e) => setRole(e.target.value as (typeof SYSTEM_ROLES)[number])}
           className={fieldClass}
@@ -148,6 +149,7 @@ function ManageUserPanel({
           ))}
         </select>
         <input
+          aria-label="Reason for role change"
           value={roleReason}
           onChange={(e) => setRoleReason(e.target.value)}
           placeholder="Reason (required)"
@@ -166,7 +168,7 @@ function ManageUserPanel({
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-[11.5px] font-semibold text-slate-500">Add tag</span>
-        <select value={tagId} onChange={(e) => setTagId(e.target.value)} className={fieldClass}>
+        <select aria-label="Tag to add" value={tagId} onChange={(e) => setTagId(e.target.value)} className={fieldClass}>
           {tags.map((tag) => (
             <option key={tag.id} value={tag.id}>
               {tag.name}
@@ -174,6 +176,7 @@ function ManageUserPanel({
           ))}
         </select>
         <select
+          aria-label="Membership role"
           value={membershipRole}
           onChange={(e) => setMembershipRole(e.target.value as (typeof MEMBERSHIP_ROLES)[number])}
           className={fieldClass}
@@ -234,12 +237,14 @@ function ManageUserPanel({
         ))}
         <div className="flex flex-wrap items-center gap-2">
           <input
+            aria-label="Guardian email address"
             value={guardianEmail}
             onChange={(e) => setGuardianEmail(e.target.value)}
             placeholder="guardian@example.com"
             className={`${fieldClass} flex-1 min-w-[160px]`}
           />
           <input
+            aria-label="Reason for linking this guardian"
             value={guardianReason}
             onChange={(e) => setGuardianReason(e.target.value)}
             placeholder="Reason (required)"

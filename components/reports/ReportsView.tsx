@@ -131,20 +131,20 @@ export function ReportsView({ rosterSummary, contentSummary }: ReportsViewProps)
           <h2 className="mb-3 text-[14px] font-semibold tracking-tight text-slate-900">Audit log</h2>
           <div className="mb-3 flex flex-wrap items-end gap-2 rounded-xl border border-slate-200 bg-white p-4">
             <div>
-              <label className="mb-1 block text-[11px] font-semibold text-slate-500">From</label>
-              <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="rounded-lg border border-slate-200 px-2 py-1.5 text-[12.5px]" />
+              <label htmlFor="report-from" className="mb-1 block text-[11px] font-semibold text-slate-500">From</label>
+              <input id="report-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="rounded-lg border border-slate-200 px-2 py-1.5 text-[12.5px]" />
             </div>
             <div>
-              <label className="mb-1 block text-[11px] font-semibold text-slate-500">To</label>
-              <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-lg border border-slate-200 px-2 py-1.5 text-[12.5px]" />
+              <label htmlFor="report-to" className="mb-1 block text-[11px] font-semibold text-slate-500">To</label>
+              <input id="report-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-lg border border-slate-200 px-2 py-1.5 text-[12.5px]" />
             </div>
             <div>
-              <label className="mb-1 block text-[11px] font-semibold text-slate-500">Action</label>
-              <input value={action} onChange={(e) => setAction(e.target.value)} placeholder="e.g. quiz.created" className="rounded-lg border border-slate-200 px-2 py-1.5 text-[12.5px]" />
+              <label htmlFor="report-action" className="mb-1 block text-[11px] font-semibold text-slate-500">Action</label>
+              <input id="report-action" value={action} onChange={(e) => setAction(e.target.value)} placeholder="e.g. quiz.created" className="rounded-lg border border-slate-200 px-2 py-1.5 text-[12.5px]" />
             </div>
             <div>
-              <label className="mb-1 block text-[11px] font-semibold text-slate-500">Target type</label>
-              <input value={targetType} onChange={(e) => setTargetType(e.target.value)} placeholder="e.g. quiz" className="rounded-lg border border-slate-200 px-2 py-1.5 text-[12.5px]" />
+              <label htmlFor="report-target-type" className="mb-1 block text-[11px] font-semibold text-slate-500">Target type</label>
+              <input id="report-target-type" value={targetType} onChange={(e) => setTargetType(e.target.value)} placeholder="e.g. quiz" className="rounded-lg border border-slate-200 px-2 py-1.5 text-[12.5px]" />
             </div>
             <button
               type="button"

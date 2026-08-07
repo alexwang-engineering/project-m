@@ -229,6 +229,7 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
       <main className="mx-auto max-w-[760px] px-8 pb-32 pt-9">
         <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <input
+            aria-label="Page title"
             value={title}
             onChange={(e) => {
               setTitle(e.target.value);
@@ -240,6 +241,7 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
           <div className="flex items-center gap-2 text-[12.5px] text-slate-500">
             <span>/</span>
             <input
+              aria-label="Page URL slug"
               value={slug}
               onChange={(e) => {
                 setSlugTouched(true);

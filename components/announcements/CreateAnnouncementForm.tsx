@@ -56,12 +56,14 @@ export function CreateAnnouncementForm({ writableTags, isAdmin }: CreateAnnounce
       <p className="mb-3 text-[13px] font-semibold text-slate-900">Post an announcement</p>
       <div className="flex flex-col gap-2.5">
         <input
+          aria-label="Announcement title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Announcement title"
           className={`${fieldClass} w-full`}
         />
         <textarea
+          aria-label="Announcement body"
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder="What do you want to say?"

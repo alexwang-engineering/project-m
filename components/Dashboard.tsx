@@ -278,7 +278,7 @@ function TagRail({
 }) {
   return (
     <div className="mb-8">
-      <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">Your tags</p>
+      <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">Your tags</p>
       <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
         {tags.map((tag) => {
           const active = tag.id === activeTag;
@@ -441,14 +441,20 @@ export default function Dashboard({ pages }: DashboardProps) {
 
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-[13px] focus:font-semibold focus:text-slate-900 focus:shadow-lg"
+      >
+        Skip to main content
+      </a>
       <TopNav />
 
-      <main className="mx-auto max-w-[1180px] px-8 pb-32 pt-9">
+      <main id="main-content" className="mx-auto max-w-[1180px] px-8 pb-32 pt-9">
         <div className="mb-6">
           <h1 className="text-[23px] font-bold tracking-tight text-slate-900">
             Good afternoon, {CURRENT_USER.name.split(' ')[0]}
           </h1>
-          <p className="mt-0.5 text-[13px] text-slate-500">Here&rsquo;s what&rsquo;s moving across your tags today.</p>
+          <p className="mt-0.5 text-[13px] text-slate-600">Here&rsquo;s what&rsquo;s moving across your tags today.</p>
         </div>
 
         <TagRail tags={tags} activeTag={activeTag} onSelect={setActiveTag} />

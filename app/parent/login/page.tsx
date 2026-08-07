@@ -44,6 +44,7 @@ export default function ParentLoginPage() {
           <div className="mt-5 flex flex-col gap-2.5">
             <input
               type="email"
+              aria-label="Your email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"

@@ -67,6 +67,7 @@ export function CreateBankItemForm({ writableTags, onCreated }: CreateBankItemFo
       <p className="mb-3 text-[13px] font-semibold text-slate-900">Create a bank item</p>
       <div className="flex flex-col gap-2.5">
         <input
+          aria-label="Question prompt"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="Question prompt"
@@ -84,6 +85,7 @@ export function CreateBankItemForm({ writableTags, onCreated }: CreateBankItemFo
                 aria-label={`Mark choice ${cIndex + 1} as correct`}
               />
               <input
+                aria-label={`Choice ${cIndex + 1} text`}
                 value={choice.label}
                 onChange={(e) =>
                   setChoices((prev) => prev.map((c) => (c.id === choice.id ? { ...c, label: e.target.value } : c)))

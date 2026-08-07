@@ -57,6 +57,8 @@ export function SearchBox() {
       <div className="flex h-8 w-[200px] items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 focus-within:border-brand-400 focus-within:bg-white">
         <Search size={13} strokeWidth={2.4} className="shrink-0 text-slate-400" />
         <input
+          type="search"
+          aria-label="Search pages, assignments, quizzes, announcements, and events"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -70,7 +72,11 @@ export function SearchBox() {
       </div>
 
       {open && query.trim().length >= 2 && (
-        <div className="absolute right-0 top-9 z-50 max-h-[360px] w-[320px] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
+        <div
+          role="status"
+          aria-live="polite"
+          className="absolute right-0 top-9 z-50 max-h-[360px] w-[320px] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg"
+        >
           {results.length === 0 && !loading ? (
             <p className="px-2.5 py-3 text-[12.5px] text-slate-400">No results.</p>
           ) : (

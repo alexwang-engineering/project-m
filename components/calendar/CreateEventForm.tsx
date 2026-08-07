@@ -63,12 +63,14 @@ export function CreateEventForm({ writableTags, isAdmin }: CreateEventFormProps)
       <div className="flex flex-col gap-2.5">
         <div className="flex flex-wrap items-center gap-2">
           <input
+            aria-label="Event title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Event title"
             className={`${fieldClass} flex-1 min-w-[180px]`}
           />
           <input
+            aria-label="Starts at"
             type="datetime-local"
             value={startsAt}
             onChange={(e) => setStartsAt(e.target.value)}
@@ -76,6 +78,7 @@ export function CreateEventForm({ writableTags, isAdmin }: CreateEventFormProps)
           />
           <span className="text-[12px] text-slate-400">to</span>
           <input
+            aria-label="Ends at"
             type="datetime-local"
             value={endsAt}
             onChange={(e) => setEndsAt(e.target.value)}
@@ -83,6 +86,7 @@ export function CreateEventForm({ writableTags, isAdmin }: CreateEventFormProps)
           />
         </div>
         <input
+          aria-label="Event description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Description (optional)"

@@ -158,14 +158,18 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
       <main className="mx-auto max-w-[760px] px-8 pb-32 pt-9">
         <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <input
+            aria-label="Quiz title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Quiz title"
             className="w-full border-none text-[22px] font-semibold tracking-tight text-slate-950 outline-none placeholder:text-slate-300"
           />
           <div className="flex items-center gap-2">
-            <label className="text-[12.5px] font-medium text-slate-500">Due (optional)</label>
+            <label htmlFor="quiz-due-at" className="text-[12.5px] font-medium text-slate-500">
+              Due (optional)
+            </label>
             <input
+              id="quiz-due-at"
               type="datetime-local"
               value={dueAt}
               onChange={(e) => setDueAt(e.target.value)}
@@ -214,6 +218,7 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
                       <p className="mb-1 text-[10.5px] font-bold uppercase tracking-wide text-brand-600">From question bank</p>
                     )}
                     <input
+                      aria-label={`Question ${qIndex + 1} prompt`}
                       value={question.prompt}
                       onChange={(e) => updateQuestion(question.key, (q) => ({ ...q, prompt: e.target.value }))}
                       placeholder={`Question ${qIndex + 1}`}
@@ -243,6 +248,7 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
                         aria-label={`Mark choice ${cIndex + 1} as correct`}
                       />
                       <input
+                        aria-label={`Question ${qIndex + 1}, choice ${cIndex + 1} text`}
                         value={choice.label}
                         readOnly={fromBank}
                         onChange={(e) =>

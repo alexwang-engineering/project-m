@@ -37,18 +37,21 @@ export function CreateTagForm() {
       <p className="mb-3 text-[13px] font-semibold text-slate-900">Create a tag</p>
       <div className="flex flex-wrap items-center gap-2">
         <input
+          aria-label="Tag name (short code)"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Y9MA1"
           className={`${fieldClass} w-28 font-mono uppercase`}
         />
         <input
+          aria-label="Tag display name"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           placeholder="Year 9 Maths Set 1"
           className={`${fieldClass} flex-1 min-w-[160px]`}
         />
         <input
+          aria-label="Reason for creating this tag"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder="Reason (optional)"
