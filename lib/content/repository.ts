@@ -19,6 +19,7 @@ export interface ContentPage {
   readonly lifecycle: Database['public']['Enums']['content_state'];
   readonly isPublic: boolean;
   readonly version: number;
+  readonly tagIds: readonly string[];
 }
 
 export type PageResolution =
@@ -34,6 +35,7 @@ function pageFromRow(row: {
   lifecycle: Database['public']['Enums']['content_state'];
   is_public: boolean;
   version: number;
+  page_tags: readonly { tag_id: string }[];
 }): ContentPage {
   return {
     id: row.id,
@@ -43,6 +45,7 @@ function pageFromRow(row: {
     lifecycle: row.lifecycle,
     isPublic: row.is_public,
     version: row.version,
+    tagIds: row.page_tags.map((t) => t.tag_id),
   };
 }
 
@@ -55,7 +58,7 @@ export async function resolvePage(
   const { data: page, error: pageError } = await client
     .from('pages')
     .select(
-      'id, canonical_url, title, content_json, lifecycle, is_public, version',
+      'id, canonical_url, title, content_json, lifecycle, is_public, version, page_tags(tag_id)',
     )
     .eq('canonical_url', path)
     .maybeSingle();

@@ -66,6 +66,8 @@ export interface SubmissionSummary {
   readonly note: string | null;
   readonly studentEmail: string | null;
   readonly fileId: string;
+  readonly grade: number | null;
+  readonly gradeFeedback: string | null;
 }
 
 export interface AssignmentDetail {
@@ -95,7 +97,9 @@ export async function getAssignmentDetail(
 
   const { data: submissions, error: submissionsError } = await client
     .from('assignment_submissions')
-    .select('id, submitted_at, note, file_id, profiles(email)')
+    .select(
+      'id, submitted_at, note, file_id, grade, grade_feedback, profiles!assignment_submissions_student_id_fkey(email)',
+    )
     .eq('assignment_id', assignmentId)
     .order('submitted_at', { ascending: false });
   if (submissionsError) throw submissionsError;
@@ -110,6 +114,8 @@ export async function getAssignmentDetail(
       note: submission.note,
       studentEmail: submission.profiles?.email ?? null,
       fileId: submission.file_id,
+      grade: submission.grade,
+      gradeFeedback: submission.grade_feedback,
     })),
   };
 }
@@ -176,4 +182,53 @@ export async function submitAssignment(
     correlation_id: crypto.randomUUID(),
   });
   return error ? failure(error) : { ok: true };
+}
+
+export type GradeSubmissionResult =
+  | { readonly ok: true }
+  | {
+      readonly ok: false;
+      readonly code: 'invalid_input' | 'forbidden' | 'not_found' | 'failed';
+      readonly message: string;
+    };
+
+function gradeFailure(error: unknown): GradeSubmissionResult {
+  const code =
+    error !== null && typeof error === 'object' && 'code' in error && typeof error.code === 'string'
+      ? error.code
+      : undefined;
+  switch (code) {
+    case '42501':
+      return { ok: false, code: 'forbidden', message: 'You do not manage this assignment.' };
+    case 'P0002':
+      return { ok: false, code: 'not_found', message: 'The submission was not found.' };
+    default:
+      return { ok: false, code: 'failed', message: 'The grade could not be saved.' };
+  }
+}
+
+/** Records a percentage grade (0-100) and optional feedback via the audited RPC. */
+export async function gradeSubmission(client: Client, input: unknown): Promise<GradeSubmissionResult> {
+  const value =
+    input !== null && typeof input === 'object' && !Array.isArray(input)
+      ? (input as Record<string, unknown>)
+      : null;
+  if (!value) return { ok: false, code: 'invalid_input', message: 'Grade input must be an object.' };
+  if (typeof value.submissionId !== 'string' || !UUID.test(value.submissionId)) {
+    return { ok: false, code: 'invalid_input', message: 'Submission ID is invalid.' };
+  }
+  if (typeof value.grade !== 'number' || !Number.isFinite(value.grade) || value.grade < 0 || value.grade > 100) {
+    return { ok: false, code: 'invalid_input', message: 'Grade must be a number between 0 and 100.' };
+  }
+  if (value.feedback !== undefined && (typeof value.feedback !== 'string' || value.feedback.length > 2000)) {
+    return { ok: false, code: 'invalid_input', message: 'Feedback must be at most 2000 characters.' };
+  }
+
+  const { error } = await client.rpc('grade_assignment_submission', {
+    target_submission_id: value.submissionId,
+    grade_value: value.grade,
+    feedback_text: (value.feedback as string | undefined) ?? undefined,
+    correlation_id: crypto.randomUUID(),
+  });
+  return error ? gradeFailure(error) : { ok: true };
 }

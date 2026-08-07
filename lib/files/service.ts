@@ -12,7 +12,20 @@ const DOWNLOAD_TTL_SECONDS = 60;
 
 type Client = SupabaseClient<Database>;
 type FileMediaType =
-  'application/pdf' | 'application/zip' | 'application/octet-stream';
+  | 'application/pdf'
+  | 'application/zip'
+  | 'application/octet-stream'
+  | 'image/png'
+  | 'image/jpeg'
+  | 'image/webp'
+  | 'image/gif';
+
+const IMAGE_MEDIA_TYPES: readonly FileMediaType[] = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/gif',
+];
 
 export interface FileServiceFailure {
   readonly ok: false;
@@ -136,17 +149,23 @@ export async function beginFileUpload(
       'application/pdf',
       'application/zip',
       'application/octet-stream',
+      ...IMAGE_MEDIA_TYPES,
     ].includes(value.mediaType as string)
   ) {
-    return invalid('Only PDF and MPX uploads are supported.');
+    return invalid('Only PDF, MPX, and image uploads are supported.');
   }
   const mediaType = value.mediaType as FileMediaType;
   const lowerName = filename.toLowerCase();
-  if (
-    mediaType === 'application/pdf'
-      ? !lowerName.endsWith('.pdf')
-      : !lowerName.endsWith('.mpx')
-  ) {
+  const expectedExtension: Record<FileMediaType, string> = {
+    'application/pdf': '.pdf',
+    'application/zip': '.mpx',
+    'application/octet-stream': '.mpx',
+    'image/png': '.png',
+    'image/jpeg': '.jpg',
+    'image/webp': '.webp',
+    'image/gif': '.gif',
+  };
+  if (!lowerName.endsWith(expectedExtension[mediaType])) {
     return invalid(
       'Filename extension does not match the declared media type.',
     );

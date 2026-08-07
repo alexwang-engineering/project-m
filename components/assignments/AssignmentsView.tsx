@@ -9,6 +9,7 @@ import { formatRelativeTime } from '@/lib/relative-time';
 import { createClient } from '@/lib/supabase/client';
 import { beginFileUploadAction, completeFileUploadAction } from '@/app/actions/files';
 import { submitAssignmentAction } from '@/app/actions/assignments';
+import { sha256Hex } from '@/lib/files/client-hash';
 import type { AssignmentSummary } from '@/lib/content/assignments';
 
 interface AssignmentsViewProps {
@@ -30,13 +31,6 @@ const STEP_LABEL: Record<SubmissionStep, string> = {
   verifying: 'Verifying upload…',
   recording: 'Recording submission…',
 };
-
-async function sha256Hex(file: File): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
-  return Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('');
-}
 
 function isOverdue(dueAt: string | null): boolean {
   return dueAt !== null && new Date(dueAt).getTime() < Date.now();

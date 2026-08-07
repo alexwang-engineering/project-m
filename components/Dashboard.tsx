@@ -7,6 +7,7 @@ import {
   ChevronDown,
   MoreVertical,
   FileText,
+  FilePlus,
   Plus,
   Upload,
   Pencil,
@@ -142,6 +143,18 @@ function TopNav() {
             className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
           >
             Assignments
+          </Link>
+          <Link
+            href="/quizzes"
+            className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+          >
+            Quizzes
+          </Link>
+          <Link
+            href="/gradebook"
+            className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+          >
+            Gradebook
           </Link>
         </nav>
       </div>
@@ -349,7 +362,19 @@ function FloatingActionButton() {
     <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-3" ref={menuRef}>
       {open && (
         <div className="w-[240px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
-          <button className="flex w-full items-center gap-3 px-[15px] py-3.5 text-left hover:bg-slate-50">
+          <Link
+            href="/pages/new"
+            className="flex w-full items-center gap-3 px-[15px] py-3.5 text-left hover:bg-slate-50"
+          >
+            <span className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-lg bg-[#eef2fa] text-[#254889]">
+              <FilePlus size={16} strokeWidth={2} />
+            </span>
+            <span className="flex flex-col">
+              <span className="text-[12.5px] font-semibold text-slate-900">New page</span>
+              <span className="text-[10.5px] text-slate-400">Block editor</span>
+            </span>
+          </Link>
+          <button className="flex w-full items-center gap-3 border-t border-slate-200 px-[15px] py-3.5 text-left hover:bg-slate-50">
             <span className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-lg bg-[#eef2fa] text-[#254889]">
               <Upload size={16} strokeWidth={2} />
             </span>

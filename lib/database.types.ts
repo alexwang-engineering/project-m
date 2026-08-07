@@ -38,6 +38,10 @@ export type Database = {
         Row: {
           assignment_id: string
           file_id: string
+          grade: number | null
+          grade_feedback: string | null
+          graded_at: string | null
+          graded_by: string | null
           id: string
           note: string | null
           student_id: string
@@ -46,6 +50,10 @@ export type Database = {
         Insert: {
           assignment_id: string
           file_id: string
+          grade?: number | null
+          grade_feedback?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
           id?: string
           note?: string | null
           student_id: string
@@ -54,6 +62,10 @@ export type Database = {
         Update: {
           assignment_id?: string
           file_id?: string
+          grade?: number | null
+          grade_feedback?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
           id?: string
           note?: string | null
           student_id?: string
@@ -170,6 +182,177 @@ export type Database = {
             columns: ["instructions_page_id"]
             isOneToOne: false
             referencedRelation: "pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quizzes: {
+        Row: {
+          archived_at: string | null
+          author_id: string
+          created_at: string
+          due_at: string | null
+          id: string
+          title: string
+        }
+        Insert: {
+          archived_at?: string | null
+          author_id: string
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          title: string
+        }
+        Update: {
+          archived_at?: string | null
+          author_id?: string
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quizzes_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_tags: {
+        Row: {
+          added_by: string
+          created_at: string
+          quiz_id: string
+          tag_id: string
+        }
+        Insert: {
+          added_by: string
+          created_at?: string
+          quiz_id: string
+          tag_id: string
+        }
+        Update: {
+          added_by?: string
+          created_at?: string
+          quiz_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_tags_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_questions: {
+        Row: {
+          choices: Json
+          id: string
+          position: number
+          prompt: string
+          quiz_id: string
+        }
+        Insert: {
+          choices: Json
+          id?: string
+          position: number
+          prompt: string
+          quiz_id: string
+        }
+        Update: {
+          choices?: Json
+          id?: string
+          position?: number
+          prompt?: string
+          quiz_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_answer_keys: {
+        Row: {
+          correct_choice_id: string
+          question_id: string
+        }
+        Insert: {
+          correct_choice_id: string
+          question_id: string
+        }
+        Update: {
+          correct_choice_id?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_answer_keys_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: true
+            referencedRelation: "quiz_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_attempts: {
+        Row: {
+          answers: Json
+          id: string
+          max_score: number
+          quiz_id: string
+          score: number
+          student_id: string
+          submitted_at: string
+        }
+        Insert: {
+          answers: Json
+          id?: string
+          max_score: number
+          quiz_id: string
+          score: number
+          student_id: string
+          submitted_at?: string
+        }
+        Update: {
+          answers?: Json
+          id?: string
+          max_score?: number
+          quiz_id?: string
+          score?: number
+          student_id?: string
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_attempts_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_attempts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -860,11 +1043,84 @@ export type Database = {
         Args: { target_assignment: string }
         Returns: boolean
       }
+      can_manage_quiz: { Args: { target_quiz: string }; Returns: boolean }
       can_read_assignment: {
         Args: { target_assignment: string }
         Returns: boolean
       }
+      can_read_quiz: { Args: { target_quiz: string }; Returns: boolean }
       can_read_page: { Args: { target_page: string }; Returns: boolean }
+      create_quiz: {
+        Args: {
+          audience_tag_ids: string[]
+          correlation_id?: string
+          quiz_due_at: string | null
+          quiz_questions: Json
+          quiz_title: string
+        }
+        Returns: {
+          archived_at: string | null
+          author_id: string
+          created_at: string
+          due_at: string | null
+          id: string
+          title: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "quizzes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_quiz_attempt: {
+        Args: {
+          correlation_id?: string
+          submitted_answers: Json
+          target_quiz_id: string
+        }
+        Returns: {
+          answers: Json
+          id: string
+          max_score: number
+          quiz_id: string
+          score: number
+          student_id: string
+          submitted_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "quiz_attempts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      grade_assignment_submission: {
+        Args: {
+          correlation_id?: string
+          feedback_text?: string | null
+          grade_value: number
+          target_submission_id: string
+        }
+        Returns: {
+          assignment_id: string
+          file_id: string
+          grade: number | null
+          grade_feedback: string | null
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          note: string | null
+          student_id: string
+          submitted_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "assignment_submissions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_assignment: {
         Args: {
           assignment_due_at: string
