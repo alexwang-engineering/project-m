@@ -18,6 +18,21 @@ export interface AdminTagMembership {
   readonly role: MembershipRole;
 }
 
+/**
+ * Not itself a security boundary - the admin RPCs (and, in Package Q,
+ * create_calendar_event's broadcast path) enforce institution_admin
+ * server-side regardless of what this check shows. This only avoids
+ * presenting a confusing UI to a non-admin (RLS would otherwise just
+ * filter the underlying query down to their own row).
+ */
+export async function isInstitutionAdmin(client: Client): Promise<boolean> {
+  const { data } = await client
+    .from('role_assignments')
+    .select('role')
+    .eq('role', 'institution_admin');
+  return (data ?? []).length > 0;
+}
+
 export interface AdminUser {
   readonly id: string;
   readonly email: string;

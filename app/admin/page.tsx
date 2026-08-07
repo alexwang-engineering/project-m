@@ -5,22 +5,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { AdminRoster } from '@/components/admin/AdminRoster';
 import { CreateTagForm } from '@/components/admin/CreateTagForm';
 import { createServerClient } from '@/lib/supabase/server';
-import { listTags, listUsers } from '@/lib/content/admin';
+import { isInstitutionAdmin, listTags, listUsers } from '@/lib/content/admin';
 import type { Database } from '@/lib/database.types';
-
-/**
- * Not itself a security boundary - the four RPCs behind this page enforce
- * institution_admin server-side regardless of what this check shows. This
- * only avoids presenting a confusing near-empty roster to a non-admin
- * (RLS would otherwise just filter `listUsers` down to their own row).
- */
-async function isInstitutionAdmin(client: SupabaseClient<Database>): Promise<boolean> {
-  const { data } = await client
-    .from('role_assignments')
-    .select('role')
-    .eq('role', 'institution_admin');
-  return (data ?? []).length > 0;
-}
 
 export default async function AdminPage() {
   const supabase = (await createServerClient()) as SupabaseClient<Database>;

@@ -186,6 +186,86 @@ export type Database = {
           },
         ]
       }
+      calendar_events: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          ends_at: string | null
+          id: string
+          is_broadcast: boolean
+          starts_at: string
+          title: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          is_broadcast?: boolean
+          starts_at: string
+          title: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          is_broadcast?: boolean
+          starts_at?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendar_event_tags: {
+        Row: {
+          added_by: string
+          created_at: string
+          event_id: string
+          tag_id: string
+        }
+        Insert: {
+          added_by: string
+          created_at?: string
+          event_id: string
+          tag_id: string
+        }
+        Update: {
+          added_by?: string
+          created_at?: string
+          event_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_event_tags_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_event_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quizzes: {
         Row: {
           archived_at: string | null
@@ -1043,13 +1123,53 @@ export type Database = {
         Args: { target_assignment: string }
         Returns: boolean
       }
+      can_manage_calendar_event: {
+        Args: { target_event: string }
+        Returns: boolean
+      }
       can_manage_quiz: { Args: { target_quiz: string }; Returns: boolean }
       can_read_assignment: {
         Args: { target_assignment: string }
         Returns: boolean
       }
+      can_read_calendar_event: {
+        Args: { target_event: string }
+        Returns: boolean
+      }
       can_read_quiz: { Args: { target_quiz: string }; Returns: boolean }
       can_read_page: { Args: { target_page: string }; Returns: boolean }
+      cancel_calendar_event: {
+        Args: { correlation_id?: string; target_event_id: string }
+        Returns: undefined
+      }
+      create_calendar_event: {
+        Args: {
+          audience_tag_ids: string[]
+          broadcast: boolean
+          correlation_id?: string
+          event_description?: string | null
+          event_ends_at?: string | null
+          event_starts_at: string
+          event_title: string
+        }
+        Returns: {
+          archived_at: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          ends_at: string | null
+          id: string
+          is_broadcast: boolean
+          starts_at: string
+          title: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "calendar_events"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_tag: {
         Args: {
           correlation_id?: string
