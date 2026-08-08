@@ -1270,6 +1270,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      consume_search_quota: { Args: never; Returns: boolean };
       assert_can_assign_tags: {
         Args: { actor: string; tag_ids: string[] };
         Returns: undefined;

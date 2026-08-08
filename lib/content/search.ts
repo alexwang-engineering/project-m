@@ -31,10 +31,17 @@ const MAX_QUERY_LENGTH = 200;
  */
 export async function search(
   client: Client,
-  query: string,
+  query: unknown,
 ): Promise<readonly SearchResult[]> {
+  if (typeof query !== 'string') return [];
   const trimmed = query.trim();
   if (trimmed.length < 2 || trimmed.length > MAX_QUERY_LENGTH) return [];
+
+  const { data: permitted, error: quotaError } = await client.rpc(
+    'consume_search_quota',
+  );
+  if (quotaError) throw quotaError;
+  if (!permitted) return [];
 
   const [pages, assignments, quizzes, announcements, events] =
     await Promise.all([

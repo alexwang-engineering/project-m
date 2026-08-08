@@ -8,7 +8,7 @@ import { createServerClient } from '@/lib/supabase/server';
 
 /** Runs a full-text search across every content type the caller can currently read. Returns an empty list when signed out, rather than an error - a search box degrading to "no results" is expected, not exceptional. */
 export async function searchAction(
-  query: string,
+  query: unknown,
 ): Promise<readonly SearchResult[]> {
   const client = (await createServerClient()) as SupabaseClient<Database>;
   const { data } = await client.auth.getUser();
