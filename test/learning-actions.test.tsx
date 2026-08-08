@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import AssignmentsView from '@/components/assignments/AssignmentsView';
 import QuizzesView from '@/components/quizzes/QuizzesView';
+import { CalendarView } from '@/components/calendar/CalendarView';
+import { AnnouncementsView } from '@/components/announcements/AnnouncementsView';
 
 describe('role-sensitive learning actions', () => {
   it('hides authoring actions from students', () => {
@@ -31,5 +33,27 @@ describe('role-sensitive learning actions', () => {
       'href',
       '/quizzes/new',
     );
+  });
+
+  it('keeps student calendar and announcements read-only', () => {
+    render(
+      <CalendarView
+        items={[]}
+        writableTags={[]}
+        currentUserId="00000000-0000-4000-8000-000000000001"
+        isAdmin={false}
+      />,
+    );
+    expect(screen.queryByText('Create an event')).not.toBeInTheDocument();
+
+    render(
+      <AnnouncementsView
+        announcements={[]}
+        writableTags={[]}
+        currentUserId="00000000-0000-4000-8000-000000000001"
+        isAdmin={false}
+      />,
+    );
+    expect(screen.queryByText('Post an announcement')).not.toBeInTheDocument();
   });
 });
