@@ -49,9 +49,13 @@ describe('institutional authentication', () => {
     expect(safeNextPath('/safe\\@attacker.test')).toBe('/');
   });
 
-  it('protects only authenticated application areas so public pages remain readable', () => {
+  it('protects private LMS areas while public and guardian entry pages remain readable', () => {
     expect(isProtectedPath('/admin/users')).toBe(true);
     expect(isProtectedPath('/editor/page')).toBe(true);
+    expect(isProtectedPath('/assignments/123')).toBe(true);
+    expect(isProtectedPath('/quizzes')).toBe(true);
+    expect(isProtectedPath('/question-bank')).toBe(true);
     expect(isProtectedPath('/chemistry/mechanisms')).toBe(false);
+    expect(isProtectedPath('/parent/login')).toBe(false);
   });
 });

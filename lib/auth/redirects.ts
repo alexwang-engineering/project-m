@@ -29,7 +29,17 @@ export function safeNextPath(
 
 /** Returns true only for application areas that must never be anonymous. */
 export function isProtectedPath(pathname: string): boolean {
-  return ['/account', '/admin', '/editor'].some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-  );
+  return [
+    '/account',
+    '/admin',
+    '/announcements',
+    '/assignments',
+    '/calendar',
+    '/editor',
+    '/gradebook',
+    '/pages',
+    '/question-bank',
+    '/quizzes',
+    '/reports',
+  ].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
