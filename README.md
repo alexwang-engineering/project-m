@@ -5,37 +5,46 @@ Modern LMS replacing a legacy Moodle platform for Merchant Taylors' School.
 **Stack:** Next.js (App Router) + React + Tailwind CSS + Supabase (Postgres).
 **Core model:** content is addressed by **tags**, not nested folders (e.g. `Y9MA1` = Year 9 Maths Set 1). A page can carry multiple tags; a user's assigned tags determine what they can see/edit.
 
-## Status: Runnable foundation (Packages 0/A/B)
+## Status: functionally complete for release-1 scope, not yet production-deployable
 
-- [x] `supabase/schema.sql` — tables (`users`, `tags`, `user_tags`, `pages`, `page_tags`) + RLS. Students are read-only by policy omission; teachers can only `UPDATE` pages sharing a tag with them (enforced via `user_matches_page()`).
-- [x] `app/[...slug]/page.tsx` — canonical routing engine. Resolves purely against `pages.canonical_url`; any other path (id-based deep links from notifications, old bookmarks) 307-redirects to the canonical hierarchy path instead of rendering in place.
-- [x] `components/Dashboard.tsx` — main dashboard: top nav (logo, notifications dropdown, Outlook-style role chip), horizontal tag-pill rail, page/file card grid with breadcrumbs, FAB with an "Upload page" / "Edit current page" menu.
-- [x] `dashboard-preview.html` — static HTML/CSS/JS mirror of `Dashboard.tsx` for previewing the interaction design without spinning up Next.js. Open it directly in a browser.
-- [x] `docs/adr/` and `docs/product/` — approved/provisional release-1 architecture, service targets, data classification, and full-LMS roadmap.
-- [x] `lib/mpx-packager.ts` / `lib/security.ts` — reconciled experimental utilities with explicit production limitations; see `lib/README.md`.
-- [x] Phase 3 auth-domain trigger reviewed but intentionally withheld from executable migrations because parent access and tenant validation require a combined admission design.
-- [x] Next.js 16 application foundation, Supabase SSR browser/server clients, auth-cookie proxy, Tailwind CSS, strict TypeScript, ESLint, Prettier, Vitest, and Playwright.
+Every feature below is merged, has RLS-backed authorization (not app-level checks), and has automated test coverage. See `docs/coordination/ACTIVE_WORK.md` for the full package-by-package ledger and verification evidence.
+
+- **Content**: tag-scoped pages with a block editor (paragraph/heading/list/quote/code/callout/file/image blocks), page revisions with restore, MPX (`.mpx`) export/import for offline transfer, canonical tag-hierarchy routing.
+- **Assessment**: quizzes with a shared, tag-scoped question bank; assignments with student submission and teacher review; a gradebook aggregating both.
+- **Scheduling & comms**: calendar (deadline aggregation + standalone events), one-way announcements (not threaded messaging — see below).
+- **Access**: role-based auth admission (student/teacher/institution admin), read-only parent/guardian access via admin-attested links and email magic-link sign-in (not Entra — see below).
+- **Admin**: roster management, tag creation, CSV-based MIS/SIS roster reconciliation, staged Moodle-migration import, operational reporting (audit log, roster/content summaries).
+- **Search**: RLS-scoped full-text search (Postgres `tsvector`/GIN, not `ILIKE`) across pages/assignments/quizzes/announcements/calendar events.
+- **File handling**: uploads go through a two-phase flow — the browser only ever creates a `pending` record and uploads bytes to private Storage; a separate out-of-band worker (`npm run verify-uploads`) is the *only* process that can recompute checksums, validate real file signatures, run malware scanning, and mark a file `ready`. No browser-reachable code path can self-approve an upload.
+- **Platform**: strict TypeScript, RLS as the sole authorization layer (no app-level access checks duplicating it), nonce-based CSP with no `unsafe-inline`/`unsafe-eval` in production, automated accessibility coverage (jsx-a11y + axe-core) on every page reachable without a session, GitHub Actions CI (format/lint/typecheck/unit tests/build/e2e/audit + a fresh-database pgTAP run + secret scanning).
 
 ## Local development
 
-Requirements: Node.js 22.22.2 or a compatible version in the range declared in `package.json`, and npm 10.9.8.
+Requirements: Node.js 22.22.2 or a compatible version in the range declared in `package.json`, npm 10.9.8, and Docker (for the local Supabase stack).
 
 ```bash
 cp .env.example .env.local
 npm ci
+npx supabase start   # local Postgres/Auth/Storage; fills in the Supabase values below
 npm run dev
 ```
 
-Set the two public Supabase values in `.env.local` when exercising authenticated or database-backed routes. The dashboard shell remains available without them; database-backed canonical pages fail closed until they are configured.
+Set the Supabase values in `.env.local` (from `supabase start`'s output) to exercise authenticated or database-backed routes. The dashboard shell renders without them; database-backed pages fail closed until configured.
 
-Run the complete fast verification gate with `npm run check`. Run the browser smoke test separately with `npm run test:e2e`; install its browser once with `npx playwright install chromium` if needed.
+Run the complete fast verification gate with `npm run check` (format, lint, typecheck, unit tests, production build). Run the browser smoke test separately with `npm run test:e2e` (install its browser once with `npx playwright install chromium`). Run the database test suite with `npx supabase test db`. `npm run verify-uploads` runs the trusted file-verification worker against whatever is currently `pending` — see `lib/files/README.md`.
 
-## Not yet built
+## Not yet built / deliberately deferred
 
-- A production block renderer/editor. `components/page-renderer.tsx` is deliberately a safe temporary JSON adapter for compilation and must be replaced by Claude's presentation package.
-- Auth flow, guardian admission, `content_json` block schema, tag admin UI, and authoritative upload handling for `.mpx`/PDF.
-- The trigger/job that (re)computes `canonical_url` when a page's tags or parent change — `page.tsx` assumes this is already correct in the DB.
-- Assignments/submissions, quizzes, gradebook, calendar/messaging, parent projections, LTI/SCORM, MIS/SIS sync, migration, and reporting listed in the release-1 roadmap.
+Everything here is a named decision (usually an ADR under `docs/adr/`), not an oversight:
+
+- **Real Microsoft Entra SSO.** Auth admission logic exists and is tested, but no real tenant is registered — local development signs in via a temporary, gitignored, never-committed `app/dev-login` bridge that is hard-blocked (real HTTP 404) outside development.
+- **Production malware scanning.** The verification worker's scanner is a pluggable interface; only a development no-op adapter exists, and it refuses to run when `NODE_ENV=production`. A real scanner (e.g. ClamAV, a cloud AV API) needs to be wired in and deployed before real uploads go live.
+- **Threaded/bidirectional messaging** (ADR-012) — blocked pending a named human safeguarding owner, not a technical gap.
+- **SCORM/LTI** (ADR-020) — LTI is fully deferred (no real third-party tool to integrate against in this environment); SCORM playback is *designed* but its build is deliberately deferred because it means running arbitrary third-party JavaScript inside the app, the highest security-stakes surface in this project, and this environment cannot live-verify sandbox isolation.
+- **Live MIS/SIS connector** — only CSV-upload reconciliation exists; no live API/webhook integration (ADR-015).
+- **Real Moodle `.mbz` reader** — the staged import engine works against structured input; a real Moodle backup-format parser is separate future work (ADR-019).
+- **Compliance reporting** (GDPR data-subject/erasure exports, safeguarding audit evidence) — operational reporting exists; compliance exports need a named human privacy reviewer first (ADR-017).
+- **Pre-launch operational gates**, none of which are code: a DPIA and safeguarding/privacy sign-off for guardian data, monitoring/alerting, a rehearsed backup/PITR restore, an authenticated WCAG 2.2 AA walkthrough (only unauthenticated pages have automated coverage today), and representative-device performance testing.
 
 ## Design constraints (Dashboard)
 

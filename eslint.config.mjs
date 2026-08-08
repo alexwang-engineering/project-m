@@ -35,5 +35,9 @@ export default defineConfig([
     'dashboard-preview.html',
     'supabase/.temp/**',
     'supabase/.branches/**',
+    // Temporary, gitignored local-login test scaffold (see .gitignore) -
+    // never committed, so it doesn't exist in CI, but a contributor's local
+    // checkout can have it on disk and it shouldn't fail `npm run check`.
+    'app/dev-login/**',
   ]),
 ]);
