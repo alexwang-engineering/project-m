@@ -1544,6 +1544,15 @@ export type Database = {
         Args: { correlation_id?: string; target_link_id: string };
         Returns: undefined;
       };
+      revoke_page_editor: {
+        Args: {
+          correlation_id?: string;
+          revocation_reason: string;
+          target_page: string;
+          target_profile: string;
+        };
+        Returns: undefined;
+      };
       revoke_system_role: {
         Args: {
           correlation_id?: string;

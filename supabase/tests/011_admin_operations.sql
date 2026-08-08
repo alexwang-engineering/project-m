@@ -186,13 +186,13 @@ select set_config('request.jwt.claim.role', 'authenticated', true);
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000401', true);
 select lives_ok(
   $$ select public.grant_page_editor('50000000-0000-0000-0000-000000000002',
-    '00000000-0000-0000-0000-000000000403', 'covering for absence') $$,
+    '00000000-0000-0000-0000-000000000402', 'covering for absence') $$,
   'admin can grant a page-editor delegation'
 );
 select is(
   (select count(*) from public.page_editors
    where page_id = '50000000-0000-0000-0000-000000000002'
-     and profile_id = '00000000-0000-0000-0000-000000000403')::bigint,
+     and profile_id = '00000000-0000-0000-0000-000000000402')::bigint,
   1::bigint, 'the page-editor grant row was created'
 );
 
