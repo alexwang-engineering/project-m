@@ -5,7 +5,8 @@ import {
   listDashboardPages,
   type CurrentUserSummary,
 } from '@/lib/content/dashboard';
-import type { DashboardPage } from '@/components/Dashboard';
+import type { DashboardPage, DashboardUpdate } from '@/components/Dashboard';
+import { listAnnouncements } from '@/lib/content/announcements';
 
 /**
  * The dashboard shell must render even when Supabase isn't configured yet
@@ -14,21 +15,32 @@ import type { DashboardPage } from '@/components/Dashboard';
  */
 async function loadDashboardData(): Promise<{
   pages: readonly DashboardPage[];
+  updates: readonly DashboardUpdate[];
   currentUser: CurrentUserSummary | null;
 }> {
   try {
     const supabase = await createServerClient();
-    const [pages, currentUser] = await Promise.all([
+    const currentUser = await getCurrentUserSummary(supabase);
+    if (!currentUser) return { pages: [], updates: [], currentUser: null };
+    const [pages, announcements] = await Promise.all([
       listDashboardPages(supabase),
-      getCurrentUserSummary(supabase),
+      listAnnouncements(supabase, 5),
     ]);
-    return { pages, currentUser };
+    const updates = announcements.map((announcement) => ({
+      id: announcement.id,
+      title: announcement.title,
+      createdAt: announcement.createdAt,
+      tags: announcement.tags.map((tag) => tag.name),
+    }));
+    return { pages, updates, currentUser };
   } catch {
-    return { pages: [], currentUser: null };
+    return { pages: [], updates: [], currentUser: null };
   }
 }
 
 export default async function HomePage() {
-  const { pages, currentUser } = await loadDashboardData();
-  return <Dashboard pages={pages} currentUser={currentUser} />;
+  const { pages, updates, currentUser } = await loadDashboardData();
+  return (
+    <Dashboard pages={pages} updates={updates} currentUser={currentUser} />
+  );
 }

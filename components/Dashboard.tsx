@@ -46,8 +46,16 @@ export interface CurrentUser {
   readonly role: 'admin' | 'teacher' | 'student';
 }
 
+export interface DashboardUpdate {
+  readonly id: string;
+  readonly title: string;
+  readonly createdAt: string;
+  readonly tags: readonly string[];
+}
+
 interface DashboardProps {
   pages: readonly DashboardPage[];
+  updates: readonly DashboardUpdate[];
   currentUser: CurrentUser | null;
 }
 
@@ -114,9 +122,11 @@ function toPageCard(page: DashboardPage): PageCard {
 function TopNav({
   identity,
   currentUser,
+  updates,
 }: {
   identity: { name: string; role: Role; initials: string };
   currentUser: CurrentUser | null;
+  updates: readonly DashboardUpdate[];
 }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -199,9 +209,31 @@ function TopNav({
               <div className="border-b border-slate-200 px-4 py-3 text-[12.5px] font-bold text-slate-900">
                 Tag updates
               </div>
-              <p className="px-4 py-5 text-[12.5px] text-slate-500">
-                No new tag updates.
-              </p>
+              {updates.length === 0 ? (
+                <p className="px-4 py-5 text-[12.5px] text-slate-500">
+                  No new tag updates.
+                </p>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {updates.map((update) => (
+                    <Link
+                      key={update.id}
+                      href="/announcements"
+                      className="block px-4 py-3 hover:bg-slate-50"
+                    >
+                      <span className="block text-[12.5px] font-semibold text-slate-900">
+                        {update.title}
+                      </span>
+                      <span className="mt-1 block text-[11px] text-slate-400">
+                        {update.tags.length > 0
+                          ? update.tags.join(', ')
+                          : 'Whole school'}{' '}
+                        · {formatRelativeTime(update.createdAt)}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -386,7 +418,11 @@ function FloatingActionButton() {
 // Dashboard
 // ---------------------------------------------------------------------------
 
-export default function Dashboard({ pages, currentUser }: DashboardProps) {
+export default function Dashboard({
+  pages,
+  updates,
+  currentUser,
+}: DashboardProps) {
   const [activeTag, setActiveTag] = useState('all');
 
   const identity = useMemo(
@@ -414,7 +450,11 @@ export default function Dashboard({ pages, currentUser }: DashboardProps) {
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
       <SkipToContentLink />
-      <TopNav identity={identity} currentUser={currentUser} />
+      <TopNav
+        identity={identity}
+        currentUser={currentUser}
+        updates={updates}
+      />
 
       <main id="main-content" className="mx-auto max-w-[1180px] px-8 pb-32 pt-9">
         <div className="mb-6">
