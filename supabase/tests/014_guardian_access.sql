@@ -7,7 +7,7 @@
 -- that file already owns institutional-trigger testing.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(19);
+select plan(20);
 
 insert into auth.users (id, email, aud, role) values
   ('00000000-0000-0000-0000-000000000901', 'guardian-admin@merchanttaylors.com', 'authenticated', 'authenticated'),
@@ -49,6 +49,22 @@ select lives_ok(
     array['90000000-0000-0000-0000-000000000001']::uuid[]) $$,
   'fixture: teacher posts an announcement on the shared tag'
 );
+
+-- Two marks for the linked pupil: only the explicitly released one may cross
+-- the guardian projection boundary.
+reset role;
+insert into public.files (id, owner_id, object_name, original_name, media_type, size_bytes, sha256, state, scanned_at) values
+  ('91000000-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000000903', 'guardian/released.pdf', 'released.pdf', 'application/pdf', 100, repeat('a', 64), 'ready', now()),
+  ('91000000-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000903', 'guardian/draft.pdf', 'draft.pdf', 'application/pdf', 100, repeat('b', 64), 'ready', now());
+insert into public.assignment_submissions (id, assignment_id, student_id, file_id) values
+  ('92000000-0000-4000-8000-000000000001', (select id from public.assignments where title = 'Guardian test assignment'), '00000000-0000-0000-0000-000000000903', '91000000-0000-4000-8000-000000000001'),
+  ('92000000-0000-4000-8000-000000000002', (select id from public.assignments where title = 'Guardian test assignment'), '00000000-0000-0000-0000-000000000903', '91000000-0000-4000-8000-000000000002');
+insert into public.assignment_grades (submission_id, grade, graded_by, released_by, released_at) values
+  ('92000000-0000-4000-8000-000000000001', 77, '00000000-0000-0000-0000-000000000902', '00000000-0000-0000-0000-000000000902', now()),
+  ('92000000-0000-4000-8000-000000000002', 44, '00000000-0000-0000-0000-000000000902', null, null);
+set local role authenticated;
+select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000902', true);
 
 -- Only an institution_admin can link a guardian.
 select throws_ok(
@@ -132,9 +148,15 @@ select is(
   1::bigint,
   'the authorized guardian sees exactly the one fixture announcement'
 );
-select lives_ok(
-  $$ select * from public.guardian_view_grades('00000000-0000-0000-0000-000000000903') $$,
-  'the authorized guardian can call guardian_view_grades without error'
+select is(
+  (select count(*) from public.guardian_view_grades('00000000-0000-0000-0000-000000000903'))::bigint,
+  1::bigint,
+  'the guardian sees the released mark but not the saved draft'
+);
+select is(
+  (select grade from public.guardian_view_grades('00000000-0000-0000-0000-000000000903'))::numeric,
+  77::numeric,
+  'the guardian projection returns the released mark'
 );
 
 -- Revocation: only an institution_admin can revoke, and it fails closed immediately.
