@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A run superseded by a newer push on the same ref is cancelled rather than
+# left to finish - saves runner minutes, and only the latest commit's status
+# matters for merge decisions.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: App gate (format, lint, typecheck, unit tests, build, e2e, audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.2
+          cache: npm
+
+      - run: npm ci
+
+      - name: Formatting
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E tests
+        # e2e/accessibility.spec.ts and e2e/dashboard.spec.ts only cover
+        # paths reachable without a real Supabase session by design - see
+        # the comment in e2e/accessibility.spec.ts. No local Postgres/
+        # Supabase stack is started for this job.
+        run: npm run test:e2e
+
+      - name: Dependency audit (production dependencies)
+        run: npm audit --omit=dev
+
+  database:
+    name: Database gate (append-only migrations + pgTAP, fresh DB)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase stack (applies every migration to a fresh DB)
+        run: supabase start
+
+      - name: Run pgTAP suite
+        run: supabase test db
+
+      - name: Stop local Supabase stack
+        if: always()
+        run: supabase stop
+
+  secret-scan:
+    name: Secret scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GITLEAKS_LICENSE is only required for GitHub Organization
+          # accounts; omit it for a personal-account repository.
