@@ -15,6 +15,13 @@ test-results/
 supabase/.branches/
 supabase/.temp/
 
+# Temporary local-login/session bridges (Entra SSO is not connected in any
+# dev/test environment here) - covers every past and future one by prefix,
+# never committed regardless of what a session happens to name it.
+app/dev-login/
+app/*-login-bridge/
+scripts/dev-login-*.sh
+
 # Environment and secrets
 .env
 .env.*
