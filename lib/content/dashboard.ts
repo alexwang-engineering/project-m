@@ -11,6 +11,42 @@ export interface PageSummaryTag {
   readonly displayName: string;
 }
 
+export interface CurrentUserSummary {
+  readonly email: string;
+  readonly role: 'admin' | 'teacher' | 'student';
+}
+
+/**
+ * The dashboard shell (name/role chip) needs to show who is actually signed
+ * in, not a placeholder - it previously never reflected the real session at
+ * all. Reads auth.getUser() for the email and role_assignments for the
+ * highest currently-valid role (admin > teacher > student); returns null
+ * when signed out, which the caller renders as a generic guest state.
+ */
+export async function getCurrentUserSummary(
+  client: Client,
+): Promise<CurrentUserSummary | null> {
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  if (!user?.email) return null;
+
+  const nowIso = new Date().toISOString();
+  const { data } = await client
+    .from('role_assignments')
+    .select('role')
+    .lte('valid_from', nowIso)
+    .or(`valid_until.is.null,valid_until.gt.${nowIso}`);
+  const roles = new Set((data ?? []).map((row) => row.role));
+  const role = roles.has('institution_admin')
+    ? 'admin'
+    : roles.has('teacher')
+      ? 'teacher'
+      : 'student';
+
+  return { email: user.email, role };
+}
+
 /** Stable server-to-UI contract for an authorized dashboard page card. */
 export interface PageSummary {
   readonly kind: 'page';

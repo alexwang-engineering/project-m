@@ -54,22 +54,43 @@ interface UrgentNotification {
   urgent: boolean;
 }
 
+export interface CurrentUser {
+  readonly email: string;
+  readonly role: 'admin' | 'teacher' | 'student';
+}
+
 interface DashboardProps {
   pages: readonly DashboardPage[];
+  currentUser: CurrentUser | null;
 }
 
 // ---------------------------------------------------------------------------
-// Pending contracts — no loader exists yet for the signed-in profile or for
-// tag-targeted notifications (Phase 5). Kept as explicit placeholders rather
-// than invented queries, same pattern as components/page-renderer.tsx.
+// Pending contract — no loader exists yet for tag-targeted notifications
+// (Phase 5). Kept as an explicit placeholder rather than an invented query,
+// same pattern as components/page-renderer.tsx. The signed-in user chip
+// below now reads the real session (see lib/content/dashboard.ts) instead
+// of being a placeholder like this.
 // ---------------------------------------------------------------------------
 
-const CURRENT_USER = {
-  name: 'Jonathan Dale',
-  email: 'j.dale@merchanttaylors.school.uk',
-  role: 'teacher' as Role,
-  initials: 'JD',
-};
+/** There's no display-name field in the schema (profiles only has email) - derives a readable name/initials from the email local-part. */
+function deriveDisplayIdentity(user: CurrentUser | null): {
+  name: string;
+  role: Role;
+  initials: string;
+} {
+  if (!user) return { name: 'Signed out', role: 'student', initials: '?' };
+  const localPart = user.email.split('@')[0] ?? user.email;
+  const words = localPart.split(/[.\-_]+/).filter(Boolean);
+  const name = words
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+  const initials =
+    words
+      .slice(0, 2)
+      .map((word) => word.charAt(0).toUpperCase())
+      .join('') || '?';
+  return { name: name || user.email, role: user.role, initials };
+}
 
 const NOTIFICATIONS: UrgentNotification[] = [
   { id: '1', tag: 'L6CH2', message: 'Organic Mechanisms homework due tomorrow, 9:00am', timeRelative: '42 minutes ago', urgent: true },
@@ -110,7 +131,13 @@ function toPageCard(page: DashboardPage): PageCard {
 // Top navigation
 // ---------------------------------------------------------------------------
 
-function TopNav() {
+function TopNav({
+  identity,
+  currentUser,
+}: {
+  identity: { name: string; role: Role; initials: string };
+  currentUser: CurrentUser | null;
+}) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
@@ -226,12 +253,12 @@ function TopNav() {
             className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 transition hover:border-slate-300"
           >
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#dfe7f7] text-[11.5px] font-bold text-[#254889]">
-              {CURRENT_USER.initials}
+              {identity.initials}
             </span>
             <span className="hidden text-left leading-tight sm:block">
-              <span className="block text-[12.5px] font-semibold text-slate-900">{CURRENT_USER.name}</span>
+              <span className="block text-[12.5px] font-semibold text-slate-900">{identity.name}</span>
               <span className="block text-[10.5px] font-semibold uppercase tracking-wide text-[#254889]">
-                {CURRENT_USER.role}
+                {identity.role}
               </span>
             </span>
             <ChevronDown size={13} strokeWidth={2.4} className="text-slate-400" />
@@ -239,8 +266,8 @@ function TopNav() {
 
           {profileOpen && (
             <div className="absolute right-0 top-[calc(100%+10px)] w-[220px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
-              <div className="px-4 pb-1 pt-3 text-[12.5px] font-bold text-slate-900">{CURRENT_USER.name}</div>
-              <div className="px-4 pb-3 text-[11.5px] text-slate-500">{CURRENT_USER.email}</div>
+              <div className="px-4 pb-1 pt-3 text-[12.5px] font-bold text-slate-900">{identity.name}</div>
+              <div className="px-4 pb-3 text-[11.5px] text-slate-500">{currentUser?.email ?? 'Not signed in'}</div>
               <button className="w-full border-t border-slate-200 px-4 py-2.5 text-left text-[12.5px] text-slate-900 hover:bg-slate-50">
                 Switch role view
               </button>
@@ -420,8 +447,13 @@ function FloatingActionButton() {
 // Dashboard
 // ---------------------------------------------------------------------------
 
-export default function Dashboard({ pages }: DashboardProps) {
+export default function Dashboard({ pages, currentUser }: DashboardProps) {
   const [activeTag, setActiveTag] = useState('all');
+
+  const identity = useMemo(
+    () => deriveDisplayIdentity(currentUser),
+    [currentUser],
+  );
 
   const cards = useMemo(() => pages.map(toPageCard), [pages]);
 
@@ -443,12 +475,12 @@ export default function Dashboard({ pages }: DashboardProps) {
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
       <SkipToContentLink />
-      <TopNav />
+      <TopNav identity={identity} currentUser={currentUser} />
 
       <main id="main-content" className="mx-auto max-w-[1180px] px-8 pb-32 pt-9">
         <div className="mb-6">
           <h1 className="text-[23px] font-bold tracking-tight text-slate-900">
-            Good afternoon, {CURRENT_USER.name.split(' ')[0]}
+            Good afternoon, {identity.name.split(' ')[0]}
           </h1>
           <p className="mt-0.5 text-[13px] text-slate-600">Here&rsquo;s what&rsquo;s moving across your tags today.</p>
         </div>

@@ -20,9 +20,14 @@ const SAMPLE_PAGES: DashboardPage[] = [
   },
 ];
 
+const SAMPLE_USER = {
+  email: 'j.dale@merchanttaylors.com',
+  role: 'teacher' as const,
+};
+
 describe('Dashboard', () => {
   it('renders the primary navigation and tag feed', () => {
-    render(<Dashboard pages={SAMPLE_PAGES} />);
+    render(<Dashboard pages={SAMPLE_PAGES} currentUser={SAMPLE_USER} />);
 
     expect(screen.getByText('Project', { exact: false })).toBeInTheDocument();
     expect(
@@ -38,8 +43,22 @@ describe('Dashboard', () => {
   });
 
   it('shows an empty state when there are no authorized pages', () => {
-    render(<Dashboard pages={[]} />);
+    render(<Dashboard pages={[]} currentUser={SAMPLE_USER} />);
 
     expect(screen.getByText('No pages yet')).toBeInTheDocument();
+  });
+
+  it('shows the real signed-in identity, not a hardcoded placeholder', () => {
+    render(<Dashboard pages={[]} currentUser={SAMPLE_USER} />);
+
+    expect(screen.getAllByText('J Dale').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('teacher').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Jonathan Dale')).not.toBeInTheDocument();
+  });
+
+  it('renders a generic guest state when signed out', () => {
+    render(<Dashboard pages={[]} currentUser={null} />);
+
+    expect(screen.getByText('Signed out')).toBeInTheDocument();
   });
 });
