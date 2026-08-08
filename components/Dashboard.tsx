@@ -9,8 +9,6 @@ import {
   FileText,
   FilePlus,
   Plus,
-  Upload,
-  Pencil,
   X,
 } from 'lucide-react';
 
@@ -236,9 +234,6 @@ function TopNav({
                   </div>
                 </div>
               ))}
-              <button className="w-full bg-slate-50 py-2.5 text-[12px] font-semibold text-[#254889]">
-                View all notifications
-              </button>
             </div>
           )}
         </div>
@@ -411,24 +406,6 @@ function FloatingActionButton() {
               <span className="text-[10.5px] text-slate-400">Block editor</span>
             </span>
           </Link>
-          <button className="flex w-full items-center gap-3 border-t border-slate-200 px-[15px] py-3.5 text-left hover:bg-slate-50">
-            <span className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-lg bg-[#eef2fa] text-[#254889]">
-              <Upload size={16} strokeWidth={2} />
-            </span>
-            <span className="flex flex-col">
-              <span className="text-[12.5px] font-semibold text-slate-900">Upload page</span>
-              <span className="text-[10.5px] text-slate-400">.mpx or PDF</span>
-            </span>
-          </button>
-          <button className="flex w-full items-center gap-3 border-t border-slate-200 px-[15px] py-3.5 text-left hover:bg-slate-50">
-            <span className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-lg bg-[#eef2fa] text-[#254889]">
-              <Pencil size={16} strokeWidth={2} />
-            </span>
-            <span className="flex flex-col">
-              <span className="text-[12.5px] font-semibold text-slate-900">Edit current page</span>
-              <span className="text-[10.5px] text-slate-400">Opens block editor</span>
-            </span>
-          </button>
         </div>
       )}
 
