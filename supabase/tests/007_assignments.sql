@@ -21,7 +21,7 @@ insert into public.role_assignments (profile_id, role, reason) values
   ('00000000-0000-0000-0000-000000000104', 'student', 'test fixture');
 
 insert into public.tags (id, tag_name, display_name, created_by) values
-  ('20000000-0000-0000-0000-000000000001', 'Y9MA1', 'Year 9 Maths Set 1', '00000000-0000-0000-0000-000000000101');
+  ('20000000-0000-0000-0000-000000000001', 'TST9MA1B', 'Test Year 9 Maths Set 1', '00000000-0000-0000-0000-000000000101');
 
 insert into public.tag_memberships (profile_id, tag_id, membership_role, source) values
   ('00000000-0000-0000-0000-000000000101', '20000000-0000-0000-0000-000000000001', 'teacher', 'test'),
