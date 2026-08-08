@@ -1,6 +1,14 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(6);
+select plan(7);
+
+select volatility_is(
+  'public',
+  'assert_valid_content',
+  array['jsonb', 'integer'],
+  'stable',
+  'content validation is not misdeclared immutable'
+);
 
 select lives_ok(
   $$ select public.assert_valid_content('{"schemaVersion":1,"blocks":[{"id":"p1","type":"paragraph","html":"<p>Safe <strong>text</strong></p>"}]}'::jsonb, 1) $$,
