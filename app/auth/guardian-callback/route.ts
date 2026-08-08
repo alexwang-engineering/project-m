@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { getAppOrigin } from '@/lib/auth/config';
 import { createServerClient } from '@/lib/supabase/server';
 
 /**
@@ -11,10 +12,18 @@ import { createServerClient } from '@/lib/supabase/server';
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
+  let appOrigin: string;
+  try {
+    appOrigin = getAppOrigin();
+  } catch {
+    return new NextResponse('Authentication is not configured.', {
+      status: 500,
+    });
+  }
   const code = url.searchParams.get('code');
   if (!code || code.length > 2048) {
     return NextResponse.redirect(
-      new URL('/parent/login?error=invalid_callback', url.origin),
+      new URL('/parent/login?error=invalid_callback', appOrigin),
     );
   }
 
@@ -22,10 +31,10 @@ export async function GET(request: Request) {
   const { error } = await client.auth.exchangeCodeForSession(code);
   if (error) {
     return NextResponse.redirect(
-      new URL('/parent/login?error=invalid_callback', url.origin),
+      new URL('/parent/login?error=invalid_callback', appOrigin),
     );
   }
-  return NextResponse.redirect(new URL('/parent', url.origin), {
+  return NextResponse.redirect(new URL('/parent', appOrigin), {
     headers: { 'Cache-Control': 'private, no-store' },
   });
 }

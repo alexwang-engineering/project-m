@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { Bold, Italic, Link as LinkIcon } from 'lucide-react';
 
+import { sanitizeEditorHtml } from '@/lib/html-sanitizer';
+
 interface RichTextFieldProps {
   /** Stable identity for the field - the DOM is only re-synced from `html` when this changes. */
   fieldKey: string;
@@ -60,8 +62,23 @@ export function RichTextField({
   }
 
   function insertLink() {
-    const url = window.prompt('Link URL');
-    if (url) exec('createLink', url);
+    const input = window.prompt('Link URL');
+    if (!input) return;
+    try {
+      const url = new URL(input, window.location.origin);
+      if (!['http:', 'https:', 'mailto:'].includes(url.protocol)) return;
+      exec('createLink', input);
+    } catch {
+      return;
+    }
+  }
+
+  function paste(event: React.ClipboardEvent<HTMLDivElement>) {
+    event.preventDefault();
+    const clipboard = event.clipboardData;
+    const html = clipboard.getData('text/html');
+    if (html) exec('insertHTML', sanitizeEditorHtml(html));
+    else exec('insertText', clipboard.getData('text/plain'));
   }
 
   return (
@@ -101,6 +118,7 @@ export function RichTextField({
         ref={ref}
         contentEditable
         suppressContentEditableWarning
+        onPaste={paste}
         onInput={(e) => onChange(e.currentTarget.innerHTML)}
         data-placeholder={placeholder}
         className={

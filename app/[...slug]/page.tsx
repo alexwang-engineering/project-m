@@ -12,7 +12,6 @@ import { PageRenderer, type BlockFileInfo } from '@/components/page-renderer';
 import { createFileDownload } from '@/lib/files/service';
 import { canonicalPathFromSegments } from '@/lib/content/canonical';
 import { resolvePage } from '@/lib/content/repository';
-import { listWritableTags } from '@/lib/content/pages-editor';
 import type { Database } from '@/lib/database.types';
 
 interface RouteParams {
@@ -46,21 +45,17 @@ export default async function CanonicalPage({ params }: RouteParams) {
   if (!lastSegment) notFound();
   const resolution = await resolvePage(supabase, requestedPath, lastSegment);
   if (resolution.kind === 'page') {
-    const { id, title, content, tagIds } = resolution.page;
+    const { id, title, content } = resolution.page;
     const [files, { data: userData }] = await Promise.all([
       loadBlockFiles(supabase, content),
       supabase.auth.getUser(),
     ]);
     let editHref: string | undefined;
     if (userData.user) {
-      const writable = await listWritableTags(supabase);
-      const writableIds = new Set(writable.map((tag) => tag.id));
-      if (
-        tagIds.length > 0 &&
-        tagIds.every((tagId) => writableIds.has(tagId))
-      ) {
-        editHref = `/pages/${id}/edit`;
-      }
+      const { data: canEdit } = await supabase.rpc('can_edit_page', {
+        target_page: id,
+      });
+      if (canEdit) editHref = `/pages/${id}/edit`;
     }
     return (
       <PageRenderer

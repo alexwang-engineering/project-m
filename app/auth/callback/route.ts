@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { verifyInstitutionalUser } from '@/lib/auth/admission';
-import { getInstitutionalAuthConfig } from '@/lib/auth/config';
+import { getAppOrigin, getInstitutionalAuthConfig } from '@/lib/auth/config';
 import { safeNextPath } from '@/lib/auth/redirects';
 import { createServerClient } from '@/lib/supabase/server';
 
@@ -17,8 +17,15 @@ function errorRedirect(origin: string, code: string): NextResponse {
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
-  if (!code || code.length > 2048)
-    return errorRedirect(url.origin, 'invalid_callback');
+  if (!code || code.length > 2048) {
+    try {
+      return errorRedirect(getAppOrigin(), 'invalid_callback');
+    } catch {
+      return new NextResponse('Authentication is not configured.', {
+        status: 500,
+      });
+    }
+  }
 
   try {
     const config = getInstitutionalAuthConfig();
@@ -39,6 +46,12 @@ export async function GET(request: Request) {
       headers: { 'Cache-Control': 'private, no-store' },
     });
   } catch {
-    return errorRedirect(url.origin, 'configuration');
+    try {
+      return errorRedirect(getAppOrigin(), 'configuration');
+    } catch {
+      return new NextResponse('Authentication is not configured.', {
+        status: 500,
+      });
+    }
   }
 }

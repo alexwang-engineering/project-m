@@ -1,32 +1,6 @@
 import 'server-only';
 
-import DOMPurify, { type Config } from 'isomorphic-dompurify';
-
-const SANITIZE_OPTIONS: Config = {
-  ALLOWED_TAGS: [
-    'p', 'br', 'strong', 'em', 'u', 's', 'blockquote', 'pre', 'code',
-    'h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'a', 'table', 'thead',
-    'tbody', 'tr', 'th', 'td', 'hr', 'span', 'sub', 'sup',
-  ],
-  ALLOWED_ATTR: ['href', 'title', 'colspan', 'rowspan', 'scope'],
-  ALLOW_DATA_ATTR: false,
-  ALLOW_ARIA_ATTR: false,
-  ALLOW_UNKNOWN_PROTOCOLS: false,
-  FORBID_TAGS: ['script', 'style', 'svg', 'math', 'iframe', 'object', 'embed'],
-  FORBID_ATTR: ['style', 'srcset', 'formaction', 'target'],
-  RETURN_DOM: false,
-  RETURN_DOM_FRAGMENT: false,
-  RETURN_TRUSTED_TYPE: false,
-};
-
-/** Sanitises an HTML fragment using Project M's WYSIWYG allow-list. */
-export function sanitizeEditorHtml(html: string): string {
-  if (typeof html !== 'string') {
-    throw new TypeError('Editor HTML must be a string.');
-  }
-
-  return DOMPurify.sanitize(html, SANITIZE_OPTIONS);
-}
+export { sanitizeEditorHtml } from '@/lib/html-sanitizer';
 
 function normaliseTag(tag: string): string | null {
   if (typeof tag !== 'string') return null;
@@ -56,23 +30,4 @@ export function verifyTagAccess(
     required.length > 0 &&
     required.every((tag): tag is string => tag !== null && owned.has(tag))
   );
-}
-
-/** Throws a generic authorization error suitable for an API 403 response. */
-export function assertTagAccess(
-  userTags: readonly string[],
-  requiredTags: readonly string[],
-): void {
-  if (!verifyTagAccess(userTags, requiredTags)) {
-    throw new TagAccessDeniedError();
-  }
-}
-
-export class TagAccessDeniedError extends Error {
-  readonly statusCode = 403;
-
-  constructor() {
-    super('You do not have permission to edit this page.');
-    this.name = 'TagAccessDeniedError';
-  }
 }
