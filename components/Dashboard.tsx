@@ -21,7 +21,7 @@ import { SearchBox } from '@/components/search/SearchBox';
 // Types
 // ---------------------------------------------------------------------------
 
-type Role = 'admin' | 'teacher' | 'student';
+type Role = 'admin' | 'teacher' | 'student' | 'guest';
 
 /** Matches `PageSummary` from lib/content/dashboard.ts (Codex's typed loader). */
 export interface DashboardPage {
@@ -65,7 +65,7 @@ function deriveDisplayIdentity(user: CurrentUser | null): {
   role: Role;
   initials: string;
 } {
-  if (!user) return { name: 'Signed out', role: 'student', initials: '?' };
+  if (!user) return { name: 'Guest', role: 'guest', initials: '?' };
   const localPart = user.email.split('@')[0] ?? user.email;
   const words = localPart.split(/[.\-_]+/).filter(Boolean);
   const name = words
@@ -207,7 +207,8 @@ function TopNav({
         </div>
 
         {/* Profile — Outlook-style role chip */}
-        <div className="relative" ref={profileRef}>
+        {signedIn ? (
+          <div className="relative" ref={profileRef}>
           <button
             onClick={() => {
               setProfileOpen((v) => !v);
@@ -230,24 +231,23 @@ function TopNav({
           {profileOpen && (
             <div className="absolute right-0 top-[calc(100%+10px)] w-[220px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
               <div className="px-4 pb-1 pt-3 text-[12.5px] font-bold text-slate-900">{identity.name}</div>
-              <div className="px-4 pb-3 text-[11.5px] text-slate-500">{currentUser?.email ?? 'Not signed in'}</div>
-              {signedIn ? (
-                <form action="/auth/logout" method="post" className="border-t border-slate-200">
-                  <button className="w-full px-4 py-2.5 text-left text-[12.5px] font-medium text-[#d0483c] hover:bg-slate-50">
-                    Sign out
-                  </button>
-                </form>
-              ) : (
-                <Link
-                  href="/auth/login"
-                  className="block border-t border-slate-200 px-4 py-2.5 text-[12.5px] font-medium text-[#254889] hover:bg-slate-50"
-                >
-                  Sign in
-                </Link>
-              )}
+              <div className="px-4 pb-3 text-[11.5px] text-slate-500">{currentUser.email}</div>
+              <form action="/auth/logout" method="post" className="border-t border-slate-200">
+                <button className="w-full px-4 py-2.5 text-left text-[12.5px] font-medium text-[#d0483c] hover:bg-slate-50">
+                  Sign out
+                </button>
+              </form>
             </div>
           )}
-        </div>
+          </div>
+        ) : (
+          <Link
+            href="/auth/login"
+            className="rounded-lg bg-[#254889] px-4 py-2 text-[12.5px] font-semibold text-white transition hover:bg-[#1c3a70]"
+          >
+            Sign in with Microsoft
+          </Link>
+        )}
       </div>
     </header>
   );
@@ -419,9 +419,15 @@ export default function Dashboard({ pages, currentUser }: DashboardProps) {
       <main id="main-content" className="mx-auto max-w-[1180px] px-8 pb-32 pt-9">
         <div className="mb-6">
           <h1 className="text-[23px] font-bold tracking-tight text-slate-900">
-            Good afternoon, {identity.name.split(' ')[0]}
+            {currentUser
+              ? `Good afternoon, ${identity.name.split(' ')[0]}`
+              : 'Welcome to Project M'}
           </h1>
-          <p className="mt-0.5 text-[13px] text-slate-600">Here&rsquo;s what&rsquo;s moving across your tags today.</p>
+          <p className="mt-0.5 text-[13px] text-slate-600">
+            {currentUser
+              ? 'Here’s what’s moving across your tags today.'
+              : 'Sign in with your school Microsoft account to access your pages and files.'}
+          </p>
         </div>
 
         <TagRail tags={tags} activeTag={activeTag} onSelect={setActiveTag} />

@@ -68,7 +68,13 @@ describe('Dashboard', () => {
     const { container } = render(<Dashboard pages={[]} currentUser={null} />);
     const view = within(container);
 
-    expect(view.getByText('Signed out')).toBeInTheDocument();
+    expect(view.getByText('Welcome to Project M')).toBeInTheDocument();
+    expect(
+      view.getByRole('link', { name: 'Sign in with Microsoft' }),
+    ).toHaveAttribute('href', '/auth/login');
+    expect(
+      view.queryByText('student', { exact: false }),
+    ).not.toBeInTheDocument();
     expect(
       view.queryByRole('button', { name: 'Create' }),
     ).not.toBeInTheDocument();
