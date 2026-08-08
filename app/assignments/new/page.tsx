@@ -12,5 +12,6 @@ export default async function NewAssignmentPage() {
   if (!data.user) redirect('/');
 
   const writableTags = await listWritableTags(supabase);
+  if (writableTags.length === 0) redirect('/assignments');
   return <AssignmentEditor writableTags={writableTags} />;
 }

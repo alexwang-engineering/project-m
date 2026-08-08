@@ -17,6 +17,7 @@ import type { AssignmentSummary } from '@/lib/content/assignments';
 
 interface AssignmentsViewProps {
   assignments: readonly AssignmentSummary[];
+  canCreate: boolean;
 }
 
 type SubmissionStep =
@@ -204,7 +205,10 @@ function AssignmentCard({
   );
 }
 
-export default function AssignmentsView({ assignments }: AssignmentsViewProps) {
+export default function AssignmentsView({
+  assignments,
+  canCreate,
+}: AssignmentsViewProps) {
   const [states, setStates] = useState<Record<string, SubmissionState>>({});
   const [completed, setCompleted] = useState<ReadonlySet<string>>(new Set());
 
@@ -254,13 +258,15 @@ export default function AssignmentsView({ assignments }: AssignmentsViewProps) {
         backLabel="Dashboard"
         title="Assignments"
         actions={
-          <Link
-            href="/assignments/new"
-            className="bg-brand-600 hover:bg-brand-700 flex h-9 items-center gap-1.5 rounded-lg px-3.5 text-[12.5px] font-semibold text-white transition"
-          >
-            <Plus size={14} strokeWidth={2.4} />
-            New assignment
-          </Link>
+          canCreate ? (
+            <Link
+              href="/assignments/new"
+              className="bg-brand-600 hover:bg-brand-700 flex h-9 items-center gap-1.5 rounded-lg px-3.5 text-[12.5px] font-semibold text-white transition"
+            >
+              <Plus size={14} strokeWidth={2.4} />
+              New assignment
+            </Link>
+          ) : undefined
         }
       />
 
