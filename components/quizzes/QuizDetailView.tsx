@@ -139,7 +139,11 @@ export default function QuizDetailView({ quiz }: QuizDetailViewProps) {
         title={quiz.title}
       />
 
-      <main id="main-content" className="mx-auto max-w-[720px] px-8 pt-9 pb-24">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto max-w-[720px] px-8 pt-9 pb-24"
+      >
         <div className="mb-6">
           <h1 className="text-[20px] font-bold tracking-tight text-slate-900">
             {quiz.canManage

@@ -5,6 +5,9 @@ import type {
   MigrationResource,
 } from '@/lib/content/migration-types';
 
+export const MAX_MIGRATION_MANIFEST_BYTES = 5 * 1024 * 1024;
+export const MAX_MIGRATION_ITEMS = 1_000;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
@@ -115,10 +118,26 @@ function parseQuiz(
       );
       return null;
     }
-    const choices = q.choices.filter((c): c is string => typeof c === 'string');
+    if (!q.choices.every((choice) => typeof choice === 'string')) {
+      errors.push(
+        `quizzes[${index}].questions[${qi}].choices must contain only strings.`,
+      );
+      return null;
+    }
+    const choices = q.choices as string[];
     if (choices.length < 2) {
       errors.push(
         `quizzes[${index}].questions[${qi}] needs at least 2 choices.`,
+      );
+      return null;
+    }
+    if (
+      !Number.isInteger(q.correctChoiceIndex) ||
+      q.correctChoiceIndex < 0 ||
+      q.correctChoiceIndex >= choices.length
+    ) {
+      errors.push(
+        `quizzes[${index}].questions[${qi}].correctChoiceIndex is out of range.`,
       );
       return null;
     }
@@ -155,6 +174,12 @@ export function parseMigrationManifest(text: string): {
   readonly manifest: MigrationManifest | null;
   readonly errors: readonly string[];
 } {
+  if (new TextEncoder().encode(text).byteLength > MAX_MIGRATION_MANIFEST_BYTES)
+    return {
+      manifest: null,
+      errors: ['The manifest must be 5 MB or smaller.'],
+    };
+
   let raw: unknown;
   try {
     raw = JSON.parse(text);
@@ -163,6 +188,26 @@ export function parseMigrationManifest(text: string): {
   }
   if (!isRecord(raw))
     return { manifest: null, errors: ['The manifest must be a JSON object.'] };
+
+  for (const key of ['resources', 'assignments', 'quizzes'] as const) {
+    if (raw[key] !== undefined && !Array.isArray(raw[key]))
+      return {
+        manifest: null,
+        errors: [`${key} must be an array when provided.`],
+      };
+  }
+
+  const itemCount = ['resources', 'assignments', 'quizzes'].reduce(
+    (total, key) => total + ((raw[key] as unknown[] | undefined)?.length ?? 0),
+    0,
+  );
+  if (itemCount > MAX_MIGRATION_ITEMS)
+    return {
+      manifest: null,
+      errors: [
+        `The manifest cannot contain more than ${MAX_MIGRATION_ITEMS} items.`,
+      ],
+    };
 
   const errors: string[] = [];
   const resources = (Array.isArray(raw.resources) ? raw.resources : [])

@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(9);
+select plan(10);
 
 select is(
   public.before_user_created_institutional('{"user":{"email":"teacher@merchanttaylors.com","app_metadata":{"provider":"azure"}}}'::jsonb) #>> '{error,http_code}',
@@ -69,6 +69,11 @@ select is(
 insert into public.guardian_links (pupil_id, guardian_email, created_by, reason)
 values ('90000000-0000-4000-8000-000000000001', 'guardian@example.com',
   '90000000-0000-4000-8000-000000000001', 'test fixture');
+select is(
+  public.before_user_created_institutional('{"user":{"email":"guardian@example.com","app_metadata":{"provider":"email"}}}'::jsonb),
+  '{}'::jsonb,
+  'the global auth hook admits a pre-authorized guardian when institutional auth is enabled'
+);
 insert into auth.users (id, email, aud, role, raw_app_meta_data, email_confirmed_at)
 values ('90000000-0000-4000-8000-000000000002', 'guardian@example.com',
   'authenticated', 'authenticated', '{"provider":"email"}'::jsonb, now());

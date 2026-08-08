@@ -44,7 +44,11 @@ export default async function AdminPage() {
         }
       />
 
-      <main id="main-content" className="mx-auto max-w-[900px] px-8 pt-9 pb-24">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto max-w-[900px] px-8 pt-9 pb-24"
+      >
         <CreateTagForm />
         <RosterSyncPanel />
         <MigrationImportPanel />

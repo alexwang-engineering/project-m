@@ -12,11 +12,13 @@ export default async function NewPagePage() {
   if (!data.user) redirect('/');
 
   const writableTags = await listWritableTags(supabase);
+  if (writableTags.length === 0) redirect('/');
   return (
     <PageEditor
       writableTags={writableTags}
       initial={{
         id: null,
+        parentId: null,
         title: '',
         slug: '',
         version: null,

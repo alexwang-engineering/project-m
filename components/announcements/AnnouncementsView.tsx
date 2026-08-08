@@ -117,8 +117,17 @@ export function AnnouncementsView({
       <SkipToContentLink />
       <SubPageHeader backHref="/" backLabel="Dashboard" title="Announcements" />
 
-      <main id="main-content" className="mx-auto max-w-[900px] px-8 pt-9 pb-24">
-        <CreateAnnouncementForm writableTags={writableTags} isAdmin={isAdmin} />
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto max-w-[900px] px-8 pt-9 pb-24"
+      >
+        {(isAdmin || writableTags.length > 0) && (
+          <CreateAnnouncementForm
+            writableTags={writableTags}
+            isAdmin={isAdmin}
+          />
+        )}
 
         {error && <p className="mb-4 text-[12.5px] text-red-600">{error}</p>}
 

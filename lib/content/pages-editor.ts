@@ -27,6 +27,23 @@ export interface WritableTag {
 export async function listWritableTags(
   client: Client,
 ): Promise<readonly WritableTag[]> {
+  const { data: isAdmin, error: roleError } = await client.rpc(
+    'current_principal_is_admin',
+  );
+  if (roleError) throw roleError;
+  if (isAdmin) {
+    const { data, error } = await client
+      .from('tags')
+      .select('id, tag_name, display_name')
+      .eq('is_active', true)
+      .order('tag_name');
+    if (error) throw error;
+    return (data ?? []).map((tag) => ({
+      id: tag.id,
+      name: tag.tag_name,
+      displayName: tag.display_name,
+    }));
+  }
   const { data, error } = await client
     .from('tag_memberships')
     .select('tags!inner(id, tag_name, display_name)')
@@ -69,6 +86,12 @@ export async function getPageForEdit(
   pageId: string,
 ): Promise<EditablePage | null> {
   if (!UUID.test(pageId)) return null;
+  const { data: canEdit, error: authorizationError } = await client.rpc(
+    'can_edit_page',
+    { target_page: pageId },
+  );
+  if (authorizationError) throw authorizationError;
+  if (!canEdit) return null;
   const { data, error } = await client
     .from('pages')
     .select(

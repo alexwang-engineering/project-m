@@ -88,7 +88,11 @@ export function ReportsView({
       <SkipToContentLink />
       <SubPageHeader backHref="/admin" backLabel="Admin" title="Reports" />
 
-      <main id="main-content" className="mx-auto max-w-[900px] px-8 pt-9 pb-24">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto max-w-[900px] px-8 pt-9 pb-24"
+      >
         <p className="mb-6 text-[12.5px] text-slate-500">
           Operational reporting only, not a compliance export — see ADR-017. For
           GDPR data-subject or safeguarding audit exports, a named human privacy

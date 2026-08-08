@@ -16,5 +16,6 @@ export default async function NewQuizPage() {
     listWritableTags(supabase),
     listBankItems(supabase),
   ]);
+  if (writableTags.length === 0) redirect('/quizzes');
   return <QuizEditor writableTags={writableTags} bankItems={bankItems} />;
 }

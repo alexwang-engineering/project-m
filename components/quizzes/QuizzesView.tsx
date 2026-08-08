@@ -11,6 +11,7 @@ import type { QuizSummary } from '@/lib/content/quizzes';
 
 interface QuizzesViewProps {
   quizzes: readonly QuizSummary[];
+  canCreate: boolean;
 }
 
 function isOverdue(dueAt: string | null): boolean {
@@ -68,7 +69,7 @@ function QuizCard({ quiz }: { quiz: QuizSummary }) {
   );
 }
 
-export default function QuizzesView({ quizzes }: QuizzesViewProps) {
+export default function QuizzesView({ quizzes, canCreate }: QuizzesViewProps) {
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
       <SkipToContentLink />
@@ -77,25 +78,31 @@ export default function QuizzesView({ quizzes }: QuizzesViewProps) {
         backLabel="Dashboard"
         title="Quizzes"
         actions={
-          <>
-            <Link
-              href="/question-bank"
-              className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-3.5 text-[12.5px] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
-            >
-              Question bank
-            </Link>
-            <Link
-              href="/quizzes/new"
-              className="bg-brand-600 hover:bg-brand-700 flex h-9 items-center gap-1.5 rounded-lg px-3.5 text-[12.5px] font-semibold text-white transition"
-            >
-              <Plus size={14} strokeWidth={2.4} />
-              New quiz
-            </Link>
-          </>
+          canCreate ? (
+            <>
+              <Link
+                href="/question-bank"
+                className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-3.5 text-[12.5px] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+              >
+                Question bank
+              </Link>
+              <Link
+                href="/quizzes/new"
+                className="bg-brand-600 hover:bg-brand-700 flex h-9 items-center gap-1.5 rounded-lg px-3.5 text-[12.5px] font-semibold text-white transition"
+              >
+                <Plus size={14} strokeWidth={2.4} />
+                New quiz
+              </Link>
+            </>
+          ) : undefined
         }
       />
 
-      <main id="main-content" className="mx-auto max-w-[900px] px-8 pt-9 pb-24">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto max-w-[900px] px-8 pt-9 pb-24"
+      >
         {quizzes.length === 0 ? (
           <EmptyState
             icon={<HelpCircle size={20} strokeWidth={2} />}

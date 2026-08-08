@@ -17,6 +17,7 @@ import {
   isBlockReady,
   type BlockDraft,
 } from '@/components/pages/block-draft';
+import { sanitizeEditorHtml } from '@/lib/html-sanitizer';
 
 interface MpxPageContent {
   readonly title: string;
@@ -185,14 +186,18 @@ function parseImportedBlock(raw: unknown): BlockDraft | null {
       return {
         id,
         type: 'paragraph',
-        html: typeof value.html === 'string' ? value.html : '',
+        html: sanitizeEditorHtml(
+          typeof value.html === 'string' ? value.html : '',
+        ),
       };
     case 'heading':
       return {
         id,
         type: 'heading',
         level: value.level === 3 || value.level === 4 ? value.level : 2,
-        html: typeof value.html === 'string' ? value.html : '',
+        html: sanitizeEditorHtml(
+          typeof value.html === 'string' ? value.html : '',
+        ),
       };
     case 'list':
       return {
@@ -200,16 +205,18 @@ function parseImportedBlock(raw: unknown): BlockDraft | null {
         type: 'list',
         ordered: value.ordered === true,
         items: Array.isArray(value.items)
-          ? value.items.filter(
-              (item): item is string => typeof item === 'string',
-            )
+          ? value.items
+              .filter((item): item is string => typeof item === 'string')
+              .map(sanitizeEditorHtml)
           : [],
       };
     case 'quote':
       return {
         id,
         type: 'quote',
-        html: typeof value.html === 'string' ? value.html : '',
+        html: sanitizeEditorHtml(
+          typeof value.html === 'string' ? value.html : '',
+        ),
         attribution:
           typeof value.attribution === 'string' ? value.attribution : '',
       };
@@ -229,7 +236,9 @@ function parseImportedBlock(raw: unknown): BlockDraft | null {
             ? value.tone
             : 'neutral',
         title: typeof value.title === 'string' ? value.title : '',
-        html: typeof value.html === 'string' ? value.html : '',
+        html: sanitizeEditorHtml(
+          typeof value.html === 'string' ? value.html : '',
+        ),
       };
     case 'file':
       return {

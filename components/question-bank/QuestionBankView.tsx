@@ -55,7 +55,11 @@ export function QuestionBankView({
         title="Question bank"
       />
 
-      <main id="main-content" className="mx-auto max-w-[760px] px-8 pt-9 pb-24">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto max-w-[760px] px-8 pt-9 pb-24"
+      >
         <CreateBankItemForm
           writableTags={writableTags}
           onCreated={() => router.refresh()}

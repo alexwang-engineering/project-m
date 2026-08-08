@@ -32,7 +32,6 @@ export default defineConfig([
     'coverage/**',
     'playwright-report/**',
     'test-results/**',
-    'dashboard-preview.html',
     'supabase/.temp/**',
     'supabase/.branches/**',
     // Temporary, gitignored local-login test scaffold (see .gitignore) -

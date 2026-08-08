@@ -258,6 +258,69 @@ export async function assignTagMembership(
   return error ? failure(error) : { ok: true };
 }
 
+/** Closes every active grant for one system role while preserving its audit history. */
+export async function revokeSystemRole(
+  client: Client,
+  input: unknown,
+): Promise<AdminActionResult> {
+  const value = record(input);
+  if (
+    !value ||
+    typeof value.profileId !== 'string' ||
+    !UUID.test(value.profileId) ||
+    typeof value.role !== 'string' ||
+    !SYSTEM_ROLES.includes(value.role as SystemRole) ||
+    typeof value.reason !== 'string' ||
+    !value.reason.trim()
+  )
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Valid role revocation details are required.',
+    };
+
+  const { error } = await client.rpc('revoke_system_role', {
+    target_profile: value.profileId,
+    revoked_role: value.role as SystemRole,
+    revocation_reason: value.reason.trim(),
+    correlation_id: crypto.randomUUID(),
+  });
+  return error ? failure(error) : { ok: true };
+}
+
+/** Closes every active matching tag-membership grant while preserving history. */
+export async function revokeTagMembership(
+  client: Client,
+  input: unknown,
+): Promise<AdminActionResult> {
+  const value = record(input);
+  if (
+    !value ||
+    typeof value.profileId !== 'string' ||
+    !UUID.test(value.profileId) ||
+    typeof value.tagId !== 'string' ||
+    !UUID.test(value.tagId) ||
+    typeof value.role !== 'string' ||
+    !MEMBERSHIP_ROLES.includes(value.role as MembershipRole) ||
+    typeof value.reason !== 'string' ||
+    !value.reason.trim()
+  )
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Valid membership revocation details are required.',
+    };
+
+  const { error } = await client.rpc('revoke_tag_membership', {
+    target_profile: value.profileId,
+    target_tag: value.tagId,
+    revoked_membership_role: value.role as MembershipRole,
+    revocation_reason: value.reason.trim(),
+    correlation_id: crypto.randomUUID(),
+  });
+  return error ? failure(error) : { ok: true };
+}
+
 /** Enables or disables a profile via the audited RPC. */
 export async function setProfileState(
   client: Client,

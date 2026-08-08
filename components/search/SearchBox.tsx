@@ -72,6 +72,7 @@ export function SearchBox() {
           type="search"
           aria-label="Search pages, assignments, quizzes, announcements, and events"
           value={query}
+          maxLength={200}
           onChange={(e) => {
             setQuery(e.target.value);
             setOpen(true);

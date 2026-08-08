@@ -4,7 +4,11 @@ import { useRef, useState } from 'react';
 import { Loader2, Upload } from 'lucide-react';
 
 import { syncRosterAction } from '@/app/actions/roster-sync';
-import { parseRosterCsv, type RosterRow } from '@/lib/content/roster-csv';
+import {
+  MAX_ROSTER_FILE_BYTES,
+  parseRosterCsv,
+  type RosterRow,
+} from '@/lib/content/roster-csv';
 import type { RosterSyncReport } from '@/lib/content/roster-sync';
 
 const fieldClass = 'text-[12.5px] text-slate-600';
@@ -53,6 +57,11 @@ export function RosterSyncPanel() {
     setReport(null);
     setError(null);
     setApplied(false);
+    if (file.size > MAX_ROSTER_FILE_BYTES) {
+      setRows([]);
+      setParseErrors(['The roster CSV must be 5 MB or smaller.']);
+      return;
+    }
     const text = await file.text();
     const parsed = parseRosterCsv(text);
     setRows(parsed.rows);

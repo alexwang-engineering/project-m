@@ -34,6 +34,58 @@ export type Database = {
   };
   public: {
     Tables: {
+      assignment_grades: {
+        Row: {
+          feedback: string | null;
+          grade: number;
+          graded_at: string;
+          graded_by: string;
+          released_at: string | null;
+          released_by: string | null;
+          submission_id: string;
+        };
+        Insert: {
+          feedback?: string | null;
+          grade: number;
+          graded_at?: string;
+          graded_by: string;
+          released_at?: string | null;
+          released_by?: string | null;
+          submission_id: string;
+        };
+        Update: {
+          feedback?: string | null;
+          grade?: number;
+          graded_at?: string;
+          graded_by?: string;
+          released_at?: string | null;
+          released_by?: string | null;
+          submission_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'assignment_grades_submission_id_fkey';
+            columns: ['submission_id'];
+            isOneToOne: true;
+            referencedRelation: 'assignment_submissions';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'assignment_grades_graded_by_fkey';
+            columns: ['graded_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'assignment_grades_released_by_fkey';
+            columns: ['released_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       assignment_submissions: {
         Row: {
           assignment_id: string;
@@ -752,6 +804,8 @@ export type Database = {
           size_bytes: number;
           state: Database['public']['Enums']['file_state'];
           updated_at: string;
+          verification_lease_id: string | null;
+          verification_started_at: string | null;
         };
         Insert: {
           archived_at?: string | null;
@@ -768,6 +822,8 @@ export type Database = {
           size_bytes: number;
           state?: Database['public']['Enums']['file_state'];
           updated_at?: string;
+          verification_lease_id?: string | null;
+          verification_started_at?: string | null;
         };
         Update: {
           archived_at?: string | null;
@@ -784,6 +840,8 @@ export type Database = {
           size_bytes?: number;
           state?: Database['public']['Enums']['file_state'];
           updated_at?: string;
+          verification_lease_id?: string | null;
+          verification_started_at?: string | null;
         };
         Relationships: [
           {
@@ -1264,6 +1322,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      consume_search_quota: { Args: never; Returns: boolean };
       assert_can_assign_tags: {
         Args: { actor: string; tag_ids: string[] };
         Returns: undefined;
@@ -1342,6 +1401,43 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      claim_file_for_verification: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          archived_at: string | null;
+          bucket_id: string;
+          created_at: string;
+          id: string;
+          media_type: string;
+          object_name: string;
+          original_name: string;
+          owner_id: string;
+          quarantine_reason: string | null;
+          scanned_at: string | null;
+          sha256: string;
+          size_bytes: number;
+          state: Database['public']['Enums']['file_state'];
+          updated_at: string;
+          verification_lease_id: string;
+          verification_started_at: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'files';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      complete_file_verification: {
+        Args: {
+          correlation_id?: string;
+          lease_id: string;
+          outcome: Database['public']['Enums']['file_state'];
+          reason?: string;
+          target_file_id: string;
+        };
+        Returns: undefined;
       };
       can_edit_page: { Args: { target_page: string }; Returns: boolean };
       can_manage_assignment: {
@@ -1446,6 +1542,34 @@ export type Database = {
       };
       revoke_guardian_link: {
         Args: { correlation_id?: string; target_link_id: string };
+        Returns: undefined;
+      };
+      revoke_page_editor: {
+        Args: {
+          correlation_id?: string;
+          revocation_reason: string;
+          target_page: string;
+          target_profile: string;
+        };
+        Returns: undefined;
+      };
+      revoke_system_role: {
+        Args: {
+          correlation_id?: string;
+          revocation_reason: string;
+          revoked_role: Database['public']['Enums']['system_role'];
+          target_profile: string;
+        };
+        Returns: undefined;
+      };
+      revoke_tag_membership: {
+        Args: {
+          correlation_id?: string;
+          revocation_reason: string;
+          revoked_membership_role: Database['public']['Enums']['membership_role'];
+          target_profile: string;
+          target_tag: string;
+        };
         Returns: undefined;
       };
       create_announcement: {
@@ -1642,6 +1766,16 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      teacher_gradebook_rollups: {
+        Args: { row_limit?: number };
+        Returns: {
+          average_percent: number | null;
+          item_id: string;
+          item_kind: string;
+          item_title: string;
+          submission_count: number;
+        }[];
+      };
       grade_assignment_submission: {
         Args: {
           correlation_id?: string;
@@ -1664,6 +1798,27 @@ export type Database = {
         SetofOptions: {
           from: '*';
           to: 'assignment_submissions';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      release_assignment_grade: {
+        Args: {
+          correlation_id?: string;
+          target_submission_id: string;
+        };
+        Returns: {
+          feedback: string | null;
+          grade: number;
+          graded_at: string;
+          graded_by: string;
+          released_at: string | null;
+          released_by: string | null;
+          submission_id: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'assignment_grades';
           isOneToOne: true;
           isSetofReturn: false;
         };

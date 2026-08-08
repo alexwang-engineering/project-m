@@ -8,7 +8,10 @@ import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
 import { SubPageHeader } from '@/components/ui/SubPageHeader';
 import { formatRelativeTime } from '@/lib/relative-time';
 import { createFileDownloadAction } from '@/app/actions/files';
-import { gradeSubmissionAction } from '@/app/actions/assignments';
+import {
+  gradeSubmissionAction,
+  releaseSubmissionGradeAction,
+} from '@/app/actions/assignments';
 import type { AssignmentDetail } from '@/lib/content/assignments';
 
 interface SubmissionsViewProps {
@@ -20,17 +23,20 @@ function GradeControl({
   submissionId,
   grade,
   gradeFeedback,
+  gradeReleasedAt,
 }: {
   assignmentId: string;
   submissionId: string;
   grade: number | null;
   gradeFeedback: string | null;
+  gradeReleasedAt: string | null;
 }) {
   const [value, setValue] = useState(grade === null ? '' : String(grade));
   const [feedback, setFeedback] = useState(gradeFeedback ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(grade !== null);
+  const [released, setReleased] = useState(gradeReleasedAt !== null);
 
   async function handleSave() {
     const parsed = Number(value);
@@ -57,6 +63,22 @@ function GradeControl({
       return;
     }
     setSaved(true);
+    setReleased(false);
+  }
+
+  async function handleRelease() {
+    setSaving(true);
+    setError(null);
+    const result = await releaseSubmissionGradeAction(
+      assignmentId,
+      submissionId,
+    );
+    setSaving(false);
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    setReleased(true);
   }
 
   return (
@@ -94,11 +116,19 @@ function GradeControl({
         >
           {saving ? (
             <Loader2 size={12} className="animate-spin" />
-          ) : saved ? (
+          ) : saved && grade === null ? (
             'Saved'
           ) : (
             'Save'
           )}
+        </button>
+        <button
+          type="button"
+          onClick={handleRelease}
+          disabled={saving || released || !saved}
+          className="flex h-7 flex-shrink-0 items-center rounded-lg border border-slate-200 px-2.5 text-[11.5px] font-semibold text-slate-700 transition hover:border-[#254889] hover:text-[#254889] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {released ? 'Released' : 'Release'}
         </button>
       </div>
       {error && <p className="text-[11px] text-[#c2483a]">{error}</p>}
@@ -115,7 +145,12 @@ function SubmissionRow({
   studentEmail,
   grade,
   gradeFeedback,
-}: AssignmentDetail['submissions'][number] & { assignmentId: string }) {
+  gradeReleasedAt,
+  canManage,
+}: AssignmentDetail['submissions'][number] & {
+  assignmentId: string;
+  canManage: boolean;
+}) {
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -168,12 +203,22 @@ function SubmissionRow({
           Download
         </button>
       </div>
-      <GradeControl
-        assignmentId={assignmentId}
-        submissionId={id}
-        grade={grade}
-        gradeFeedback={gradeFeedback}
-      />
+      {canManage ? (
+        <GradeControl
+          assignmentId={assignmentId}
+          submissionId={id}
+          grade={grade}
+          gradeFeedback={gradeFeedback}
+          gradeReleasedAt={gradeReleasedAt}
+        />
+      ) : (
+        grade !== null && (
+          <p className="mt-2 border-t border-slate-100 pt-2.5 text-[12px] text-slate-700">
+            Mark: {grade}/100
+            {gradeFeedback ? ` — ${gradeFeedback}` : ''}
+          </p>
+        )
+      )}
     </div>
   );
 }
@@ -188,7 +233,11 @@ export default function SubmissionsView({ assignment }: SubmissionsViewProps) {
         title={assignment.title}
       />
 
-      <main id="main-content" className="mx-auto max-w-[720px] px-8 pt-9 pb-24">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto max-w-[720px] px-8 pt-9 pb-24"
+      >
         <div className="mb-6">
           <h1 className="text-[20px] font-bold tracking-tight text-slate-900">
             Submissions
@@ -218,6 +267,7 @@ export default function SubmissionsView({ assignment }: SubmissionsViewProps) {
               <SubmissionRow
                 key={submission.id}
                 assignmentId={assignment.id}
+                canManage={assignment.canManage}
                 {...submission}
               />
             ))}

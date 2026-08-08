@@ -9,12 +9,8 @@ export interface InstitutionalAuthConfig {
   readonly appOrigin: string;
 }
 
-/** Reads the deployment gate for institutional SSO and fails closed if incomplete. */
-export function getInstitutionalAuthConfig(): InstitutionalAuthConfig {
-  const tenantId = process.env.ENTRA_TENANT_ID?.trim().toLowerCase();
-  if (!tenantId || !UUID.test(tenantId))
-    throw new Error('Institutional SSO is not configured.');
-
+/** Returns the validated canonical deployment origin used for auth redirects. */
+export function getAppOrigin(): string {
   const rawOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim();
   let origin: URL;
   try {
@@ -38,9 +34,17 @@ export function getInstitutionalAuthConfig(): InstitutionalAuthConfig {
     throw new Error('Institutional SSO is not configured.');
   }
 
+  return origin.origin;
+}
+
+/** Reads the deployment gate for institutional SSO and fails closed if incomplete. */
+export function getInstitutionalAuthConfig(): InstitutionalAuthConfig {
+  const tenantId = process.env.ENTRA_TENANT_ID?.trim().toLowerCase();
+  if (!tenantId || !UUID.test(tenantId))
+    throw new Error('Institutional SSO is not configured.');
   return {
     tenantId,
     emailDomain: 'merchanttaylors.com',
-    appOrigin: origin.origin,
+    appOrigin: getAppOrigin(),
   };
 }

@@ -8,6 +8,8 @@ import {
   assignSystemRole,
   assignTagMembership,
   createTag,
+  revokeSystemRole,
+  revokeTagMembership,
   setProfileState,
   type AdminActionResult,
   type CreateTagResult,
@@ -44,6 +46,28 @@ export async function assignTagMembershipAction(
   const client = await authenticatedClient();
   if (!client) return signedOut;
   const result = await assignTagMembership(client, input);
+  if (result.ok) revalidatePath('/admin');
+  return result;
+}
+
+/** Revokes one current system role and refreshes the admin roster. */
+export async function revokeSystemRoleAction(
+  input: unknown,
+): Promise<AdminActionResult> {
+  const client = await authenticatedClient();
+  if (!client) return signedOut;
+  const result = await revokeSystemRole(client, input);
+  if (result.ok) revalidatePath('/admin');
+  return result;
+}
+
+/** Revokes one current tag membership and refreshes the admin roster. */
+export async function revokeTagMembershipAction(
+  input: unknown,
+): Promise<AdminActionResult> {
+  const client = await authenticatedClient();
+  if (!client) return signedOut;
+  const result = await revokeTagMembership(client, input);
   if (result.ok) revalidatePath('/admin');
   return result;
 }

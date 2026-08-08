@@ -8,7 +8,7 @@ The browser utility implements MPX v1 with an exact-entry manifest, content-addr
 
 ## `security.ts`
 
-`sanitizeEditorHtml` is a narrow rich-HTML primitive, and tag helpers are defence in depth. `sanitizeEditorPayload` is deprecated because treating every JSON string as HTML changes structured values. P1-04/P3-03 must validate the versioned block schema first and sanitize only fields declared as rich HTML. Supabase RLS and transactional authorization remain authoritative.
+`sanitizeEditorHtml` is a narrow rich-HTML primitive, and tag helpers are defence in depth. Structured editor data is validated by `lib/content/schema.ts`, which sanitizes only fields declared as rich HTML. Supabase RLS and transactional authorization remain authoritative.
 
 ## Dependencies
 

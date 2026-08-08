@@ -5,12 +5,9 @@ import { useMemo, useState } from 'react';
 import {
   Bell,
   ChevronDown,
-  MoreVertical,
   FileText,
   FilePlus,
   Plus,
-  Upload,
-  Pencil,
   X,
 } from 'lucide-react';
 
@@ -24,7 +21,7 @@ import { SearchBox } from '@/components/search/SearchBox';
 // Types
 // ---------------------------------------------------------------------------
 
-type Role = 'admin' | 'teacher' | 'student';
+type Role = 'admin' | 'teacher' | 'student' | 'guest';
 
 /** Matches `PageSummary` from lib/content/dashboard.ts (Codex's typed loader). */
 export interface DashboardPage {
@@ -38,20 +35,10 @@ export interface DashboardPage {
 interface PageCard {
   id: string;
   title: string;
-  kind: 'page' | 'file';
-  fileType: 'page' | 'pdf' | 'doc';
+  canonicalUrl: string;
   breadcrumb: string[];
   tags: string[];
-  authorInitials?: string;
   updatedRelative: string;
-}
-
-interface UrgentNotification {
-  id: string;
-  tag: string;
-  message: string;
-  timeRelative: string;
-  urgent: boolean;
 }
 
 export interface CurrentUser {
@@ -59,8 +46,16 @@ export interface CurrentUser {
   readonly role: 'admin' | 'teacher' | 'student';
 }
 
+export interface DashboardUpdate {
+  readonly id: string;
+  readonly title: string;
+  readonly createdAt: string;
+  readonly tags: readonly string[];
+}
+
 interface DashboardProps {
   pages: readonly DashboardPage[];
+  updates: readonly DashboardUpdate[];
   currentUser: CurrentUser | null;
 }
 
@@ -78,7 +73,7 @@ function deriveDisplayIdentity(user: CurrentUser | null): {
   role: Role;
   initials: string;
 } {
-  if (!user) return { name: 'Signed out', role: 'student', initials: '?' };
+  if (!user) return { name: 'Guest', role: 'guest', initials: '?' };
   const localPart = user.email.split('@')[0] ?? user.email;
   const words = localPart.split(/[.\-_]+/).filter(Boolean);
   const name = words
@@ -91,12 +86,6 @@ function deriveDisplayIdentity(user: CurrentUser | null): {
       .join('') || '?';
   return { name: name || user.email, role: user.role, initials };
 }
-
-const NOTIFICATIONS: UrgentNotification[] = [
-  { id: '1', tag: 'L6CH2', message: 'Organic Mechanisms homework due tomorrow, 9:00am', timeRelative: '42 minutes ago', urgent: true },
-  { id: '2', tag: 'Y9MA1', message: 'New resource added — Trigonometry Revision Pack', timeRelative: '2 hours ago', urgent: false },
-  { id: '3', tag: 'U6PH1', message: 'Practical write-up returned with feedback', timeRelative: 'Yesterday', urgent: true },
-];
 
 /** Derives the breadcrumb from the one authoritative canonical path (ADR-004). */
 function breadcrumbFromCanonicalUrl(canonicalUrl: string): string[] {
@@ -115,8 +104,7 @@ function toPageCard(page: DashboardPage): PageCard {
   return {
     id: page.id,
     title: page.title,
-    kind: 'page',
-    fileType: 'page',
+    canonicalUrl: page.canonicalUrl,
     breadcrumb: breadcrumbFromCanonicalUrl(page.canonicalUrl),
     tags: page.tags.map((tag) => tag.name),
     updatedRelative: formatRelativeTime(page.updatedAt),
@@ -134,9 +122,11 @@ function toPageCard(page: DashboardPage): PageCard {
 function TopNav({
   identity,
   currentUser,
+  updates,
 }: {
   identity: { name: string; role: Role; initials: string };
   currentUser: CurrentUser | null;
+  updates: readonly DashboardUpdate[];
 }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -144,7 +134,7 @@ function TopNav({
   const notifRef = useClickOutside<HTMLDivElement>(() => setNotifOpen(false));
   const profileRef = useClickOutside<HTMLDivElement>(() => setProfileOpen(false));
 
-  const hasUrgent = NOTIFICATIONS.some((n) => n.urgent);
+  const signedIn = currentUser !== null;
 
   return (
     <header className="sticky top-0 z-40 flex h-[68px] items-center justify-between gap-6 border-b border-slate-200 bg-white/85 px-8 backdrop-blur">
@@ -155,48 +145,52 @@ function TopNav({
         <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">
           Project <span className="text-[#254889]">M</span>
         </span>
-        <nav className="ml-6 hidden items-center gap-1 sm:flex">
-          <Link
-            href="/assignments"
-            className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-          >
-            Assignments
-          </Link>
-          <Link
-            href="/quizzes"
-            className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-          >
-            Quizzes
-          </Link>
-          <Link
-            href="/calendar"
-            className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-          >
-            Calendar
-          </Link>
-          <Link
-            href="/announcements"
-            className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-          >
-            Announcements
-          </Link>
-          <Link
-            href="/gradebook"
-            className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-          >
-            Gradebook
-          </Link>
-          <Link
-            href="/admin"
-            className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-          >
-            Admin
-          </Link>
-        </nav>
+        {signedIn && (
+          <nav className="ml-6 hidden items-center gap-1 sm:flex">
+            <Link
+              href="/assignments"
+              className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+            >
+              Assignments
+            </Link>
+            <Link
+              href="/quizzes"
+              className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+            >
+              Quizzes
+            </Link>
+            <Link
+              href="/calendar"
+              className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+            >
+              Calendar
+            </Link>
+            <Link
+              href="/announcements"
+              className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+            >
+              Announcements
+            </Link>
+            <Link
+              href="/gradebook"
+              className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+            >
+              Gradebook
+            </Link>
+            {currentUser?.role === 'admin' && (
+              <Link
+                href="/admin"
+                className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+              >
+                Admin
+              </Link>
+            )}
+          </nav>
+        )}
       </div>
 
       <div className="flex items-center gap-2">
-        <SearchBox />
+        {signedIn && <SearchBox />}
         {/* Notifications */}
         <div className="relative" ref={notifRef}>
           <button
@@ -208,9 +202,6 @@ function TopNav({
             className="relative flex h-[38px] w-[38px] items-center justify-center rounded-lg border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-white hover:text-slate-900"
           >
             <Bell size={18} strokeWidth={2} />
-            {hasUrgent && (
-              <span className="absolute right-2 top-2 h-[7px] w-[7px] rounded-full border-[1.5px] border-[#f7f8fa] bg-[#d0483c]" />
-            )}
           </button>
 
           {notifOpen && (
@@ -218,33 +209,38 @@ function TopNav({
               <div className="border-b border-slate-200 px-4 py-3 text-[12.5px] font-bold text-slate-900">
                 Tag updates
               </div>
-              {NOTIFICATIONS.map((n) => (
-                <div
-                  key={n.id}
-                  className="flex cursor-pointer gap-3 border-b border-slate-200 px-4 py-3 last:border-b-0 hover:bg-slate-50"
-                >
-                  <span
-                    className={`flex h-5 flex-shrink-0 items-center rounded-md px-1.5 text-[10.5px] font-bold ${
-                      n.urgent ? 'bg-red-50 text-[#d0483c]' : 'bg-[#eef2fa] text-[#254889]'
-                    }`}
-                  >
-                    {n.tag}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[12.5px] leading-snug text-slate-900">{n.message}</p>
-                    <p className="mt-0.5 text-[11px] text-slate-400">{n.timeRelative}</p>
-                  </div>
+              {updates.length === 0 ? (
+                <p className="px-4 py-5 text-[12.5px] text-slate-500">
+                  No new tag updates.
+                </p>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {updates.map((update) => (
+                    <Link
+                      key={update.id}
+                      href="/announcements"
+                      className="block px-4 py-3 hover:bg-slate-50"
+                    >
+                      <span className="block text-[12.5px] font-semibold text-slate-900">
+                        {update.title}
+                      </span>
+                      <span className="mt-1 block text-[11px] text-slate-400">
+                        {update.tags.length > 0
+                          ? update.tags.join(', ')
+                          : 'Whole school'}{' '}
+                        · {formatRelativeTime(update.createdAt)}
+                      </span>
+                    </Link>
+                  ))}
                 </div>
-              ))}
-              <button className="w-full bg-slate-50 py-2.5 text-[12px] font-semibold text-[#254889]">
-                View all notifications
-              </button>
+              )}
             </div>
           )}
         </div>
 
         {/* Profile — Outlook-style role chip */}
-        <div className="relative" ref={profileRef}>
+        {signedIn ? (
+          <div className="relative" ref={profileRef}>
           <button
             onClick={() => {
               setProfileOpen((v) => !v);
@@ -267,19 +263,23 @@ function TopNav({
           {profileOpen && (
             <div className="absolute right-0 top-[calc(100%+10px)] w-[220px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
               <div className="px-4 pb-1 pt-3 text-[12.5px] font-bold text-slate-900">{identity.name}</div>
-              <div className="px-4 pb-3 text-[11.5px] text-slate-500">{currentUser?.email ?? 'Not signed in'}</div>
-              <button className="w-full border-t border-slate-200 px-4 py-2.5 text-left text-[12.5px] text-slate-900 hover:bg-slate-50">
-                Switch role view
-              </button>
-              <button className="w-full px-4 py-2.5 text-left text-[12.5px] text-slate-900 hover:bg-slate-50">
-                Account settings
-              </button>
-              <button className="w-full px-4 py-2.5 text-left text-[12.5px] font-medium text-[#d0483c] hover:bg-slate-50">
-                Sign out
-              </button>
+              <div className="px-4 pb-3 text-[11.5px] text-slate-500">{currentUser.email}</div>
+              <form action="/auth/logout" method="post" className="border-t border-slate-200">
+                <button className="w-full px-4 py-2.5 text-left text-[12.5px] font-medium text-[#d0483c] hover:bg-slate-50">
+                  Sign out
+                </button>
+              </form>
             </div>
           )}
-        </div>
+          </div>
+        ) : (
+          <Link
+            href="/auth/login"
+            className="rounded-lg bg-[#254889] px-4 py-2 text-[12.5px] font-semibold text-white transition hover:bg-[#1c3a70]"
+          >
+            Sign in with Microsoft
+          </Link>
+        )}
       </div>
     </header>
   );
@@ -334,22 +334,16 @@ function TagRail({
 // Page / file card
 // ---------------------------------------------------------------------------
 
-const ICON_STYLES: Record<PageCard['fileType'], string> = {
-  page: 'bg-[#eef2fa] text-[#254889]',
-  pdf: 'bg-red-50 text-[#c2483a]',
-  doc: 'bg-blue-50 text-[#2f6fd6]',
-};
-
 function PageCardItem({ page }: { page: PageCard }) {
   return (
-    <button className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-[18px] text-left shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md">
+    <Link
+      href={page.canonicalUrl}
+      className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-[18px] text-left shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+    >
       <div className="flex items-start justify-between gap-2.5">
-        <div className={`flex h-9 w-9 items-center justify-center rounded-[10px] ${ICON_STYLES[page.fileType]}`}>
+        <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#eef2fa] text-[#254889]">
           <FileText size={17} strokeWidth={2} />
         </div>
-        <span className="flex h-[26px] w-[26px] items-center justify-center rounded-md text-slate-400 hover:bg-slate-50 hover:text-slate-600">
-          <MoreVertical size={15} strokeWidth={2.4} />
-        </span>
       </div>
 
       <div>
@@ -374,16 +368,11 @@ function PageCardItem({ page }: { page: PageCard }) {
 
       <div className="mt-auto flex items-center justify-between border-t border-slate-200 pt-2.5 text-[11.5px] text-slate-400">
         <span className="flex items-center gap-1.5">
-          {page.authorInitials && (
-            <span className="flex h-[17px] w-[17px] items-center justify-center rounded-full bg-[#dfe7f7] text-[8px] font-bold text-[#254889]">
-              {page.authorInitials}
-            </span>
-          )}
           <span suppressHydrationWarning>{page.updatedRelative}</span>
         </span>
-        <span className="capitalize">{page.kind}</span>
+        <span>Page</span>
       </div>
-    </button>
+    </Link>
   );
 }
 
@@ -411,24 +400,6 @@ function FloatingActionButton() {
               <span className="text-[10.5px] text-slate-400">Block editor</span>
             </span>
           </Link>
-          <button className="flex w-full items-center gap-3 border-t border-slate-200 px-[15px] py-3.5 text-left hover:bg-slate-50">
-            <span className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-lg bg-[#eef2fa] text-[#254889]">
-              <Upload size={16} strokeWidth={2} />
-            </span>
-            <span className="flex flex-col">
-              <span className="text-[12.5px] font-semibold text-slate-900">Upload page</span>
-              <span className="text-[10.5px] text-slate-400">.mpx or PDF</span>
-            </span>
-          </button>
-          <button className="flex w-full items-center gap-3 border-t border-slate-200 px-[15px] py-3.5 text-left hover:bg-slate-50">
-            <span className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-lg bg-[#eef2fa] text-[#254889]">
-              <Pencil size={16} strokeWidth={2} />
-            </span>
-            <span className="flex flex-col">
-              <span className="text-[12.5px] font-semibold text-slate-900">Edit current page</span>
-              <span className="text-[10.5px] text-slate-400">Opens block editor</span>
-            </span>
-          </button>
         </div>
       )}
 
@@ -447,7 +418,11 @@ function FloatingActionButton() {
 // Dashboard
 // ---------------------------------------------------------------------------
 
-export default function Dashboard({ pages, currentUser }: DashboardProps) {
+export default function Dashboard({
+  pages,
+  updates,
+  currentUser,
+}: DashboardProps) {
   const [activeTag, setActiveTag] = useState('all');
 
   const identity = useMemo(
@@ -475,14 +450,24 @@ export default function Dashboard({ pages, currentUser }: DashboardProps) {
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
       <SkipToContentLink />
-      <TopNav identity={identity} currentUser={currentUser} />
+      <TopNav
+        identity={identity}
+        currentUser={currentUser}
+        updates={updates}
+      />
 
-      <main id="main-content" className="mx-auto max-w-[1180px] px-8 pb-32 pt-9">
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-[1180px] px-8 pb-32 pt-9">
         <div className="mb-6">
           <h1 className="text-[23px] font-bold tracking-tight text-slate-900">
-            Good afternoon, {identity.name.split(' ')[0]}
+            {currentUser
+              ? `Good afternoon, ${identity.name.split(' ')[0]}`
+              : 'Welcome to Project M'}
           </h1>
-          <p className="mt-0.5 text-[13px] text-slate-600">Here&rsquo;s what&rsquo;s moving across your tags today.</p>
+          <p className="mt-0.5 text-[13px] text-slate-600">
+            {currentUser
+              ? 'Here’s what’s moving across your tags today.'
+              : 'Sign in with your school Microsoft account to access your pages and files.'}
+          </p>
         </div>
 
         <TagRail tags={tags} activeTag={activeTag} onSelect={setActiveTag} />
@@ -510,7 +495,9 @@ export default function Dashboard({ pages, currentUser }: DashboardProps) {
         )}
       </main>
 
-      <FloatingActionButton />
+      {(currentUser?.role === 'teacher' || currentUser?.role === 'admin') && (
+        <FloatingActionButton />
+      )}
     </div>
   );
 }
