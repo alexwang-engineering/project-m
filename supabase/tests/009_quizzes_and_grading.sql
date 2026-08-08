@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(22);
+select plan(25);
 
 insert into auth.users (id, email, aud, role) values
   ('00000000-0000-0000-0000-000000000201', 'teacher-b@merchanttaylors.com', 'authenticated', 'authenticated'),
@@ -104,6 +104,32 @@ select is(
   (select count(*) from public.profiles where id = '00000000-0000-0000-0000-000000000202')::bigint,
   0::bigint,
   'a non-managing tag member cannot read another student''s profile via the quiz-taker path either'
+);
+select throws_ok(
+  $$ select public.submit_quiz_attempt(
+    (select id from public.quizzes where title = 'Photosynthesis basics'), '{}'::jsonb) $$,
+  '22023', 'every quiz question needs one valid choice',
+  'an incomplete answer set is rejected without consuming the attempt'
+);
+select throws_ok(
+  $$ select public.submit_quiz_attempt(
+    (select id from public.quizzes where title = 'Photosynthesis basics'),
+    jsonb_build_object(
+      (select id::text from public.quiz_questions where position = 1 and quiz_id = (select id from public.quizzes where title = 'Photosynthesis basics')), 'not-a-choice',
+      (select id::text from public.quiz_questions where position = 2 and quiz_id = (select id from public.quizzes where title = 'Photosynthesis basics')), 'a'
+    )) $$,
+  '22023', 'every quiz question needs one valid choice',
+  'a choice not offered by its question is rejected'
+);
+select throws_ok(
+  $$ select public.submit_quiz_attempt(
+    (select id from public.quizzes where title = 'Photosynthesis basics'),
+    jsonb_build_object(
+      (select id::text from public.quiz_questions where position = 1 and quiz_id = (select id from public.quizzes where title = 'Photosynthesis basics')), 'b',
+      '00000000-0000-0000-0000-000000000999', 'a'
+    )) $$,
+  '22023', 'every quiz question needs one valid choice',
+  'a substituted question id is rejected even when the answer count matches'
 );
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000201', true);
