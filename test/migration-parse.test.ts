@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseMigrationManifest } from '@/lib/content/migration-parse';
+import {
+  MAX_MIGRATION_ITEMS,
+  parseMigrationManifest,
+} from '@/lib/content/migration-parse';
 
 describe('parseMigrationManifest', () => {
   it('rejects invalid JSON', () => {
@@ -89,5 +92,31 @@ describe('parseMigrationManifest', () => {
     expect(errors).toContain(
       'The manifest has no resources, assignments, or quizzes to import.',
     );
+  });
+
+  it('rejects oversized item lists before parsing every entry', () => {
+    const { manifest, errors } = parseMigrationManifest(
+      JSON.stringify({ resources: Array(MAX_MIGRATION_ITEMS + 1).fill(null) }),
+    );
+    expect(manifest).toBeNull();
+    expect(errors[0]).toContain(`${MAX_MIGRATION_ITEMS} items`);
+  });
+
+  it('rejects a quiz answer index outside its choices', () => {
+    const { errors } = parseMigrationManifest(
+      JSON.stringify({
+        quizzes: [
+          {
+            externalId: 'q1',
+            tagName: 'Y10MA1',
+            title: 'Bad answer',
+            questions: [
+              { prompt: 'x?', choices: ['a', 'b'], correctChoiceIndex: 2 },
+            ],
+          },
+        ],
+      }),
+    );
+    expect(errors.some((error) => error.includes('out of range'))).toBe(true);
   });
 });

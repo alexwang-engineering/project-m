@@ -4,7 +4,10 @@ import { useRef, useState } from 'react';
 import { Loader2, Upload } from 'lucide-react';
 
 import { importMigrationManifestAction } from '@/app/actions/migration';
-import { parseMigrationManifest } from '@/lib/content/migration-parse';
+import {
+  MAX_MIGRATION_MANIFEST_BYTES,
+  parseMigrationManifest,
+} from '@/lib/content/migration-parse';
 import type {
   MigrationManifest,
   MigrationReportEntry,
@@ -46,6 +49,11 @@ export function MigrationImportPanel() {
     setReport(null);
     setError(null);
     setApplied(false);
+    if (file.size > MAX_MIGRATION_MANIFEST_BYTES) {
+      setManifest(null);
+      setParseErrors(['The manifest must be 5 MB or smaller.']);
+      return;
+    }
     const text = await file.text();
     const parsed = parseMigrationManifest(text);
     setManifest(parsed.manifest);
