@@ -8,6 +8,13 @@ begin;
 create extension if not exists pgtap with schema extensions;
 select plan(16);
 
+-- Baseline before this file's own fixtures - a populated/live-tested
+-- database can already have committed calendar_event audit rows from
+-- earlier sessions, which an absolute count can't tell apart from this
+-- file's own actions.
+select count(*) as baseline_calendar_audit_events
+  from public.audit_events where target_type = 'calendar_event' \gset
+
 insert into auth.users (id, email, aud, role) values
   ('00000000-0000-0000-0000-000000000601', 'calendar-admin@merchanttaylors.com', 'authenticated', 'authenticated'),
   ('00000000-0000-0000-0000-000000000602', 'calendar-teacher-in@merchanttaylors.com', 'authenticated', 'authenticated'),
@@ -149,8 +156,12 @@ select lives_ok(
 
 -- Every create and cancel is audited.
 select is(
-  (select count(*) from public.audit_events where target_type = 'calendar_event')::bigint, 4::bigint,
-  'two creations and two cancellations are all audited'
+  (
+    (select count(*) from public.audit_events where target_type = 'calendar_event')
+    - :baseline_calendar_audit_events
+  )::bigint,
+  4::bigint,
+  'two creations and two cancellations are all audited (delta from this file''s own fixtures)'
 );
 
 -- Direct table writes cannot bypass the audited RPC path.

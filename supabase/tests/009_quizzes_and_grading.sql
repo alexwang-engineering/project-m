@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(20);
+select plan(22);
 
 insert into auth.users (id, email, aud, role) values
   ('00000000-0000-0000-0000-000000000201', 'teacher-b@merchanttaylors.com', 'authenticated', 'authenticated'),
@@ -100,11 +100,25 @@ select is(
   (select count(*) from public.quiz_attempts)::bigint, 0::bigint,
   'a different in-audience student (not managing the quiz) cannot see another student''s attempt'
 );
+select is(
+  (select count(*) from public.profiles where id = '00000000-0000-0000-0000-000000000202')::bigint,
+  0::bigint,
+  'a non-managing tag member cannot read another student''s profile via the quiz-taker path either'
+);
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000201', true);
 select is(
   (select count(*) from public.quiz_attempts)::bigint, 1::bigint,
   'owning teacher can read every attempt against their quiz'
+);
+-- Regression test for the "Unknown student" bug found live-testing this
+-- feature: quiz_attempts embeds profiles(email) (lib/content/quizzes.ts),
+-- but until this migration no RLS policy on profiles ever let a managing
+-- teacher read it, so the join silently returned null.
+select is(
+  (select email from public.profiles where id = '00000000-0000-0000-0000-000000000202')::text,
+  'student-quiz-in@merchanttaylors.com',
+  'owning teacher can read the profile email of a student who attempted their quiz'
 );
 select is(
   (select correct_choice_id from public.quiz_answer_keys

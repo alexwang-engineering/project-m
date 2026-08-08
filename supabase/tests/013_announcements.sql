@@ -7,6 +7,11 @@ begin;
 create extension if not exists pgtap with schema extensions;
 select plan(15);
 
+-- Baseline before this file's own fixtures - see the identical note in
+-- 012_calendar.sql.
+select count(*) as baseline_announcement_audit_events
+  from public.audit_events where target_type = 'announcement' \gset
+
 insert into auth.users (id, email, aud, role) values
   ('00000000-0000-0000-0000-000000000701', 'announce-admin@merchanttaylors.com', 'authenticated', 'authenticated'),
   ('00000000-0000-0000-0000-000000000702', 'announce-teacher-in@merchanttaylors.com', 'authenticated', 'authenticated'),
@@ -140,7 +145,11 @@ select lives_ok(
 
 -- Every create and cancel is audited.
 select is(
-  (select count(*) from public.audit_events where target_type = 'announcement')::bigint, 4::bigint,
+  (
+    (select count(*) from public.audit_events where target_type = 'announcement')
+    - :baseline_announcement_audit_events
+  )::bigint,
+  4::bigint,
   'two postings and two cancellations are all audited'
 );
 

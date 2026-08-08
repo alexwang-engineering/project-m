@@ -2,6 +2,13 @@ begin;
 create extension if not exists pgtap with schema extensions;
 select plan(30);
 
+-- Baseline captured before this file's own fixtures run, so the audit-count
+-- assertion below can check the delta this file's own actions produced
+-- rather than an absolute value - a live-tested/populated database (this
+-- file's own transaction rolls back, but earlier committed sessions'
+-- rows don't) otherwise makes an exact global count non-repeatable.
+select count(*) as baseline_audit_events from public.audit_events \gset
+
 insert into auth.users (id, email, aud, role) values
   ('00000000-0000-0000-0000-000000000001', 'admin@merchanttaylors.com', 'authenticated', 'authenticated'),
   ('00000000-0000-0000-0000-000000000002', 'teacher-all@merchanttaylors.com', 'authenticated', 'authenticated'),
@@ -193,7 +200,11 @@ select throws_ok(
 );
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
-select is((select count(*) from public.audit_events)::bigint, 9::bigint, 'administrator can read append-only audit events');
+select is(
+  ((select count(*) from public.audit_events) - :baseline_audit_events)::bigint,
+  9::bigint,
+  'administrator can read append-only audit events (delta from this file''s own fixtures)'
+);
 
 select * from finish();
 rollback;
