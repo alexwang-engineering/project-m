@@ -68,12 +68,14 @@ export interface SubmissionSummary {
   readonly fileId: string;
   readonly grade: number | null;
   readonly gradeFeedback: string | null;
+  readonly gradeReleasedAt: string | null;
 }
 
 export interface AssignmentDetail {
   readonly id: string;
   readonly title: string;
   readonly dueAt: string | null;
+  readonly canManage: boolean;
   readonly submissions: readonly SubmissionSummary[];
 }
 
@@ -95,28 +97,40 @@ export async function getAssignmentDetail(
   if (assignmentError) throw assignmentError;
   if (!assignment) return null;
 
-  const { data: submissions, error: submissionsError } = await client
-    .from('assignment_submissions')
-    .select(
-      'id, submitted_at, note, file_id, grade, grade_feedback, profiles!assignment_submissions_student_id_fkey(email)',
-    )
-    .eq('assignment_id', assignmentId)
-    .order('submitted_at', { ascending: false });
+  const [
+    { data: submissions, error: submissionsError },
+    { data: canManage, error: canManageError },
+  ] = await Promise.all([
+    client
+      .from('assignment_submissions')
+      .select(
+        'id, submitted_at, note, file_id, profiles!assignment_submissions_student_id_fkey(email), assignment_grades(grade, feedback, released_at)',
+      )
+      .eq('assignment_id', assignmentId)
+      .order('submitted_at', { ascending: false }),
+    client.rpc('can_manage_assignment', { target_assignment: assignmentId }),
+  ]);
   if (submissionsError) throw submissionsError;
+  if (canManageError) throw canManageError;
 
   return {
     id: assignment.id,
     title: assignment.title,
     dueAt: assignment.due_at,
-    submissions: (submissions ?? []).map((submission) => ({
-      id: submission.id,
-      submittedAt: submission.submitted_at,
-      note: submission.note,
-      studentEmail: submission.profiles?.email ?? null,
-      fileId: submission.file_id,
-      grade: submission.grade,
-      gradeFeedback: submission.grade_feedback,
-    })),
+    canManage: canManage ?? false,
+    submissions: (submissions ?? []).map((submission) => {
+      const grade = submission.assignment_grades;
+      return {
+        id: submission.id,
+        submittedAt: submission.submitted_at,
+        note: submission.note,
+        studentEmail: submission.profiles?.email ?? null,
+        fileId: submission.file_id,
+        grade: grade?.grade ?? null,
+        gradeFeedback: grade?.feedback ?? null,
+        gradeReleasedAt: grade?.released_at ?? null,
+      };
+    }),
   };
 }
 
@@ -306,6 +320,25 @@ export async function gradeSubmission(
     target_submission_id: value.submissionId,
     grade_value: value.grade,
     feedback_text: (value.feedback as string | undefined) ?? undefined,
+    correlation_id: crypto.randomUUID(),
+  });
+  return error ? gradeFailure(error) : { ok: true };
+}
+
+/** Publishes a saved assignment grade to the student and linked guardians. */
+export async function releaseSubmissionGrade(
+  client: Client,
+  submissionId: string,
+): Promise<GradeSubmissionResult> {
+  if (!UUID.test(submissionId)) {
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Submission ID is invalid.',
+    };
+  }
+  const { error } = await client.rpc('release_assignment_grade', {
+    target_submission_id: submissionId,
     correlation_id: crypto.randomUUID(),
   });
   return error ? gradeFailure(error) : { ok: true };

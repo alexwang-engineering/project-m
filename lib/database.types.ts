@@ -34,6 +34,58 @@ export type Database = {
   };
   public: {
     Tables: {
+      assignment_grades: {
+        Row: {
+          feedback: string | null;
+          grade: number;
+          graded_at: string;
+          graded_by: string;
+          released_at: string | null;
+          released_by: string | null;
+          submission_id: string;
+        };
+        Insert: {
+          feedback?: string | null;
+          grade: number;
+          graded_at?: string;
+          graded_by: string;
+          released_at?: string | null;
+          released_by?: string | null;
+          submission_id: string;
+        };
+        Update: {
+          feedback?: string | null;
+          grade?: number;
+          graded_at?: string;
+          graded_by?: string;
+          released_at?: string | null;
+          released_by?: string | null;
+          submission_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'assignment_grades_submission_id_fkey';
+            columns: ['submission_id'];
+            isOneToOne: true;
+            referencedRelation: 'assignment_submissions';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'assignment_grades_graded_by_fkey';
+            columns: ['graded_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'assignment_grades_released_by_fkey';
+            columns: ['released_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       assignment_submissions: {
         Row: {
           assignment_id: string;
@@ -1708,6 +1760,27 @@ export type Database = {
         SetofOptions: {
           from: '*';
           to: 'assignment_submissions';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      release_assignment_grade: {
+        Args: {
+          correlation_id?: string;
+          target_submission_id: string;
+        };
+        Returns: {
+          feedback: string | null;
+          grade: number;
+          graded_at: string;
+          graded_by: string;
+          released_at: string | null;
+          released_by: string | null;
+          submission_id: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'assignment_grades';
           isOneToOne: true;
           isSetofReturn: false;
         };

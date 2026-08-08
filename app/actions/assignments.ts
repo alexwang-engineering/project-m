@@ -7,6 +7,7 @@ import type { Database } from '@/lib/database.types';
 import {
   createAssignment,
   gradeSubmission,
+  releaseSubmissionGrade,
   submitAssignment,
   type CreateAssignmentResult,
   type GradeSubmissionResult,
@@ -51,6 +52,18 @@ export async function gradeSubmissionAction(
   const client = await authenticatedClient();
   if (!client) return signedOutGrade;
   const result = await gradeSubmission(client, input);
+  if (result.ok) revalidatePath(`/assignments/${assignmentId}`);
+  return result;
+}
+
+/** Releases a previously saved grade and refreshes the assignment detail page. */
+export async function releaseSubmissionGradeAction(
+  assignmentId: string,
+  submissionId: string,
+): Promise<GradeSubmissionResult> {
+  const client = await authenticatedClient();
+  if (!client) return signedOutGrade;
+  const result = await releaseSubmissionGrade(client, submissionId);
   if (result.ok) revalidatePath(`/assignments/${assignmentId}`);
   return result;
 }

@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(25);
+select plan(30);
 
 insert into auth.users (id, email, aud, role) values
   ('00000000-0000-0000-0000-000000000201', 'teacher-b@merchanttaylors.com', 'authenticated', 'authenticated'),
@@ -216,6 +216,37 @@ select lives_ok(
   $$ select public.grade_assignment_submission(
     (select id from public.assignment_submissions where assignment_id = (select id from public.assignments where title = 'Lab report')), 85, 'Good structure') $$,
   'owning teacher can grade a submission with feedback'
+);
+select is(
+  (select count(*) from public.assignment_grades where released_at is null)::bigint,
+  1::bigint,
+  'saving a grade creates one unreleased grade record'
+);
+select is(
+  (select grade from public.assignment_submissions where assignment_id = (select id from public.assignments where title = 'Lab report'))::numeric,
+  null::numeric,
+  'the student-readable submission row never stores the draft mark'
+);
+
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000202', true);
+select is(
+  (select count(*) from public.assignment_grades)::bigint,
+  0::bigint,
+  'the submitting student cannot select an unreleased grade'
+);
+
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000201', true);
+select lives_ok(
+  $$ select public.release_assignment_grade(
+    (select id from public.assignment_submissions where assignment_id = (select id from public.assignments where title = 'Lab report'))) $$,
+  'the owning teacher can explicitly release the saved grade'
+);
+
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000202', true);
+select is(
+  (select grade from public.assignment_grades)::numeric,
+  85::numeric,
+  'the student can select the grade only after release'
 );
 
 select * from finish();

@@ -1,10 +1,22 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import AssignmentsView from '@/components/assignments/AssignmentsView';
 import QuizzesView from '@/components/quizzes/QuizzesView';
 import { CalendarView } from '@/components/calendar/CalendarView';
 import { AnnouncementsView } from '@/components/announcements/AnnouncementsView';
+import SubmissionsView from '@/components/assignments/SubmissionsView';
+
+const submission = {
+  id: '00000000-0000-4000-8000-000000000010',
+  submittedAt: '2026-08-08T12:00:00Z',
+  note: null,
+  studentEmail: 'student@merchanttaylors.com',
+  fileId: '00000000-0000-4000-8000-000000000011',
+  grade: 85,
+  gradeFeedback: 'Good structure',
+  gradeReleasedAt: '2026-08-08T13:00:00Z',
+};
 
 describe('role-sensitive learning actions', () => {
   it('hides authoring actions from students', () => {
@@ -55,5 +67,42 @@ describe('role-sensitive learning actions', () => {
       />,
     );
     expect(screen.queryByText('Post an announcement')).not.toBeInTheDocument();
+  });
+
+  it('shows released marks to students without exposing teacher controls', () => {
+    const { container } = render(
+      <SubmissionsView
+        assignment={{
+          id: '00000000-0000-4000-8000-000000000012',
+          title: 'Lab report',
+          dueAt: null,
+          canManage: false,
+          submissions: [submission],
+        }}
+      />,
+    );
+    const view = within(container);
+    expect(view.getByText(/Mark: 85\/100/)).toBeInTheDocument();
+    expect(view.queryByLabelText('Grade out of 100')).not.toBeInTheDocument();
+    expect(
+      view.queryByRole('button', { name: 'Release' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('keeps save and release as separate teacher actions', () => {
+    const { container } = render(
+      <SubmissionsView
+        assignment={{
+          id: '00000000-0000-4000-8000-000000000012',
+          title: 'Lab report',
+          dueAt: null,
+          canManage: true,
+          submissions: [{ ...submission, gradeReleasedAt: null }],
+        }}
+      />,
+    );
+    const view = within(container);
+    expect(view.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+    expect(view.getByRole('button', { name: 'Release' })).toBeEnabled();
   });
 });

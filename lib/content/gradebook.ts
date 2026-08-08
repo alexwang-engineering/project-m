@@ -40,9 +40,11 @@ async function loadStudentRows(
   ] = await Promise.all([
     client
       .from('assignment_submissions')
-      .select('id, grade, graded_at, assignments(id, title)')
+      .select(
+        'id, assignments(id, title), assignment_grades!inner(grade, graded_at)',
+      )
       .eq('student_id', userId)
-      .not('grade', 'is', null),
+      .not('assignment_grades.released_at', 'is', null),
     client
       .from('quiz_attempts')
       .select('id, score, max_score, submitted_at, quizzes(id, title)')
@@ -57,16 +59,15 @@ async function loadStudentRows(
         s,
       ): s is typeof s & {
         assignments: NonNullable<typeof s.assignments>;
-        grade: number;
-        graded_at: string;
-      } => s.assignments !== null && s.grade !== null && s.graded_at !== null,
+        assignment_grades: NonNullable<typeof s.assignment_grades>;
+      } => s.assignments !== null && s.assignment_grades !== null,
     )
     .map((s) => ({
       kind: 'assignment' as const,
       id: s.assignments.id,
       title: s.assignments.title,
-      scoreLabel: `${s.grade}/100`,
-      recordedAt: s.graded_at,
+      scoreLabel: `${s.assignment_grades.grade}/100`,
+      recordedAt: s.assignment_grades.graded_at,
     }));
 
   const quizRows: StudentGradeRow[] = (attempts ?? [])
@@ -127,7 +128,7 @@ async function loadTeacherRows(
     assignmentById.size > 0
       ? client
           .from('assignment_submissions')
-          .select('assignment_id, grade')
+          .select('assignment_id, assignment_grades(grade)')
           .in('assignment_id', Array.from(assignmentById.keys()))
       : Promise.resolve({ data: [], error: null }),
     quizById.size > 0
@@ -144,11 +145,13 @@ async function loadTeacherRows(
     assignmentById,
     ([id, title]) => {
       const rows = (allSubmissions ?? []).filter((s) => s.assignment_id === id);
-      const graded = rows.filter((s) => s.grade !== null);
+      const graded = rows.filter((s) => s.assignment_grades !== null);
       const average =
         graded.length > 0
-          ? graded.reduce((sum, s) => sum + (s.grade as number), 0) /
-            graded.length
+          ? graded.reduce(
+              (sum, s) => sum + (s.assignment_grades?.grade ?? 0),
+              0,
+            ) / graded.length
           : null;
       return {
         kind: 'assignment' as const,
