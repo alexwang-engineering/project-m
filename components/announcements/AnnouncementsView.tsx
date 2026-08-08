@@ -117,7 +117,11 @@ export function AnnouncementsView({
       <SkipToContentLink />
       <SubPageHeader backHref="/" backLabel="Dashboard" title="Announcements" />
 
-      <main id="main-content" className="mx-auto max-w-[900px] px-8 pt-9 pb-24">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto max-w-[900px] px-8 pt-9 pb-24"
+      >
         {(isAdmin || writableTags.length > 0) && (
           <CreateAnnouncementForm
             writableTags={writableTags}

@@ -127,7 +127,11 @@ export function CalendarView({
       <SkipToContentLink />
       <SubPageHeader backHref="/" backLabel="Dashboard" title="Calendar" />
 
-      <main id="main-content" className="mx-auto max-w-[900px] px-8 pt-9 pb-24">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto max-w-[900px] px-8 pt-9 pb-24"
+      >
         {(isAdmin || writableTags.length > 0) && (
           <CreateEventForm writableTags={writableTags} isAdmin={isAdmin} />
         )}

@@ -26,7 +26,11 @@ export default function GradebookView({ data }: GradebookViewProps) {
       <SkipToContentLink />
       <SubPageHeader backHref="/" backLabel="Dashboard" title="Gradebook" />
 
-      <main id="main-content" className="mx-auto max-w-[820px] px-8 pt-9 pb-24">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto max-w-[820px] px-8 pt-9 pb-24"
+      >
         {isEmpty ? (
           <EmptyState
             icon={<ClipboardList size={20} strokeWidth={2} />}

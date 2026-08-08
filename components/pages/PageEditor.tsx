@@ -280,7 +280,11 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
         }
       />
 
-      <main id="main-content" className="mx-auto max-w-[760px] px-8 pt-9 pb-32">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto max-w-[760px] px-8 pt-9 pb-32"
+      >
         <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <input
             aria-label="Page title"

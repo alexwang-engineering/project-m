@@ -270,7 +270,11 @@ export default function AssignmentsView({
         }
       />
 
-      <main id="main-content" className="mx-auto max-w-[900px] px-8 pt-9 pb-24">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto max-w-[900px] px-8 pt-9 pb-24"
+      >
         {displayAssignments.length === 0 ? (
           <EmptyState
             icon={<FileUp size={20} strokeWidth={2} />}

@@ -456,7 +456,7 @@ export default function Dashboard({
         updates={updates}
       />
 
-      <main id="main-content" className="mx-auto max-w-[1180px] px-8 pb-32 pt-9">
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-[1180px] px-8 pb-32 pt-9">
         <div className="mb-6">
           <h1 className="text-[23px] font-bold tracking-tight text-slate-900">
             {currentUser
