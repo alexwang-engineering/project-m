@@ -7,7 +7,7 @@ Last engineering verification: 2026-08-08. This is the handbook's completion led
 | Area | Evidence |
 |---|---|
 | Identity boundary | Fail-closed institutional admission, role-aware login flow, protected routes, guardian admission separated from Entra; auth pgTAP tests |
-| Authorization | RLS-backed anonymous/student/teacher/admin/guardian isolation, all-tags-required teacher writes, disabled-user handling; 275 total pgTAP assertions |
+| Authorization | RLS-backed anonymous/student/teacher/admin/guardian isolation, all-tags-required teacher writes, disabled-user handling; 285 total pgTAP assertions |
 | Content | Canonical pages, block validation/sanitization, drafts/publishing, optimistic concurrency, revisions/restore, MPX/PDF transfer and bounded imports |
 | Assessment | Assignment submission/receipts/review, quizzes/question bank/deterministic grading, separate save/release grade workflow, released-only student/guardian projections |
 | School workflows | Tags/admin audit, roster dry-run/apply, calendar, announcements, search, operational reports, staged migration manifests |
@@ -19,7 +19,7 @@ Last engineering verification: 2026-08-08. This is the handbook's completion led
 Latest clean local gate:
 
 - `npm run check`: 72 tests, lint/typecheck/format/build passed.
-- `npx supabase test db`: 22 files, 275 assertions passed.
+- `npx supabase test db`: 23 files, 285 assertions passed.
 - `npm run test:e2e`: 4 Playwright tests passed.
 - `npm audit --omit=dev`: zero vulnerabilities.
 - Live `GET /api/health`: HTTP 200 with local Supabase.
@@ -40,4 +40,4 @@ These cannot be completed truthfully from this repository. Each requires the nam
 | Production operations | Isolated environments, secret manager, monitoring/alerts, verified backups and isolated PITR restore rehearsal, named incident/release owners |
 | Human quality gates | Authenticated WCAG 2.2 AA walkthrough, representative-device performance results, role-based staging UAT/pilot and recorded sign-off |
 
-Project M is therefore **engineering-complete for the locally verifiable scope, but not authorized for production use**. The next work is external enablement and evidence collection using the runbook and UAT handbook, followed only by fixes revealed by those real exercises.
+Project M therefore has a **locally verified release-1 MVP, but is neither feature-complete against every PM-02 launch journey nor authorized for production use**. Remaining repository work and external enablement must be tracked separately; neither category is complete until its evidence is recorded.

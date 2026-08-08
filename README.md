@@ -5,7 +5,7 @@ Modern LMS replacing a legacy Moodle platform for Merchant Taylors' School.
 **Stack:** Next.js (App Router) + React + Tailwind CSS + Supabase (Postgres).
 **Core model:** content is addressed by **tags**, not nested folders (e.g. `Y9MA1` = Year 9 Maths Set 1). A page can carry multiple tags; a user's assigned tags determine what they can see/edit.
 
-## Status: local release-1 engineering complete, not yet production-authorized
+## Status: locally verified release-1 MVP, not production-authorized
 
 The implemented features below have RLS-backed authorization and automated coverage. Core dashboard journeys work, but real tenant/integration setup and human operational gates remain open. See `docs/operations/release-readiness-matrix.md` for the current boundary and `docs/coordination/ACTIVE_WORK.md` for package history.
 

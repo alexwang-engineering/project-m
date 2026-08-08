@@ -7,7 +7,7 @@
 -- that file already owns institutional-trigger testing.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(20);
+select plan(23);
 
 insert into auth.users (id, email, aud, role) values
   ('00000000-0000-0000-0000-000000000901', 'guardian-admin@merchanttaylors.com', 'authenticated', 'authenticated'),
@@ -81,8 +81,13 @@ select throws_ok(
 );
 select throws_ok(
   $$ select public.link_guardian('00000000-0000-0000-0000-000000000903', 'guardian.parent@example.com', '') $$,
-  '22023', 'a reason is required to link a guardian',
+  '22023', 'a reason between 1 and 1000 characters is required to link a guardian',
   'a blank reason is rejected'
+);
+select throws_ok(
+  $$ select public.link_guardian('00000000-0000-0000-0000-000000000902', 'guardian.parent@example.com', 'wrong target') $$,
+  'P0002', 'active pupil not found',
+  'a guardian cannot be linked to a teacher profile'
 );
 select lives_ok(
   $$ select public.link_guardian('00000000-0000-0000-0000-000000000903', 'guardian.parent@example.com', 'confirmed via enrolment form') $$,
@@ -125,6 +130,30 @@ select ok(
   'the matching guardian_links row is activated on signup'
 );
 
+set local role authenticated;
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
+-- Disabling a guardian must close every projection immediately, even while
+-- their auth session remains valid.
+reset role;
+update public.profiles set state = 'disabled', disabled_at = now()
+where id = '00000000-0000-0000-0000-000000000905';
+set local role authenticated;
+select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000905', true);
+select is(
+  (select count(*) from public.list_my_pupils())::bigint,
+  0::bigint,
+  'a disabled guardian cannot list linked pupils'
+);
+select throws_ok(
+  $$ select * from public.guardian_view_grades('00000000-0000-0000-0000-000000000903') $$,
+  '42501', 'you are not an authorized guardian for this pupil',
+  'a disabled guardian cannot read pupil projections'
+);
+reset role;
+update public.profiles set state = 'active', disabled_at = null
+where id = '00000000-0000-0000-0000-000000000905';
 set local role authenticated;
 select set_config('request.jwt.claim.role', 'authenticated', true);
 

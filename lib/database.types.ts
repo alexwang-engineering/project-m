@@ -1738,6 +1738,16 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      teacher_gradebook_rollups: {
+        Args: { row_limit?: number };
+        Returns: {
+          average_percent: number | null;
+          item_id: string;
+          item_kind: string;
+          item_title: string;
+          submission_count: number;
+        }[];
+      };
       grade_assignment_submission: {
         Args: {
           correlation_id?: string;

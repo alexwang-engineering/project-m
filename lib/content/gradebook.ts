@@ -44,11 +44,15 @@ async function loadStudentRows(
         'id, assignments(id, title), assignment_grades!inner(grade, graded_at)',
       )
       .eq('student_id', userId)
-      .not('assignment_grades.released_at', 'is', null),
+      .not('assignment_grades.released_at', 'is', null)
+      .order('submitted_at', { ascending: false })
+      .limit(200),
     client
       .from('quiz_attempts')
       .select('id, score, max_score, submitted_at, quizzes(id, title)')
-      .eq('student_id', userId),
+      .eq('student_id', userId)
+      .order('submitted_at', { ascending: false })
+      .limit(200),
   ]);
   if (submissionsError) throw submissionsError;
   if (attemptsError) throw attemptsError;
@@ -88,102 +92,26 @@ async function loadStudentRows(
   );
 }
 
-/** Roll-up stats (count + average) for every assignment/quiz the caller manages, via tag overlap. */
+/** Bounded roll-up stats computed in Postgres for recent assessments the caller manages. */
 async function loadTeacherRows(
   client: Client,
-  managedTagIds: readonly string[],
 ): Promise<readonly TeacherRollupRow[]> {
-  if (managedTagIds.length === 0) return [];
-
-  const [
-    { data: assignmentTags, error: assignmentTagsError },
-    { data: quizTags, error: quizTagsError },
-  ] = await Promise.all([
-    client
-      .from('assignment_tags')
-      .select('assignments(id, title)')
-      .in('tag_id', managedTagIds),
-    client
-      .from('quiz_tags')
-      .select('quizzes(id, title)')
-      .in('tag_id', managedTagIds),
-  ]);
-  if (assignmentTagsError) throw assignmentTagsError;
-  if (quizTagsError) throw quizTagsError;
-
-  const assignmentById = new Map<string, string>();
-  for (const row of assignmentTags ?? []) {
-    if (row.assignments)
-      assignmentById.set(row.assignments.id, row.assignments.title);
-  }
-  const quizById = new Map<string, string>();
-  for (const row of quizTags ?? []) {
-    if (row.quizzes) quizById.set(row.quizzes.id, row.quizzes.title);
-  }
-
-  const [
-    { data: allSubmissions, error: submissionsError },
-    { data: allAttempts, error: attemptsError },
-  ] = await Promise.all([
-    assignmentById.size > 0
-      ? client
-          .from('assignment_submissions')
-          .select('assignment_id, assignment_grades(grade)')
-          .in('assignment_id', Array.from(assignmentById.keys()))
-      : Promise.resolve({ data: [], error: null }),
-    quizById.size > 0
-      ? client
-          .from('quiz_attempts')
-          .select('quiz_id, score, max_score')
-          .in('quiz_id', Array.from(quizById.keys()))
-      : Promise.resolve({ data: [], error: null }),
-  ]);
-  if (submissionsError) throw submissionsError;
-  if (attemptsError) throw attemptsError;
-
-  const assignmentRows: TeacherRollupRow[] = Array.from(
-    assignmentById,
-    ([id, title]) => {
-      const rows = (allSubmissions ?? []).filter((s) => s.assignment_id === id);
-      const graded = rows.filter((s) => s.assignment_grades !== null);
-      const average =
-        graded.length > 0
-          ? graded.reduce(
-              (sum, s) => sum + (s.assignment_grades?.grade ?? 0),
-              0,
-            ) / graded.length
-          : null;
-      return {
-        kind: 'assignment' as const,
-        id,
-        title,
-        count: rows.length,
-        averageLabel: average === null ? null : `${Math.round(average)}%`,
-      };
-    },
-  );
-
-  const quizRows: TeacherRollupRow[] = Array.from(quizById, ([id, title]) => {
-    const rows = (allAttempts ?? []).filter((a) => a.quiz_id === id);
-    const average =
-      rows.length > 0
-        ? rows.reduce(
-            (sum, a) => sum + (a.max_score > 0 ? a.score / a.max_score : 0),
-            0,
-          ) / rows.length
-        : null;
-    return {
-      kind: 'quiz' as const,
-      id,
-      title,
-      count: rows.length,
-      averageLabel: average === null ? null : `${Math.round(average * 100)}%`,
-    };
+  const { data, error } = await client.rpc('teacher_gradebook_rollups', {
+    row_limit: 200,
   });
-
-  return [...assignmentRows, ...quizRows].sort((a, b) =>
-    a.title.localeCompare(b.title),
-  );
+  if (error) throw error;
+  return (data ?? [])
+    .map((row): TeacherRollupRow => ({
+      kind: row.item_kind === 'quiz' ? 'quiz' : 'assignment',
+      id: row.item_id,
+      title: row.item_title,
+      count: row.submission_count,
+      averageLabel:
+        row.average_percent === null
+          ? null
+          : `${Math.round(row.average_percent)}%`,
+    }))
+    .sort((a, b) => a.title.localeCompare(b.title));
 }
 
 /** Loads the caller's gradebook: their own grades, plus roll-ups for anything they manage. */
@@ -198,7 +126,7 @@ export async function getGradebook(client: Client): Promise<GradebookData> {
 
   const [studentRows, teacherRows] = await Promise.all([
     loadStudentRows(client, user.id),
-    loadTeacherRows(client, managedTagIds),
+    loadTeacherRows(client),
   ]);
 
   return {
