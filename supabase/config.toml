@@ -15,7 +15,10 @@ enabled = false
 enabled = true
 enable_signup = false
 site_url = "http://localhost:3000"
-additional_redirect_urls = ["http://localhost:3000/**"]
+additional_redirect_urls = [
+  "http://localhost:3000/**",
+  "http://student.localhost:3000/**",
+]
 
 [auth.email]
 enable_signup = false
