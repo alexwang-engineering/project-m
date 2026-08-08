@@ -5,9 +5,9 @@ Modern LMS replacing a legacy Moodle platform for Merchant Taylors' School.
 **Stack:** Next.js (App Router) + React + Tailwind CSS + Supabase (Postgres).
 **Core model:** content is addressed by **tags**, not nested folders (e.g. `Y9MA1` = Year 9 Maths Set 1). A page can carry multiple tags; a user's assigned tags determine what they can see/edit.
 
-## Status: release-1 implementation in progress, not yet production-deployable
+## Status: local release-1 engineering complete, not yet production-authorized
 
-The implemented features below have RLS-backed authorization and automated coverage. Core dashboard journeys work, but production integrations and operational gates remain open. See `docs/coordination/ACTIVE_WORK.md` for package-level history and verification evidence.
+The implemented features below have RLS-backed authorization and automated coverage. Core dashboard journeys work, but real tenant/integration setup and human operational gates remain open. See `docs/operations/release-readiness-matrix.md` for the current boundary and `docs/coordination/ACTIVE_WORK.md` for package history.
 
 - **Content**: tag-scoped pages with a block editor (paragraph/heading/list/quote/code/callout/file/image blocks), page revisions with restore, MPX (`.mpx`) export/import for offline transfer, canonical tag-hierarchy routing.
 - **Assessment**: quizzes with a shared, tag-scoped question bank; assignments with student submission and teacher review; a gradebook aggregating both.
@@ -32,6 +32,8 @@ npm run dev
 Set the Supabase values in `.env.local` (from `supabase start`'s output) to exercise authenticated or database-backed routes. The dashboard shell renders without them; database-backed pages fail closed until configured.
 
 Run the complete fast verification gate with `npm run check` (format, lint, typecheck, unit tests, production build). Run the browser smoke test separately with `npm run test:e2e` (install its browser once with `npx playwright install chromium`). Run the database test suite with `npx supabase test db`. `npm run verify-uploads` runs the trusted file-verification worker against whatever is currently `pending` — see `lib/files/README.md`.
+
+Release/UAT/support procedures are in `docs/operations/`. `GET /api/health` is the dependency-aware readiness endpoint for an external monitor; it returns 503 without a healthy Supabase Auth service.
 
 ## Not yet built / deliberately deferred
 
