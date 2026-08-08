@@ -69,6 +69,12 @@ export async function getPageForEdit(
   pageId: string,
 ): Promise<EditablePage | null> {
   if (!UUID.test(pageId)) return null;
+  const { data: canEdit, error: authorizationError } = await client.rpc(
+    'can_edit_page',
+    { target_page: pageId },
+  );
+  if (authorizationError) throw authorizationError;
+  if (!canEdit) return null;
   const { data, error } = await client
     .from('pages')
     .select(

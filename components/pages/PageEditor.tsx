@@ -35,6 +35,7 @@ export interface PageEditorProps {
   writableTags: readonly EditorTag[];
   initial: {
     id: string | null;
+    parentId: string | null;
     title: string;
     slug: string;
     version: number | null;
@@ -161,7 +162,7 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
     const input = {
       title: title.trim(),
       slug,
-      parentId: null,
+      parentId: initial.parentId,
       tagIds: Array.from(tagIds),
       content,
     };

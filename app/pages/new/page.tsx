@@ -17,6 +17,7 @@ export default async function NewPagePage() {
       writableTags={writableTags}
       initial={{
         id: null,
+        parentId: null,
         title: '',
         slug: '',
         version: null,
