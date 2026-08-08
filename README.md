@@ -5,9 +5,9 @@ Modern LMS replacing a legacy Moodle platform for Merchant Taylors' School.
 **Stack:** Next.js (App Router) + React + Tailwind CSS + Supabase (Postgres).
 **Core model:** content is addressed by **tags**, not nested folders (e.g. `Y9MA1` = Year 9 Maths Set 1). A page can carry multiple tags; a user's assigned tags determine what they can see/edit.
 
-## Status: functionally complete for release-1 scope, not yet production-deployable
+## Status: release-1 implementation in progress, not yet production-deployable
 
-Every feature below is merged, has RLS-backed authorization (not app-level checks), and has automated test coverage. See `docs/coordination/ACTIVE_WORK.md` for the full package-by-package ledger and verification evidence.
+The implemented features below have RLS-backed authorization and automated coverage. Core dashboard journeys work, but production integrations and operational gates remain open. See `docs/coordination/ACTIVE_WORK.md` for package-level history and verification evidence.
 
 - **Content**: tag-scoped pages with a block editor (paragraph/heading/list/quote/code/callout/file/image blocks), page revisions with restore, MPX (`.mpx`) export/import for offline transfer, canonical tag-hierarchy routing.
 - **Assessment**: quizzes with a shared, tag-scoped question bank; assignments with student submission and teacher review; a gradebook aggregating both.
@@ -15,7 +15,7 @@ Every feature below is merged, has RLS-backed authorization (not app-level check
 - **Access**: role-based auth admission (student/teacher/institution admin), read-only parent/guardian access via admin-attested links and email magic-link sign-in (not Entra — see below).
 - **Admin**: roster management, tag creation, CSV-based MIS/SIS roster reconciliation, staged Moodle-migration import, operational reporting (audit log, roster/content summaries).
 - **Search**: RLS-scoped full-text search (Postgres `tsvector`/GIN, not `ILIKE`) across pages/assignments/quizzes/announcements/calendar events.
-- **File handling**: uploads go through a two-phase flow — the browser only ever creates a `pending` record and uploads bytes to private Storage; a separate out-of-band worker (`npm run verify-uploads`) is the *only* process that can recompute checksums, validate real file signatures, run malware scanning, and mark a file `ready`. No browser-reachable code path can self-approve an upload.
+- **File handling**: uploads go through a two-phase flow — the browser only ever creates a `pending` record and uploads bytes to private Storage; a separate out-of-band worker (`npm run verify-uploads`) is the *only* process that can recompute checksums, validate real file signatures, run malware scanning, and mark a file `ready`. Verification work uses recoverable leases, and terminal state plus audit evidence commit atomically. No browser-reachable code path can self-approve an upload.
 - **Platform**: strict TypeScript, RLS as the sole authorization layer (no app-level access checks duplicating it), nonce-based CSP with no `unsafe-inline`/`unsafe-eval` in production, automated accessibility coverage (jsx-a11y + axe-core) on every page reachable without a session, GitHub Actions CI (format/lint/typecheck/unit tests/build/e2e/audit + a fresh-database pgTAP run + secret scanning).
 
 ## Local development

@@ -21,59 +21,12 @@ function makeFakeClient(options: {
   files: Record<string, { state: string }>;
   storageBytes: Record<string, Uint8Array | null>;
 }) {
-  const updates: { table: string; payload: Record<string, unknown> }[] = [];
-  const inserts: { table: string; payload: Record<string, unknown> }[] = [];
+  const rpcCalls: { name: string; args?: Record<string, unknown> }[] = [];
 
   const client = {
-    from(table: string) {
-      return {
-        select() {
-          return this;
-        },
-        eq(column: string, value: string) {
-          this._filters = { ...(this._filters ?? {}), [column]: value };
-          return this;
-        },
-        order() {
-          return this;
-        },
-        limit() {
-          return this;
-        },
-        update(payload: Record<string, unknown>) {
-          updates.push({ table, payload });
-          this._payload = payload;
-          return this;
-        },
-        insert(payload: Record<string, unknown>) {
-          inserts.push({ table, payload });
-          return Promise.resolve({ error: null });
-        },
-        maybeSingle() {
-          const id = (this._filters as Record<string, string> | undefined)?.id;
-          if (table === 'files' && id && options.files[id]) {
-            return Promise.resolve({
-              data: {
-                id,
-                bucket_id: 'learning-content',
-                object_name: `pdfs/${id}.pdf`,
-                original_name: 'test.pdf',
-                media_type: 'application/pdf',
-                size_bytes: PDF_BYTES.byteLength,
-                sha256: sha256Hex(PDF_BYTES),
-                owner_id: 'owner-1',
-              },
-              error: null,
-            });
-          }
-          return Promise.resolve({ data: null, error: null });
-        },
-        then(resolve: (result: { data: unknown; error: null }) => void) {
-          resolve({ data: [], error: null });
-        },
-        _filters: undefined as Record<string, string> | undefined,
-        _payload: undefined as Record<string, unknown> | undefined,
-      };
+    rpc(name: string, args?: Record<string, unknown>) {
+      rpcCalls.push({ name, args });
+      return Promise.resolve({ data: undefined, error: null });
     },
     storage: {
       from(bucketId: string) {
@@ -93,8 +46,7 @@ function makeFakeClient(options: {
         };
       },
     },
-    updates,
-    inserts,
+    rpcCalls,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
   return client;
@@ -122,6 +74,7 @@ function makeClaimedFile(overrides: Partial<ClaimedFile> = {}): ClaimedFile {
     sizeBytes: PDF_BYTES.byteLength,
     sha256: sha256Hex(PDF_BYTES),
     ownerId: 'owner-1',
+    leaseId: '00000000-0000-4000-8000-000000000999',
     ...overrides,
   };
 }
@@ -135,6 +88,10 @@ describe('verifyClaimedFile', () => {
     });
     const outcome = await verifyClaimedFile(client, claimed, cleanScanner);
     expect(outcome.result).toBe('ready');
+    expect(client.rpcCalls[0]).toMatchObject({
+      name: 'complete_file_verification',
+      args: { target_file_id: 'file-1', outcome: 'ready' },
+    });
   });
 
   it('fails closed on a checksum mismatch (bytes were tampered with after declaration)', async () => {
@@ -213,53 +170,26 @@ describe('verifyClaimedFile', () => {
 });
 
 describe('claimNextPendingFile', () => {
-  it('is idempotent: claiming a file already past pending returns null instead of re-processing it', async () => {
-    // maybeSingle() in this fake only returns a row when the id filter is
-    // present AND the row exists in `files` - simulating the real
-    // conditional UPDATE ("... where state = 'pending'") affecting zero
-    // rows (and therefore returning null) the second time it's attempted.
+  it('returns the database lease once and then reports an empty queue', async () => {
     let alreadyClaimed = false;
     const client = {
-      from() {
-        return {
-          select() {
-            return this;
+      rpc() {
+        if (alreadyClaimed) return Promise.resolve({ data: null, error: null });
+        alreadyClaimed = true;
+        return Promise.resolve({
+          data: {
+            id: 'file-1',
+            bucket_id: 'learning-content',
+            object_name: 'pdfs/file-1.pdf',
+            original_name: 'test.pdf',
+            media_type: 'application/pdf',
+            size_bytes: PDF_BYTES.byteLength,
+            sha256: sha256Hex(PDF_BYTES),
+            owner_id: 'owner-1',
+            verification_lease_id: '00000000-0000-4000-8000-000000000999',
           },
-          eq() {
-            return this;
-          },
-          order() {
-            return this;
-          },
-          limit() {
-            return this;
-          },
-          update() {
-            return this;
-          },
-          maybeSingle() {
-            if (alreadyClaimed)
-              return Promise.resolve({ data: null, error: null });
-            alreadyClaimed = true;
-            return Promise.resolve({
-              data: {
-                id: 'file-1',
-                bucket_id: 'learning-content',
-                object_name: 'pdfs/file-1.pdf',
-                original_name: 'test.pdf',
-                media_type: 'application/pdf',
-                size_bytes: PDF_BYTES.byteLength,
-                sha256: sha256Hex(PDF_BYTES),
-                owner_id: 'owner-1',
-              },
-              error: null,
-            });
-          },
-          then(resolve: (result: { data: unknown; error: null }) => void) {
-            resolve({ data: [{ id: 'file-1' }], error: null });
-          },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any;
+          error: null,
+        });
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;

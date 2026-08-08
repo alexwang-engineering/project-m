@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import Dashboard, { type DashboardPage } from '@/components/Dashboard';
@@ -40,6 +40,14 @@ describe('Dashboard', () => {
     expect(
       screen.getByText('Organic Mechanisms — Nucleophilic Substitution'),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', {
+        name: /Organic Mechanisms — Nucleophilic Substitution/,
+      }),
+    ).toHaveAttribute('href', '/chemistry/organic-chemistry/mechanisms');
+    expect(
+      screen.queryByRole('link', { name: 'Admin' }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows an empty state when there are no authorized pages', () => {
@@ -57,8 +65,24 @@ describe('Dashboard', () => {
   });
 
   it('renders a generic guest state when signed out', () => {
-    render(<Dashboard pages={[]} currentUser={null} />);
+    const { container } = render(<Dashboard pages={[]} currentUser={null} />);
+    const view = within(container);
 
-    expect(screen.getByText('Signed out')).toBeInTheDocument();
+    expect(view.getByText('Signed out')).toBeInTheDocument();
+    expect(
+      view.queryByRole('button', { name: 'Create' }),
+    ).not.toBeInTheDocument();
+    expect(view.queryByRole('searchbox')).not.toBeInTheDocument();
+  });
+
+  it('shows administrative navigation only to administrators', () => {
+    render(
+      <Dashboard pages={[]} currentUser={{ ...SAMPLE_USER, role: 'admin' }} />,
+    );
+
+    expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute(
+      'href',
+      '/admin',
+    );
   });
 });

@@ -23,6 +23,7 @@ export interface ClaimedFile {
   readonly sizeBytes: number;
   readonly sha256: string;
   readonly ownerId: string;
+  readonly leaseId: string;
 }
 
 export interface VerificationOutcome {
@@ -82,34 +83,16 @@ const MPX_MEDIA_TYPES: readonly string[] = [
 ];
 
 /**
- * Atomically claims one pending file for scanning. The conditional UPDATE
- * (`eq('state', 'pending')`) is what makes this race-safe: if two worker
- * runs overlap, only one's UPDATE affects the row - the other's affects
- * zero rows and this returns null, exactly like a normal SQL row lock
- * without needing one.
+ * Atomically leases one pending file, or reclaims a scan abandoned for more
+ * than 15 minutes. PostgreSQL uses `FOR UPDATE SKIP LOCKED`, so workers never
+ * claim the same file concurrently.
  */
 export async function claimNextPendingFile(
   serviceClient: Client,
 ): Promise<ClaimedFile | null> {
-  const { data: candidates, error: listError } = await serviceClient
-    .from('files')
-    .select('id')
-    .eq('state', 'pending')
-    .order('created_at', { ascending: true })
-    .limit(1);
-  if (listError) throw listError;
-  const candidate = candidates?.[0];
-  if (!candidate) return null;
-
-  const { data: claimed, error: claimError } = await serviceClient
-    .from('files')
-    .update({ state: 'scanning' })
-    .eq('id', candidate.id)
-    .eq('state', 'pending')
-    .select(
-      'id, bucket_id, object_name, original_name, media_type, size_bytes, sha256, owner_id',
-    )
-    .maybeSingle();
+  const { data: claimed, error: claimError } = await serviceClient.rpc(
+    'claim_file_for_verification',
+  );
   if (claimError) throw claimError;
   if (!claimed) return null;
 
@@ -122,42 +105,22 @@ export async function claimNextPendingFile(
     sizeBytes: claimed.size_bytes,
     sha256: claimed.sha256,
     ownerId: claimed.owner_id,
+    leaseId: claimed.verification_lease_id,
   };
 }
 
-async function transitionTo(
-  serviceClient: Client,
-  fileId: string,
-  state: 'ready' | 'quarantined' | 'failed',
-  quarantineReason: string | null,
-): Promise<void> {
-  const { error } = await serviceClient
-    .from('files')
-    .update({
-      state,
-      scanned_at: new Date().toISOString(),
-      quarantine_reason: state === 'quarantined' ? quarantineReason : null,
-    })
-    .eq('id', fileId)
-    .eq('state', 'scanning');
-  if (error) throw error;
-}
-
-async function writeAudit(
+async function completeVerification(
   serviceClient: Client,
   claimed: ClaimedFile,
-  outcome: 'ready' | 'quarantined' | 'failed',
+  state: 'ready' | 'quarantined' | 'failed',
   reason: string | null,
 ): Promise<void> {
-  const { error } = await serviceClient.from('audit_events').insert({
-    actor_id: null,
-    action: `file.verification.${outcome}`,
-    target_type: 'file',
-    target_id: claimed.id,
+  const { error } = await serviceClient.rpc('complete_file_verification', {
+    target_file_id: claimed.id,
+    lease_id: claimed.leaseId,
+    outcome: state,
+    ...(reason ? { reason } : {}),
     correlation_id: crypto.randomUUID(),
-    source: 'verification-worker',
-    before_data: { state: 'scanning' },
-    after_data: reason ? { state: outcome, reason } : { state: outcome },
   });
   if (error) throw error;
 }
@@ -176,13 +139,11 @@ export async function verifyClaimedFile(
   scanner: MalwareScanner,
 ): Promise<VerificationOutcome> {
   const fail = async (reason: string): Promise<VerificationOutcome> => {
-    await transitionTo(serviceClient, claimed.id, 'failed', null);
-    await writeAudit(serviceClient, claimed, 'failed', reason);
+    await completeVerification(serviceClient, claimed, 'failed', reason);
     return { fileId: claimed.id, result: 'failed', reason };
   };
   const quarantine = async (reason: string): Promise<VerificationOutcome> => {
-    await transitionTo(serviceClient, claimed.id, 'quarantined', reason);
-    await writeAudit(serviceClient, claimed, 'quarantined', reason);
+    await completeVerification(serviceClient, claimed, 'quarantined', reason);
     return { fileId: claimed.id, result: 'quarantined', reason };
   };
 
@@ -250,7 +211,6 @@ export async function verifyClaimedFile(
     return quarantine(scanResult.reason ?? 'Failed malware scan.');
   }
 
-  await transitionTo(serviceClient, claimed.id, 'ready', null);
-  await writeAudit(serviceClient, claimed, 'ready', null);
+  await completeVerification(serviceClient, claimed, 'ready', null);
   return { fileId: claimed.id, result: 'ready' };
 }

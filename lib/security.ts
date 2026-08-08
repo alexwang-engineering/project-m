@@ -2,16 +2,6 @@ import 'server-only';
 
 import DOMPurify, { type Config } from 'isomorphic-dompurify';
 
-export type SanitizableJson =
-  | null
-  | boolean
-  | number
-  | string
-  | SanitizableJson[]
-  | { [key: string]: SanitizableJson };
-
-const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
-
 const SANITIZE_OPTIONS: Config = {
   ALLOWED_TAGS: [
     'p', 'br', 'strong', 'em', 'u', 's', 'blockquote', 'pre', 'code',
@@ -36,70 +26,6 @@ export function sanitizeEditorHtml(html: string): string {
   }
 
   return DOMPurify.sanitize(html, SANITIZE_OPTIONS);
-}
-
-/**
- * Deeply clones and sanitises a JSON-compatible block-editor payload.
- *
- * Every string is treated as potentially renderable HTML. Prototype-pollution
- * keys, non-finite numbers, unsupported values, excessive nesting, and cyclic
- * data are rejected rather than silently persisted.
- *
- * @deprecated Do not use this on structured editor data. It sanitises IDs,
- * URLs, filenames, code, and discriminators as if they were HTML. P1-04 must
- * validate the versioned block union and sanitize only rich-HTML fields before
- * any production write route imports this module.
- */
-export function sanitizeEditorPayload<T extends SanitizableJson>(
-  payload: T,
-  maxDepth = 50,
-): T {
-  if (!Number.isSafeInteger(maxDepth) || maxDepth < 1) {
-    throw new RangeError('maxDepth must be a positive safe integer.');
-  }
-
-  const ancestors = new WeakSet<object>();
-
-  const visit = (value: unknown, depth: number): SanitizableJson => {
-    if (depth > maxDepth) {
-      throw new RangeError(`Editor payload exceeds the maximum depth of ${maxDepth}.`);
-    }
-    if (value === null || typeof value === 'boolean') return value;
-    if (typeof value === 'string') return sanitizeEditorHtml(value);
-    if (typeof value === 'number') {
-      if (!Number.isFinite(value)) throw new TypeError('Payload numbers must be finite.');
-      return value;
-    }
-    if (typeof value !== 'object') {
-      throw new TypeError(`Unsupported editor payload value: ${typeof value}.`);
-    }
-    if (ancestors.has(value)) throw new TypeError('Editor payload must not be cyclic.');
-
-    ancestors.add(value);
-    try {
-      if (Array.isArray(value)) {
-        return value.map((item) => visit(item, depth + 1));
-      }
-
-      const prototype = Object.getPrototypeOf(value);
-      if (prototype !== Object.prototype && prototype !== null) {
-        throw new TypeError('Editor payload objects must be plain objects.');
-      }
-
-      const clean: Record<string, SanitizableJson> = Object.create(null);
-      for (const [key, child] of Object.entries(value)) {
-        if (FORBIDDEN_KEYS.has(key)) {
-          throw new TypeError(`Forbidden editor payload key: ${key}.`);
-        }
-        clean[key] = visit(child, depth + 1);
-      }
-      return clean;
-    } finally {
-      ancestors.delete(value);
-    }
-  };
-
-  return visit(payload, 0) as T;
 }
 
 function normaliseTag(tag: string): string | null {

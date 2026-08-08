@@ -752,6 +752,8 @@ export type Database = {
           size_bytes: number;
           state: Database['public']['Enums']['file_state'];
           updated_at: string;
+          verification_lease_id: string | null;
+          verification_started_at: string | null;
         };
         Insert: {
           archived_at?: string | null;
@@ -768,6 +770,8 @@ export type Database = {
           size_bytes: number;
           state?: Database['public']['Enums']['file_state'];
           updated_at?: string;
+          verification_lease_id?: string | null;
+          verification_started_at?: string | null;
         };
         Update: {
           archived_at?: string | null;
@@ -784,6 +788,8 @@ export type Database = {
           size_bytes?: number;
           state?: Database['public']['Enums']['file_state'];
           updated_at?: string;
+          verification_lease_id?: string | null;
+          verification_started_at?: string | null;
         };
         Relationships: [
           {
@@ -1342,6 +1348,43 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      claim_file_for_verification: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          archived_at: string | null;
+          bucket_id: string;
+          created_at: string;
+          id: string;
+          media_type: string;
+          object_name: string;
+          original_name: string;
+          owner_id: string;
+          quarantine_reason: string | null;
+          scanned_at: string | null;
+          sha256: string;
+          size_bytes: number;
+          state: Database['public']['Enums']['file_state'];
+          updated_at: string;
+          verification_lease_id: string;
+          verification_started_at: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'files';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      complete_file_verification: {
+        Args: {
+          correlation_id?: string;
+          lease_id: string;
+          outcome: Database['public']['Enums']['file_state'];
+          reason?: string;
+          target_file_id: string;
+        };
+        Returns: undefined;
       };
       can_edit_page: { Args: { target_page: string }; Returns: boolean };
       can_manage_assignment: {
