@@ -179,6 +179,13 @@ begin
 end;
 $$;
 
+create or replace function public.lock_page_hierarchy()
+returns void language sql volatile set search_path = '' as $$
+  -- ponytail: one institution-wide hierarchy lock is sufficient at school
+  -- scale; shard by root page only if measured contention warrants it.
+  select pg_catalog.pg_advisory_xact_lock(1347241037, 1);
+$$;
+
 create or replace function public.create_page(
   page_title text, page_slug text, page_parent_id uuid, page_content jsonb,
   page_content_schema_version integer, audience_tag_ids uuid[], correlation_id uuid default null
@@ -186,6 +193,7 @@ create or replace function public.create_page(
 language plpgsql security definer set search_path = '' as $$
 declare actor uuid := auth.uid(); created public.pages; tag_id uuid;
 begin
+  perform public.lock_page_hierarchy();
   if not public.is_active_principal(actor) then raise exception using errcode = '42501', message = 'active principal required'; end if;
   if page_parent_id is not null and not public.can_edit_page(page_parent_id) then
     raise exception using errcode = '42501', message = 'parent page edit permission required';
@@ -219,6 +227,7 @@ create or replace function public.update_page(
 language plpgsql security definer set search_path = '' as $$
 declare actor uuid := auth.uid(); current_page public.pages; updated_page public.pages; original_path text; moved_paths jsonb; tag_id uuid;
 begin
+  perform public.lock_page_hierarchy();
   select * into current_page from public.pages where id = target_page_id for update;
   if not found then raise exception using errcode = 'P0002', message = 'page not found'; end if;
   if current_page.version <> expected_version then raise exception using errcode = '40001', message = 'page version conflict'; end if;
@@ -290,6 +299,7 @@ create or replace function public.set_page_lifecycle(
 language plpgsql security definer set search_path = '' as $$
 declare actor uuid := auth.uid(); current_page public.pages; updated_page public.pages;
 begin
+  perform public.lock_page_hierarchy();
   select * into current_page from public.pages where id = target_page_id for update;
   if not found then raise exception using errcode = 'P0002', message = 'page not found'; end if;
   if current_page.version <> expected_version then raise exception using errcode = '40001', message = 'page version conflict'; end if;
@@ -341,9 +351,44 @@ begin
 end;
 $$;
 
+create or replace function public.enforce_page_lifecycle_hierarchy()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  perform public.lock_page_hierarchy();
+  if new.lifecycle = 'published' and exists (
+    with recursive ancestors as (
+      select p.id, p.parent_id, p.lifecycle from public.pages p where p.id = new.parent_id
+      union all
+      select p.id, p.parent_id, p.lifecycle from public.pages p join ancestors child on p.id = child.parent_id
+    ) select 1 from ancestors where lifecycle <> 'published'
+  ) then raise exception using errcode = '55000', message = 'all parent pages must be published first'; end if;
+  if new.lifecycle <> 'published' and old.lifecycle = 'published' and exists (
+    with recursive descendants as (
+      select p.id, p.lifecycle from public.pages p where p.parent_id = new.id
+      union all
+      select p.id, p.lifecycle from public.pages p join descendants parent on p.parent_id = parent.id
+    ) select 1 from descendants where lifecycle = 'published'
+  ) then raise exception using errcode = '55000', message = 'published descendants must be unpublished first'; end if;
+  if new.lifecycle = 'archived' and exists (
+    with recursive descendants as (
+      select p.id, p.lifecycle from public.pages p where p.parent_id = new.id
+      union all
+      select p.id, p.lifecycle from public.pages p join descendants parent on p.parent_id = parent.id
+    ) select 1 from descendants where lifecycle <> 'archived'
+  ) then raise exception using errcode = '55000', message = 'descendants must be archived first'; end if;
+  return new;
+end;
+$$;
+
+create trigger pages_enforce_lifecycle_hierarchy
+before insert or update of parent_id, lifecycle on public.pages
+for each row execute function public.enforce_page_lifecycle_hierarchy();
+
 revoke all on function public.revoke_page_editor(uuid, uuid, text, uuid) from public;
 revoke all on function public.assert_page_audience_change_allowed(uuid, uuid[], uuid) from public;
 revoke all on function public.assert_page_hierarchy_change_allowed(uuid, uuid, uuid, text, text) from public;
+revoke all on function public.lock_page_hierarchy() from public;
+revoke all on function public.enforce_page_lifecycle_hierarchy() from public;
 grant execute on function public.revoke_page_editor(uuid, uuid, text, uuid) to authenticated;
 
 -- Closing a teacher role also closes page-specific delegations, preventing a

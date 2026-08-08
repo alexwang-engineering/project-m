@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(28);
+select plan(30);
 
 insert into auth.users (id, email, aud, role) values
   ('25000000-0000-4000-8000-000000000001', 'delegate-admin@merchanttaylors.com', 'authenticated', 'authenticated'),
@@ -145,6 +145,14 @@ select lives_ok(
 select throws_ok(
   $$ select public.set_page_lifecycle('25000000-0000-4000-8000-000000000021', 4, 'draft', false) $$,
   '55000', 'published descendants must be unpublished first', 'parent cannot leave published state above a published child');
+select throws_ok(
+  $$ select public.restore_page_revision('25000000-0000-4000-8000-000000000021',
+    (select id from public.page_revisions where page_id = '25000000-0000-4000-8000-000000000021' and version = 3), 4) $$,
+  '55000', 'published descendants must be unpublished first', 'revision restore cannot bypass lifecycle hierarchy');
+select is(
+  (select count(*) from pg_catalog.pg_locks where pid = pg_backend_pid()
+    and locktype = 'advisory' and classid = 1347241037::oid and objid = 1::oid and granted)::bigint,
+  1::bigint, 'page mutations retain the hierarchy advisory lock for the transaction');
 
 select * from finish();
 rollback;
