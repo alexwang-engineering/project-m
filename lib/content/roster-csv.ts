@@ -9,6 +9,9 @@ export interface RosterRow {
   readonly memberships: readonly RosterMembership[];
 }
 
+export const MAX_ROSTER_FILE_BYTES = 5 * 1024 * 1024;
+export const MAX_ROSTER_ROWS = 5_000;
+
 /**
  * Parses a roster CSV with header `email,systemRole,tags`, where `tags` is
  * a semicolon-separated list of `TAGNAME` or `TAGNAME:role` pairs (role
@@ -23,12 +26,25 @@ export function parseRosterCsv(text: string): {
   readonly rows: readonly RosterRow[];
   readonly parseErrors: readonly string[];
 } {
+  if (new TextEncoder().encode(text).byteLength > MAX_ROSTER_FILE_BYTES)
+    return {
+      rows: [],
+      parseErrors: ['The roster CSV must be 5 MB or smaller.'],
+    };
+
   const lines = text
     .split(/\r\n|\r|\n/)
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
   if (lines.length === 0)
     return { rows: [], parseErrors: ['The file is empty.'] };
+  if (lines.length - 1 > MAX_ROSTER_ROWS)
+    return {
+      rows: [],
+      parseErrors: [
+        `The roster cannot contain more than ${MAX_ROSTER_ROWS} rows.`,
+      ],
+    };
 
   const header = lines[0]!.split(',').map((cell) => cell.trim().toLowerCase());
   const emailIdx = header.indexOf('email');

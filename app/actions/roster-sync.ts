@@ -3,6 +3,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/lib/database.types';
+import { MAX_ROSTER_FILE_BYTES } from '@/lib/content/roster-csv';
 import {
   syncRoster,
   type RosterRow,
@@ -24,10 +25,32 @@ const signedOut: SyncRosterResult = {
 
 /** Runs sync_roster (dry-run or apply) for a parsed roster snapshot. */
 export async function syncRosterAction(
-  rows: readonly RosterRow[],
+  rows: unknown,
   dryRun: boolean,
 ): Promise<SyncRosterResult> {
   const client = await authenticatedClient();
   if (!client) return signedOut;
-  return syncRoster(client, rows, dryRun);
+  if (!Array.isArray(rows) || typeof dryRun !== 'boolean')
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Invalid roster data.',
+    };
+  let serialized: string;
+  try {
+    serialized = JSON.stringify(rows);
+  } catch {
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Invalid roster data.',
+    };
+  }
+  if (new TextEncoder().encode(serialized).byteLength > MAX_ROSTER_FILE_BYTES)
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'The roster data must be 5 MB or smaller.',
+    };
+  return syncRoster(client, rows as readonly RosterRow[], dryRun);
 }
