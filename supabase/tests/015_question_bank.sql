@@ -3,7 +3,18 @@
 -- optional bankItemId import path, all from 20260807060000_question_bank.sql.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(16);
+select plan(18);
+
+select is(
+  public.valid_multiple_choice_options('[{"id":"a","label":"Yes"},{"id":"a","label":"No"}]'::jsonb),
+  false,
+  'multiple-choice option IDs must be unique'
+);
+select is(
+  public.valid_multiple_choice_options('[{"id":"a","label":{"html":"No"}},{"id":"b","label":"Yes"}]'::jsonb),
+  false,
+  'multiple-choice labels must be bounded strings'
+);
 
 insert into auth.users (id, email, aud, role) values
   ('00000000-0000-0000-0000-000000000801', 'bank-admin@merchanttaylors.com', 'authenticated', 'authenticated'),
