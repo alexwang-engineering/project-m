@@ -1,10 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
-import { ArrowLeft, Download, FileText, Loader2 } from 'lucide-react';
+import { Download, FileText, Loader2 } from 'lucide-react';
 
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
+import { SubPageHeader } from '@/components/ui/SubPageHeader';
 import { formatRelativeTime } from '@/lib/relative-time';
 import { createFileDownloadAction } from '@/app/actions/files';
 import { gradeSubmissionAction } from '@/app/actions/assignments';
@@ -159,18 +160,10 @@ function SubmissionRow({
 export default function SubmissionsView({ assignment }: SubmissionsViewProps) {
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
-      <header className="sticky top-0 z-40 flex h-[68px] items-center gap-4 border-b border-slate-200 bg-white/85 px-8 backdrop-blur">
-        <Link
-          href="/assignments"
-          className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-slate-900"
-        >
-          <ArrowLeft size={15} strokeWidth={2.4} />
-          Assignments
-        </Link>
-        <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">{assignment.title}</span>
-      </header>
+      <SkipToContentLink />
+      <SubPageHeader backHref="/assignments" backLabel="Assignments" title={assignment.title} />
 
-      <main className="mx-auto max-w-[720px] px-8 pb-24 pt-9">
+      <main id="main-content" className="mx-auto max-w-[720px] px-8 pb-24 pt-9">
         <div className="mb-6">
           <h1 className="text-[20px] font-bold tracking-tight text-slate-900">Submissions</h1>
           <p className="mt-0.5 text-[13px] text-slate-500">

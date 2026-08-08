@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, ClipboardList } from 'lucide-react';
+import { ClipboardList } from 'lucide-react';
 
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
+import { SubPageHeader } from '@/components/ui/SubPageHeader';
 import { formatRelativeTime } from '@/lib/relative-time';
 import type { GradebookData } from '@/lib/content/gradebook';
 
@@ -20,15 +22,10 @@ export default function GradebookView({ data }: GradebookViewProps) {
 
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
-      <header className="sticky top-0 z-40 flex h-[68px] items-center gap-4 border-b border-slate-200 bg-white/85 px-8 backdrop-blur">
-        <Link href="/" className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-slate-900">
-          <ArrowLeft size={15} strokeWidth={2.4} />
-          Dashboard
-        </Link>
-        <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">Gradebook</span>
-      </header>
+      <SkipToContentLink />
+      <SubPageHeader backHref="/" backLabel="Dashboard" title="Gradebook" />
 
-      <main className="mx-auto max-w-[820px] px-8 pb-24 pt-9">
+      <main id="main-content" className="mx-auto max-w-[820px] px-8 pb-24 pt-9">
         {isEmpty ? (
           <EmptyState
             icon={<ClipboardList size={20} strokeWidth={2} />}

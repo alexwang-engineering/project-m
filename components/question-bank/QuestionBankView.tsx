@@ -1,12 +1,13 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { ArrowLeft, HelpCircle, Loader2, X } from 'lucide-react';
+import { HelpCircle, Loader2, X } from 'lucide-react';
 
 import { archiveBankItemAction } from '@/app/actions/question-bank';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
+import { SubPageHeader } from '@/components/ui/SubPageHeader';
 import { CreateBankItemForm } from '@/components/question-bank/CreateBankItemForm';
 import type { BankItemSummary } from '@/lib/content/question-bank';
 
@@ -42,18 +43,10 @@ export function QuestionBankView({ items, writableTags }: QuestionBankViewProps)
 
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
-      <header className="sticky top-0 z-40 flex h-[68px] items-center gap-4 border-b border-slate-200 bg-white/85 px-8 backdrop-blur">
-        <Link
-          href="/quizzes"
-          className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-slate-900"
-        >
-          <ArrowLeft size={15} strokeWidth={2.4} />
-          Quizzes
-        </Link>
-        <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">Question bank</span>
-      </header>
+      <SkipToContentLink />
+      <SubPageHeader backHref="/quizzes" backLabel="Quizzes" title="Question bank" />
 
-      <main className="mx-auto max-w-[760px] px-8 pb-24 pt-9">
+      <main id="main-content" className="mx-auto max-w-[760px] px-8 pb-24 pt-9">
         <CreateBankItemForm writableTags={writableTags} onCreated={() => router.refresh()} />
 
         {error && <p className="mb-4 text-[12.5px] text-red-600">{error}</p>}

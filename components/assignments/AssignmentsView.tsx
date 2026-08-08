@@ -2,9 +2,11 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { ArrowLeft, CheckCircle2, Clock, FileUp, Loader2, Plus } from 'lucide-react';
+import { CheckCircle2, Clock, FileUp, Loader2, Plus } from 'lucide-react';
 
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
+import { SubPageHeader } from '@/components/ui/SubPageHeader';
 import { formatRelativeTime } from '@/lib/relative-time';
 import { createClient } from '@/lib/supabase/client';
 import { beginFileUploadAction, completeFileUploadAction } from '@/app/actions/files';
@@ -205,27 +207,23 @@ export default function AssignmentsView({ assignments }: AssignmentsViewProps) {
 
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
-      <header className="sticky top-0 z-40 flex h-[68px] items-center justify-between gap-4 border-b border-slate-200 bg-white/85 px-8 backdrop-blur">
-        <div className="flex items-center gap-4">
+      <SkipToContentLink />
+      <SubPageHeader
+        backHref="/"
+        backLabel="Dashboard"
+        title="Assignments"
+        actions={
           <Link
-            href="/"
-            className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-slate-900"
+            href="/assignments/new"
+            className="flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 text-[12.5px] font-semibold text-white transition hover:bg-brand-700"
           >
-            <ArrowLeft size={15} strokeWidth={2.4} />
-            Dashboard
+            <Plus size={14} strokeWidth={2.4} />
+            New assignment
           </Link>
-          <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">Assignments</span>
-        </div>
-        <Link
-          href="/assignments/new"
-          className="flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 text-[12.5px] font-semibold text-white transition hover:bg-brand-700"
-        >
-          <Plus size={14} strokeWidth={2.4} />
-          New assignment
-        </Link>
-      </header>
+        }
+      />
 
-      <main className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
+      <main id="main-content" className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
         {displayAssignments.length === 0 ? (
           <EmptyState
             icon={<FileUp size={20} strokeWidth={2} />}

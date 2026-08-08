@@ -1,10 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
-import { ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
+import { SubPageHeader } from '@/components/ui/SubPageHeader';
 import { formatRelativeTime } from '@/lib/relative-time';
 import { submitQuizAttemptAction } from '@/app/actions/quizzes';
 import type { QuizDetail } from '@/lib/content/quizzes';
@@ -115,15 +116,10 @@ function TakeQuizForm({ quiz }: { quiz: QuizDetail }) {
 export default function QuizDetailView({ quiz }: QuizDetailViewProps) {
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
-      <header className="sticky top-0 z-40 flex h-[68px] items-center gap-4 border-b border-slate-200 bg-white/85 px-8 backdrop-blur">
-        <Link href="/quizzes" className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-slate-900">
-          <ArrowLeft size={15} strokeWidth={2.4} />
-          Quizzes
-        </Link>
-        <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">{quiz.title}</span>
-      </header>
+      <SkipToContentLink />
+      <SubPageHeader backHref="/quizzes" backLabel="Quizzes" title={quiz.title} />
 
-      <main className="mx-auto max-w-[720px] px-8 pb-24 pt-9">
+      <main id="main-content" className="mx-auto max-w-[720px] px-8 pb-24 pt-9">
         <div className="mb-6">
           <h1 className="text-[20px] font-bold tracking-tight text-slate-900">
             {quiz.canManage ? 'Attempts' : quiz.myAttempt ? 'Your result' : 'Take the quiz'}

@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle2, Clock, HelpCircle, Plus } from 'lucide-react';
+import { CheckCircle2, Clock, HelpCircle, Plus } from 'lucide-react';
 
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
+import { SubPageHeader } from '@/components/ui/SubPageHeader';
 import { formatRelativeTime } from '@/lib/relative-time';
 import type { QuizSummary } from '@/lib/content/quizzes';
 
@@ -63,35 +65,31 @@ function QuizCard({ quiz }: { quiz: QuizSummary }) {
 export default function QuizzesView({ quizzes }: QuizzesViewProps) {
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
-      <header className="sticky top-0 z-40 flex h-[68px] items-center justify-between gap-4 border-b border-slate-200 bg-white/85 px-8 backdrop-blur">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/"
-            className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-slate-900"
-          >
-            <ArrowLeft size={15} strokeWidth={2.4} />
-            Dashboard
-          </Link>
-          <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">Quizzes</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/question-bank"
-            className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-3.5 text-[12.5px] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
-          >
-            Question bank
-          </Link>
-          <Link
-            href="/quizzes/new"
-            className="flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 text-[12.5px] font-semibold text-white transition hover:bg-brand-700"
-          >
-            <Plus size={14} strokeWidth={2.4} />
-            New quiz
-          </Link>
-        </div>
-      </header>
+      <SkipToContentLink />
+      <SubPageHeader
+        backHref="/"
+        backLabel="Dashboard"
+        title="Quizzes"
+        actions={
+          <>
+            <Link
+              href="/question-bank"
+              className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-3.5 text-[12.5px] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+            >
+              Question bank
+            </Link>
+            <Link
+              href="/quizzes/new"
+              className="flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 text-[12.5px] font-semibold text-white transition hover:bg-brand-700"
+            >
+              <Plus size={14} strokeWidth={2.4} />
+              New quiz
+            </Link>
+          </>
+        }
+      />
 
-      <main className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
+      <main id="main-content" className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
         {quizzes.length === 0 ? (
           <EmptyState
             icon={<HelpCircle size={20} strokeWidth={2} />}

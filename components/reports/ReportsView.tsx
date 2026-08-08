@@ -1,10 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
-import { ArrowLeft, Download, Loader2 } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 
 import { getAuditLogAction } from '@/app/actions/reports';
+import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
+import { SubPageHeader } from '@/components/ui/SubPageHeader';
 import { toCsv } from '@/lib/csv-export';
 import type { AuditLogEntry } from '@/lib/content/reports';
 import type { ContentSummary, RosterSummary } from '@/lib/content/reports';
@@ -70,15 +71,10 @@ export function ReportsView({ rosterSummary, contentSummary }: ReportsViewProps)
 
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
-      <header className="sticky top-0 z-40 flex h-[68px] items-center gap-4 border-b border-slate-200 bg-white/85 px-8 backdrop-blur">
-        <Link href="/admin" className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-slate-900">
-          <ArrowLeft size={15} strokeWidth={2.4} />
-          Admin
-        </Link>
-        <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">Reports</span>
-      </header>
+      <SkipToContentLink />
+      <SubPageHeader backHref="/admin" backLabel="Admin" title="Reports" />
 
-      <main className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
+      <main id="main-content" className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
         <p className="mb-6 text-[12.5px] text-slate-500">
           Operational reporting only, not a compliance export — see ADR-017. For GDPR data-subject or safeguarding
           audit exports, a named human privacy reviewer must be involved before anything ships.

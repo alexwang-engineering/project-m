@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
 import { formatRelativeTime } from '@/lib/relative-time';
 import { useClickOutside } from '@/lib/use-click-outside';
 import { SearchBox } from '@/components/search/SearchBox';
@@ -441,12 +442,7 @@ export default function Dashboard({ pages }: DashboardProps) {
 
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-[13px] focus:font-semibold focus:text-slate-900 focus:shadow-lg"
-      >
-        Skip to main content
-      </a>
+      <SkipToContentLink />
       <TopNav />
 
       <main id="main-content" className="mx-auto max-w-[1180px] px-8 pb-32 pt-9">

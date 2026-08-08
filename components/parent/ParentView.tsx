@@ -6,6 +6,8 @@ import { CalendarDays, Globe2, GraduationCap, Megaphone } from 'lucide-react';
 
 import { formatRelativeTime } from '@/lib/relative-time';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
+import { SubPageHeader } from '@/components/ui/SubPageHeader';
 import type { Pupil, PupilAnnouncement, PupilCalendarItem, PupilGrade } from '@/lib/content/guardians';
 
 export interface PupilData {
@@ -106,14 +108,10 @@ export function ParentView({ pupilData }: ParentViewProps) {
 
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
-      <header className="sticky top-0 z-40 flex h-[68px] items-center gap-4 border-b border-slate-200 bg-white/85 px-8 backdrop-blur">
-        <div className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-[#254889] text-[15px] font-bold text-white">
-          M
-        </div>
-        <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">Parent view</span>
-      </header>
+      <SkipToContentLink />
+      <SubPageHeader title="Parent view" />
 
-      <main className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
+      <main id="main-content" className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
         {pupilData.length === 0 ? (
           <EmptyState
             icon={<GraduationCap size={20} strokeWidth={2} />}

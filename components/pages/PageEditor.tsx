@@ -2,14 +2,15 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import Link from 'next/link';
-import { ArrowLeft, ChevronDown, Download, Loader2, Plus, Upload } from 'lucide-react';
+import { ChevronDown, Download, Loader2, Plus, Upload } from 'lucide-react';
 
 import { createPageAction, updatePageAction, setPageLifecycleAction } from '@/app/actions/pages';
 import { createFileDownloadAction } from '@/app/actions/files';
 import { BlockEditor } from '@/components/pages/BlockEditor';
 import { BLOCK_LABEL, isBlockReady, newBlock, serializeBlock, type BlockDraft } from '@/components/pages/block-draft';
 import { exportPageAsMpx, importMpxFile } from '@/components/pages/mpx-transfer';
+import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
+import { SubPageHeader } from '@/components/ui/SubPageHeader';
 
 export interface EditorTag {
   readonly id: string;
@@ -176,64 +177,63 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
 
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
-      <header className="sticky top-0 z-40 flex h-[68px] items-center justify-between gap-4 border-b border-slate-200 bg-white/85 px-8 backdrop-blur">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 hover:text-slate-900">
-            <ArrowLeft size={15} strokeWidth={2.4} />
-            Dashboard
-          </Link>
-          <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">
-            {pageId === null ? 'New page' : 'Edit page'}
-          </span>
+      <SkipToContentLink />
+      <SubPageHeader
+        backHref="/"
+        backLabel="Dashboard"
+        title={pageId === null ? 'New page' : 'Edit page'}
+        badge={
           <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">
             {lifecycle}
           </span>
-        </div>
-        <div className="flex items-center gap-2">
-          {error &&
-            (error.code === 'conflict' ? (
-              <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-1.5 text-[12px] text-amber-800">
-                <span>Someone else changed this page since you started editing.</span>
-                <button
-                  type="button"
-                  onClick={() => window.location.reload()}
-                  className="font-semibold underline underline-offset-2 hover:text-amber-900"
-                >
-                  Reload latest version
-                </button>
-              </div>
-            ) : (
-              <p className="max-w-[280px] truncate text-[12px] text-red-600">{error.message}</p>
-            ))}
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={!canSave}
-            className="flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-4 text-[12.5px] font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {saving && <Loader2 size={13} className="animate-spin" />}
-            {pageId === null ? 'Create draft' : 'Save'}
-          </button>
-          {pageId !== null && lifecycle !== 'published' && (
-            <label className="flex items-center gap-1.5 text-[12px] text-slate-500">
-              <input type="checkbox" checked={makePublic} onChange={(e) => setMakePublic(e.target.checked)} />
-              Public (visible to everyone, not just your tags)
-            </label>
-          )}
-          {pageId !== null && (
+        }
+        actions={
+          <>
+            {error &&
+              (error.code === 'conflict' ? (
+                <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-1.5 text-[12px] text-amber-800">
+                  <span>Someone else changed this page since you started editing.</span>
+                  <button
+                    type="button"
+                    onClick={() => window.location.reload()}
+                    className="font-semibold underline underline-offset-2 hover:text-amber-900"
+                  >
+                    Reload latest version
+                  </button>
+                </div>
+              ) : (
+                <p className="max-w-[280px] truncate text-[12px] text-red-600">{error.message}</p>
+              ))}
             <button
               type="button"
-              onClick={handlePublishToggle}
-              disabled={saving}
-              className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-4 text-[12.5px] font-semibold text-slate-700 transition hover:border-brand-400 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={handleSave}
+              disabled={!canSave}
+              className="flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-4 text-[12.5px] font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {lifecycle === 'published' ? 'Unpublish' : 'Publish'}
+              {saving && <Loader2 size={13} className="animate-spin" />}
+              {pageId === null ? 'Create draft' : 'Save'}
             </button>
-          )}
-        </div>
-      </header>
+            {pageId !== null && lifecycle !== 'published' && (
+              <label className="flex items-center gap-1.5 text-[12px] text-slate-500">
+                <input type="checkbox" checked={makePublic} onChange={(e) => setMakePublic(e.target.checked)} />
+                Public (visible to everyone, not just your tags)
+              </label>
+            )}
+            {pageId !== null && (
+              <button
+                type="button"
+                onClick={handlePublishToggle}
+                disabled={saving}
+                className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-4 text-[12.5px] font-semibold text-slate-700 transition hover:border-brand-400 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {lifecycle === 'published' ? 'Unpublish' : 'Publish'}
+              </button>
+            )}
+          </>
+        }
+      />
 
-      <main className="mx-auto max-w-[760px] px-8 pb-32 pt-9">
+      <main id="main-content" className="mx-auto max-w-[760px] px-8 pb-32 pt-9">
         <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <input
             aria-label="Page title"

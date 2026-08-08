@@ -2,10 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useId, useRef, useState } from 'react';
-import Link from 'next/link';
-import { ArrowLeft, Loader2, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Trash2 } from 'lucide-react';
 
 import { createQuizAction } from '@/app/actions/quizzes';
+import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
+import { SubPageHeader } from '@/components/ui/SubPageHeader';
 
 interface EditorTag {
   readonly id: string;
@@ -133,29 +134,28 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
 
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
-      <header className="sticky top-0 z-40 flex h-[68px] items-center justify-between gap-4 border-b border-slate-200 bg-white/85 px-8 backdrop-blur">
-        <div className="flex items-center gap-4">
-          <Link href="/quizzes" className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 hover:text-slate-900">
-            <ArrowLeft size={15} strokeWidth={2.4} />
-            Quizzes
-          </Link>
-          <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">New quiz</span>
-        </div>
-        <div className="flex items-center gap-2">
-          {error && <p className="max-w-[280px] truncate text-[12px] text-red-600">{error}</p>}
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={!canSave}
-            className="flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-4 text-[12.5px] font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {saving && <Loader2 size={13} className="animate-spin" />}
-            Create quiz
-          </button>
-        </div>
-      </header>
+      <SkipToContentLink />
+      <SubPageHeader
+        backHref="/quizzes"
+        backLabel="Quizzes"
+        title="New quiz"
+        actions={
+          <>
+            {error && <p className="max-w-[280px] truncate text-[12px] text-red-600">{error}</p>}
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={!canSave}
+              className="flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-4 text-[12.5px] font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {saving && <Loader2 size={13} className="animate-spin" />}
+              Create quiz
+            </button>
+          </>
+        }
+      />
 
-      <main className="mx-auto max-w-[760px] px-8 pb-32 pt-9">
+      <main id="main-content" className="mx-auto max-w-[760px] px-8 pb-32 pt-9">
         <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <input
             aria-label="Quiz title"

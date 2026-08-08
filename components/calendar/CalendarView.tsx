@@ -1,12 +1,13 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
-import { ArrowLeft, CalendarDays, Globe2, Loader2, X } from 'lucide-react';
+import { CalendarDays, Globe2, Loader2, X } from 'lucide-react';
 
 import { cancelCalendarEventAction } from '@/app/actions/calendar';
 import { formatRelativeTime } from '@/lib/relative-time';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
+import { SubPageHeader } from '@/components/ui/SubPageHeader';
 import { CreateEventForm } from '@/components/calendar/CreateEventForm';
 import type { CalendarItem } from '@/lib/content/calendar';
 
@@ -109,18 +110,10 @@ export function CalendarView({ items, writableTags, currentUserId, isAdmin }: Ca
 
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
-      <header className="sticky top-0 z-40 flex h-[68px] items-center gap-4 border-b border-slate-200 bg-white/85 px-8 backdrop-blur">
-        <Link
-          href="/"
-          className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-slate-900"
-        >
-          <ArrowLeft size={15} strokeWidth={2.4} />
-          Dashboard
-        </Link>
-        <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">Calendar</span>
-      </header>
+      <SkipToContentLink />
+      <SubPageHeader backHref="/" backLabel="Dashboard" title="Calendar" />
 
-      <main className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
+      <main id="main-content" className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
         <CreateEventForm writableTags={writableTags} isAdmin={isAdmin} />
 
         {error && <p className="mb-4 text-[12.5px] text-red-600">{error}</p>}

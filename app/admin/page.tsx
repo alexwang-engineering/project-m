@@ -6,6 +6,8 @@ import { AdminRoster } from '@/components/admin/AdminRoster';
 import { CreateTagForm } from '@/components/admin/CreateTagForm';
 import { MigrationImportPanel } from '@/components/admin/MigrationImportPanel';
 import { RosterSyncPanel } from '@/components/admin/RosterSyncPanel';
+import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
+import { SubPageHeader } from '@/components/ui/SubPageHeader';
 import { createServerClient } from '@/lib/supabase/server';
 import { isInstitutionAdmin, listTags, listUsers } from '@/lib/content/admin';
 import { listGuardianLinks } from '@/lib/content/guardians';
@@ -27,20 +29,22 @@ export default async function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
-      <header className="sticky top-0 z-40 flex h-[68px] items-center gap-4 border-b border-slate-200 bg-white/85 px-8 backdrop-blur">
-        <Link href="/" className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-slate-900">
-          Dashboard
-        </Link>
-        <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">Admin</span>
-        <Link
-          href="/reports"
-          className="ml-auto rounded-lg border border-slate-200 px-3 py-1.5 text-[12.5px] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
-        >
-          Reports
-        </Link>
-      </header>
+      <SkipToContentLink />
+      <SubPageHeader
+        backHref="/"
+        backLabel="Dashboard"
+        title="Admin"
+        actions={
+          <Link
+            href="/reports"
+            className="rounded-lg border border-slate-200 px-3 py-1.5 text-[12.5px] font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+          >
+            Reports
+          </Link>
+        }
+      />
 
-      <main className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
+      <main id="main-content" className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
         <CreateTagForm />
         <RosterSyncPanel />
         <MigrationImportPanel />
