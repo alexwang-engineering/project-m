@@ -1544,6 +1544,25 @@ export type Database = {
         Args: { correlation_id?: string; target_link_id: string };
         Returns: undefined;
       };
+      revoke_system_role: {
+        Args: {
+          correlation_id?: string;
+          revocation_reason: string;
+          revoked_role: Database['public']['Enums']['system_role'];
+          target_profile: string;
+        };
+        Returns: undefined;
+      };
+      revoke_tag_membership: {
+        Args: {
+          correlation_id?: string;
+          revocation_reason: string;
+          revoked_membership_role: Database['public']['Enums']['membership_role'];
+          target_profile: string;
+          target_tag: string;
+        };
+        Returns: undefined;
+      };
       create_announcement: {
         Args: {
           announcement_body: string;

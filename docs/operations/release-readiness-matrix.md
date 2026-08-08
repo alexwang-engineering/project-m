@@ -7,7 +7,7 @@ Last engineering verification: 2026-08-08. This is the handbook's completion led
 | Area | Evidence |
 |---|---|
 | Identity boundary | Fail-closed institutional admission, role-aware login flow, protected routes, guardian admission separated from Entra; auth pgTAP tests |
-| Authorization | RLS-backed anonymous/student/teacher/admin/guardian isolation, all-tags-required teacher writes, disabled-user handling; 285 total pgTAP assertions |
+| Authorization | RLS-backed anonymous/student/teacher/admin/guardian isolation, all-tags-required teacher writes, disabled-user handling; 309 total pgTAP assertions |
 | Content | Canonical pages, block validation/sanitization, drafts/publishing, optimistic concurrency, revisions/restore, MPX/PDF transfer and bounded imports |
 | Assessment | Assignment submission/receipts/review, quizzes/question bank/deterministic grading, separate save/release grade workflow, released-only student/guardian projections |
 | School workflows | Tags/admin audit, roster dry-run/apply, calendar, announcements, search, operational reports, staged migration manifests |
@@ -19,7 +19,7 @@ Last engineering verification: 2026-08-08. This is the handbook's completion led
 Latest clean local gate:
 
 - `npm run check`: 72 tests, lint/typecheck/format/build passed.
-- `npx supabase test db`: 23 files, 285 assertions passed.
+- `npx supabase test db`: 24 files, 309 assertions passed.
 - `npm run test:e2e`: 4 Playwright tests passed.
 - `npm audit --omit=dev`: zero vulnerabilities.
 - Live `GET /api/health`: HTTP 200 with local Supabase.

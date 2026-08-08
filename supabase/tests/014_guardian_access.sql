@@ -7,13 +7,14 @@
 -- that file already owns institutional-trigger testing.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(23);
+select plan(26);
 
 insert into auth.users (id, email, aud, role) values
   ('00000000-0000-0000-0000-000000000901', 'guardian-admin@merchanttaylors.com', 'authenticated', 'authenticated'),
   ('00000000-0000-0000-0000-000000000902', 'guardian-teacher@merchanttaylors.com', 'authenticated', 'authenticated'),
   ('00000000-0000-0000-0000-000000000903', 'guardian-pupil@merchanttaylors.com', 'authenticated', 'authenticated'),
-  ('00000000-0000-0000-0000-000000000904', 'guardian-other-pupil@merchanttaylors.com', 'authenticated', 'authenticated');
+  ('00000000-0000-0000-0000-000000000904', 'guardian-other-pupil@merchanttaylors.com', 'authenticated', 'authenticated'),
+  ('00000000-0000-0000-0000-000000000907', 'existing-auth-only@example.com', 'authenticated', 'authenticated');
 
 insert into public.profiles (id, email, kind, state) values
   ('00000000-0000-0000-0000-000000000901', 'guardian-admin@merchanttaylors.com', 'institutional', 'active'),
@@ -97,6 +98,22 @@ select throws_ok(
   $$ select public.link_guardian('00000000-0000-0000-0000-000000000903', 'guardian.parent@example.com', 'duplicate attempt') $$,
   '23505', 'duplicate key value violates unique constraint "guardian_links_active_unique"',
   'a second active link for the same pupil and guardian email is rejected'
+);
+select lives_ok(
+  $$ select public.link_guardian('00000000-0000-0000-0000-000000000903',
+    'existing-auth-only@example.com', 'existing identity verified') $$,
+  'admin can link a pre-existing auth-only guardian identity'
+);
+select ok(
+  exists (select 1 from public.profiles
+    where id = '00000000-0000-0000-0000-000000000907' and kind = 'guardian'),
+  'linking provisions the missing guardian profile'
+);
+select ok(
+  exists (select 1 from public.guardian_links
+    where guardian_email = 'existing-auth-only@example.com'
+      and guardian_profile_id = '00000000-0000-0000-0000-000000000907'),
+  'the new link activates against the existing auth identity'
 );
 
 -- Admission: signing up with no pre-authorized link succeeds at the
@@ -215,8 +232,8 @@ select throws_ok(
 -- context the previous assertion used.
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000901', true);
 select is(
-  (select count(*) from public.audit_events where target_type = 'guardian_link')::bigint, 2::bigint,
-  'one link and one revoke are both audited'
+  (select count(*) from public.audit_events where target_type = 'guardian_link')::bigint, 3::bigint,
+  'guardian link changes are audited'
 );
 
 select throws_ok(

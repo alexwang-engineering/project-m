@@ -6,6 +6,8 @@ import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import {
   assignSystemRoleAction,
   assignTagMembershipAction,
+  revokeSystemRoleAction,
+  revokeTagMembershipAction,
   setProfileStateAction,
 } from '@/app/actions/admin';
 import {
@@ -116,6 +118,45 @@ function ManageUserPanel({
     setMessage(
       nextState === 'disabled' ? 'Account disabled.' : 'Account re-enabled.',
     );
+  }
+
+  async function handleRevokeRole(currentRole: (typeof SYSTEM_ROLES)[number]) {
+    const reason = window.prompt(`Reason for revoking ${currentRole}:`);
+    if (!reason?.trim()) return;
+    const key = `role:${currentRole}`;
+    setBusy(key);
+    setError(null);
+    setMessage(null);
+    const result = await revokeSystemRoleAction({
+      profileId: user.id,
+      role: currentRole,
+      reason: reason.trim(),
+    });
+    setBusy(null);
+    if (!result.ok) return setError(result.message);
+    setMessage(`Revoked ${currentRole}.`);
+  }
+
+  async function handleRevokeMembership(
+    membership: AdminUser['tagMemberships'][number],
+  ) {
+    const reason = window.prompt(
+      `Reason for removing ${membership.tagName} · ${membership.role}:`,
+    );
+    if (!reason?.trim()) return;
+    const key = `tag:${membership.tagId}:${membership.role}`;
+    setBusy(key);
+    setError(null);
+    setMessage(null);
+    const result = await revokeTagMembershipAction({
+      profileId: user.id,
+      tagId: membership.tagId,
+      role: membership.role,
+      reason: reason.trim(),
+    });
+    setBusy(null);
+    if (!result.ok) return setError(result.message);
+    setMessage(`Removed ${membership.tagName} · ${membership.role}.`);
   }
 
   async function handleLinkGuardian() {
@@ -253,6 +294,48 @@ function ManageUserPanel({
 
       <div className="flex flex-col gap-2 border-t border-slate-200 pt-3">
         <span className="text-[11.5px] font-semibold text-slate-500">
+          Current access
+        </span>
+        <div className="flex flex-wrap gap-1.5">
+          {user.systemRoles.map((currentRole, index) => {
+            const key = `role:${currentRole}`;
+            return (
+              <button
+                key={`${key}:${index}`}
+                type="button"
+                onClick={() => handleRevokeRole(currentRole)}
+                disabled={busy !== null}
+                className="rounded-md border border-red-200 px-2 py-1 text-[11px] font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
+              >
+                {busy === key && (
+                  <Loader2 size={11} className="mr-1 inline animate-spin" />
+                )}
+                Revoke {currentRole}
+              </button>
+            );
+          })}
+          {user.tagMemberships.map((membership, index) => {
+            const key = `tag:${membership.tagId}:${membership.role}`;
+            return (
+              <button
+                key={`${key}:${index}`}
+                type="button"
+                onClick={() => handleRevokeMembership(membership)}
+                disabled={busy !== null}
+                className="rounded-md border border-red-200 px-2 py-1 text-[11px] font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
+              >
+                {busy === key && (
+                  <Loader2 size={11} className="mr-1 inline animate-spin" />
+                )}
+                Remove {membership.tagName} · {membership.role}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2 border-t border-slate-200 pt-3">
+        <span className="text-[11.5px] font-semibold text-slate-500">
           Guardians
         </span>
         {guardianLinks.map((link) => (
@@ -349,17 +432,17 @@ function UserRow({
             >
               {user.state}
             </span>
-            {user.systemRoles.map((role) => (
+            {user.systemRoles.map((role, index) => (
               <span
-                key={role}
+                key={`${role}:${index}`}
                 className="rounded-md bg-[#eef2fa] px-2 py-0.5 text-[10.5px] font-bold text-[#254889]"
               >
                 {role}
               </span>
             ))}
-            {user.tagMemberships.map((m) => (
+            {user.tagMemberships.map((m, index) => (
               <span
-                key={m.tagId}
+                key={`${m.tagId}:${m.role}:${index}`}
                 className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10.5px] font-bold text-slate-500"
               >
                 {m.tagName} · {m.role}

@@ -7,7 +7,7 @@
 -- follow-up work (20260807020000_create_tag.sql).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(24);
+select plan(33);
 
 insert into auth.users (id, email, aud, role) values
   ('00000000-0000-0000-0000-000000000401', 'admin.verify@merchanttaylors.com', 'authenticated', 'authenticated'),
@@ -46,6 +46,17 @@ select throws_ok(
   $$ select public.set_profile_state('00000000-0000-0000-0000-000000000403', 'disabled', 'spoof') $$,
   '42501', 'institution administrator role required',
   'a non-admin teacher cannot change a profile''s state'
+);
+select throws_ok(
+  $$ select public.revoke_system_role('00000000-0000-0000-0000-000000000403', 'teacher', 'spoof') $$,
+  '42501', 'institution administrator role required',
+  'a non-admin teacher cannot revoke a system role'
+);
+select throws_ok(
+  $$ select public.revoke_tag_membership('00000000-0000-0000-0000-000000000403',
+    '50000000-0000-0000-0000-000000000001', 'member', 'spoof') $$,
+  '42501', 'institution administrator role required',
+  'a non-admin teacher cannot revoke a tag membership'
 );
 
 -- Admin happy path: assign a system role.
@@ -86,6 +97,50 @@ select is(
   (select count(*) from public.audit_events where action = 'tag_membership.assigned'
    and target_id = '00000000-0000-0000-0000-000000000403')::bigint,
   1::bigint, 'assigning a tag membership writes an audit event'
+);
+
+-- Narrow revocation closes grants without deleting their history.
+select lives_ok(
+  $$ select public.revoke_system_role('00000000-0000-0000-0000-000000000403', 'teacher', 'role no longer required') $$,
+  'admin can revoke a system role'
+);
+reset role;
+select ok(
+  not public.has_system_role('teacher', '00000000-0000-0000-0000-000000000403'),
+  'the revoked system role is no longer effective'
+);
+set local role authenticated;
+select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000401', true);
+select is(
+  (select count(*) from public.audit_events where action = 'role.revoked'
+   and target_id = '00000000-0000-0000-0000-000000000403')::bigint,
+  1::bigint, 'revoking a role writes an audit event'
+);
+select lives_ok(
+  $$ select public.revoke_tag_membership('00000000-0000-0000-0000-000000000403',
+    '50000000-0000-0000-0000-000000000001', 'member', 'class changed') $$,
+  'admin can revoke a tag membership'
+);
+reset role;
+select ok(
+  not public.has_tag_membership('50000000-0000-0000-0000-000000000001',
+    array['member']::public.membership_role[], '00000000-0000-0000-0000-000000000403'),
+  'the revoked tag membership is no longer effective'
+);
+set local role authenticated;
+select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000401', true);
+select is(
+  (select count(*) from public.audit_events where action = 'tag_membership.revoked'
+   and target_id = '00000000-0000-0000-0000-000000000403')::bigint,
+  1::bigint, 'revoking a tag membership writes an audit event'
+);
+select throws_ok(
+  $$ select public.revoke_system_role('00000000-0000-0000-0000-000000000401',
+    'institution_admin', 'self-lock attempt') $$,
+  '22023', 'administrator cannot revoke own admin role',
+  'an administrator cannot revoke their own admin role'
 );
 
 -- Admin happy path: disable, then re-enable, a profile.
