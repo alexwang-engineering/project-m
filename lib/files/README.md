@@ -2,8 +2,22 @@
 
 1. `beginFileUploadAction` validates the filename, declared type, byte size, and SHA-256 checksum, then creates `pending` metadata through the audited database RPC.
 2. The authenticated browser uploads once to the returned private bucket/object path with `upsert: false`. Storage RLS accepts only the pending record's owner and exact path.
-3. A trusted asynchronous verifier (separate deployment package) checks the stored bytes, PDF/MPX signature, malware result, declared size, and SHA-256 before setting the file to `ready`. Browser roles cannot perform this transition.
-4. `attachFileToPageAction` attaches only a verified file owned by the actor (or an administrator) to a page the actor may edit.
-5. `createFileDownloadAction` resolves the internal path through a narrowly authorized database function and asks Storage for a one-minute signed URL. Pending, archived, unlinked, and unauthorized files resolve to no target.
+3. **`scripts/verify-uploads.ts` is the only process that can move a file out of `pending`.** It is a standalone Node/tsx CLI, run out-of-band (cron, a scheduler, or by hand) with the service-role key - never a Next.js route or Server Action, and never imported by anything under `app/` or `components/`. There is no way for a browser request to trigger, influence, or self-approve this step.
+   - Claims one `pending` file at a time via a conditional `UPDATE ... WHERE state = 'pending'` (race-safe: a second concurrent claim attempt affects zero rows and returns null), moving it to `scanning`.
+   - Re-downloads the actual stored bytes and enforces the 25 MiB limit against the real object, not just the declared size.
+   - Recomputes the SHA-256 digest and compares it to what was declared at upload time using a constant-time comparison (`node:crypto`'s `timingSafeEqual`).
+   - Validates a real magic-byte signature against the declared media type (PDF `%PDF-`, PNG/JPEG/GIF/WebP signatures, or a ZIP signature followed by the existing bounded `unpackMpx` manifest/size/checksum validation for `.mpx`) - never the filename, extension, or browser-declared MIME type.
+   - Runs the bytes through a pluggable `MalwareScanner` adapter (`lib/files/scanner.ts`). No scanner is configured by default; the worker fails closed (throws before processing anything) unless `MALWARE_SCANNER` is explicitly set, and refuses the local-development no-op scanner outright when `NODE_ENV=production`. **A real scanner adapter is not implemented yet** - this is a named, tracked blocker (see `docs/coordination/ACTIVE_WORK.md`), not a silent gap.
+   - Transitions to `ready`, `quarantined` (with a reason recorded on the row and in an audit event), or `failed` (reason in the audit event only). Every transition is a conditional `UPDATE ... WHERE state = 'scanning'`, so re-running the worker never reprocesses a file twice.
+4. The browser polls a read-only status action (`getFileStatusAction` / `lib/files/poll-status.ts`'s `waitForFileReady`) after upload, waiting for the worker to reach a terminal state rather than assuming success. `attachFileToPageAction` only ever succeeds against an already-`ready` file (enforced server-side by `attach_ready_file_to_page`/`submit_assignment`, unchanged by this rework).
+5. `createFileDownloadAction` resolves the internal path through a narrowly authorized database function and asks Storage for a one-minute signed URL. Pending, scanning, quarantined, failed, and unauthorized files all resolve to no target.
 
 Never persist signed URLs or treat a filename, MIME declaration, object path, or client-computed checksum as trusted verification evidence.
+
+## Running the worker locally
+
+```bash
+MALWARE_SCANNER=noop-dev-only npm run verify-uploads
+```
+
+`MALWARE_SCANNER=noop-dev-only` is refused outright when `NODE_ENV=production` - see `lib/files/scanner.ts`. There is currently no real scanner adapter wired in; implementing and configuring one is a prerequisite for running this worker against real user uploads.

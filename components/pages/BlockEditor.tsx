@@ -1,11 +1,22 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, FileUp, ImageUp, Loader2, Trash2 } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  FileUp,
+  ImageUp,
+  Loader2,
+  Trash2,
+} from 'lucide-react';
 
-import { beginFileUploadAction, completeFileUploadAction, attachFileToPageAction } from '@/app/actions/files';
+import {
+  beginFileUploadAction,
+  attachFileToPageAction,
+} from '@/app/actions/files';
 import { createClient } from '@/lib/supabase/client';
 import { sha256Hex } from '@/lib/files/client-hash';
+import { waitForFileReady } from '@/lib/files/poll-status';
 import { RichTextField } from '@/components/pages/RichTextField';
 import type { BlockDraft } from '@/components/pages/block-draft';
 
@@ -26,24 +37,41 @@ const fieldClass =
 
 async function uploadFile(
   file: File,
-  mediaType: 'application/pdf' | 'application/zip' | 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif',
+  mediaType:
+    | 'application/pdf'
+    | 'application/zip'
+    | 'image/png'
+    | 'image/jpeg'
+    | 'image/webp'
+    | 'image/gif',
   pageId: string,
 ): Promise<{ ok: true; fileId: string } | { ok: false; message: string }> {
   const sha256 = await sha256Hex(file).catch(() => null);
   if (!sha256) return { ok: false, message: 'Could not read this file.' };
 
-  const ticket = await beginFileUploadAction({ filename: file.name, sizeBytes: file.size, sha256, mediaType });
+  const ticket = await beginFileUploadAction({
+    filename: file.name,
+    sizeBytes: file.size,
+    sha256,
+    mediaType,
+  });
   if (!ticket.ok) return { ok: false, message: ticket.message };
 
   const { error: uploadError } = await createClient()
     .storage.from(ticket.file.bucket)
-    .upload(ticket.file.objectName, file, { contentType: mediaType, upsert: false });
+    .upload(ticket.file.objectName, file, {
+      contentType: mediaType,
+      upsert: false,
+    });
   if (uploadError) return { ok: false, message: uploadError.message };
 
-  const verified = await completeFileUploadAction(ticket.file.id);
+  const verified = await waitForFileReady(ticket.file.id);
   if (!verified.ok) return { ok: false, message: verified.message };
 
-  const attached = await attachFileToPageAction({ pageId, fileId: ticket.file.id });
+  const attached = await attachFileToPageAction({
+    pageId,
+    fileId: ticket.file.id,
+  });
   if (!attached.ok) return { ok: false, message: attached.message };
 
   return { ok: true, fileId: ticket.file.id };
@@ -124,13 +152,16 @@ export function BlockEditor({
   useEffect(() => {
     if (!pendingImportFile || pageId === null) return;
     const initial = blockRef.current;
-    if (initial.type !== 'file' || initial.fileId !== '' || initial.uploading) return;
+    if (initial.type !== 'file' || initial.fileId !== '' || initial.uploading)
+      return;
     let cancelled = false;
     (async () => {
       const startingBlock = blockRef.current;
       if (startingBlock.type !== 'file') return;
       onChangeRef.current({ ...startingBlock, uploading: true });
-      const mediaType = pendingImportFile.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'application/zip';
+      const mediaType = pendingImportFile.name.toLowerCase().endsWith('.pdf')
+        ? 'application/pdf'
+        : 'application/zip';
       const result = await uploadFile(pendingImportFile, mediaType, pageId);
       if (cancelled) return;
       const latest = blockRef.current;
@@ -153,7 +184,12 @@ export function BlockEditor({
   }, [pendingImportFile, pageId]);
 
   const shell = (content: React.ReactNode) => (
-    <BlockShell canMoveUp={canMoveUp} canMoveDown={canMoveDown} onMove={onMove} onRemove={onRemove}>
+    <BlockShell
+      canMoveUp={canMoveUp}
+      canMoveDown={canMoveDown}
+      onMove={onMove}
+      onRemove={onRemove}
+    >
       {content}
       {error && <p className="mt-2 text-[12px] text-red-600">{error}</p>}
     </BlockShell>
@@ -176,7 +212,9 @@ export function BlockEditor({
           <select
             aria-label="Heading level"
             value={block.level}
-            onChange={(e) => onChange({ ...block, level: Number(e.target.value) as 2 | 3 | 4 })}
+            onChange={(e) =>
+              onChange({ ...block, level: Number(e.target.value) as 2 | 3 | 4 })
+            }
             className={`${fieldClass} w-28`}
           >
             <option value={2}>Heading 2</option>
@@ -200,7 +238,9 @@ export function BlockEditor({
             <input
               type="checkbox"
               checked={block.ordered}
-              onChange={(e) => onChange({ ...block, ordered: e.target.checked })}
+              onChange={(e) =>
+                onChange({ ...block, ordered: e.target.checked })
+              }
             />
             Numbered list
           </label>
@@ -219,7 +259,12 @@ export function BlockEditor({
               />
               <button
                 type="button"
-                onClick={() => onChange({ ...block, items: block.items.filter((_, i) => i !== index) })}
+                onClick={() =>
+                  onChange({
+                    ...block,
+                    items: block.items.filter((_, i) => i !== index),
+                  })
+                }
                 disabled={block.items.length <= 1}
                 className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-30"
                 aria-label="Remove item"
@@ -231,7 +276,7 @@ export function BlockEditor({
           <button
             type="button"
             onClick={() => onChange({ ...block, items: [...block.items, ''] })}
-            className="self-start text-[12.5px] font-semibold text-brand-600 hover:text-brand-700"
+            className="text-brand-600 hover:text-brand-700 self-start text-[12.5px] font-semibold"
           >
             + Add item
           </button>
@@ -250,7 +295,9 @@ export function BlockEditor({
           <input
             aria-label="Quote attribution"
             value={block.attribution}
-            onChange={(e) => onChange({ ...block, attribution: e.target.value })}
+            onChange={(e) =>
+              onChange({ ...block, attribution: e.target.value })
+            }
             placeholder="Attribution (optional)"
             className={fieldClass}
           />
@@ -284,7 +331,12 @@ export function BlockEditor({
           <select
             aria-label="Callout tone"
             value={block.tone}
-            onChange={(e) => onChange({ ...block, tone: e.target.value as 'neutral' | 'info' | 'warning' })}
+            onChange={(e) =>
+              onChange({
+                ...block,
+                tone: e.target.value as 'neutral' | 'info' | 'warning',
+              })
+            }
             className={`${fieldClass} w-32`}
           >
             <option value="neutral">Neutral</option>
@@ -317,9 +369,13 @@ export function BlockEditor({
           </p>
         ) : (
           <div className="flex flex-col gap-2">
-            <label className="flex h-10 w-fit cursor-pointer items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 text-[12.5px] font-medium text-slate-600 hover:border-brand-400 hover:text-brand-700">
+            <label className="hover:border-brand-400 hover:text-brand-700 flex h-10 w-fit cursor-pointer items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 text-[12.5px] font-medium text-slate-600">
               <FileUp size={14} strokeWidth={2} />
-              {block.uploading ? 'Uploading...' : block.fileId ? 'Replace file' : 'Choose PDF or MPX'}
+              {block.uploading
+                ? 'Uploading...'
+                : block.fileId
+                  ? 'Replace file'
+                  : 'Choose PDF or MPX'}
               <input
                 type="file"
                 accept=".pdf,.mpx,application/pdf,application/zip"
@@ -330,7 +386,9 @@ export function BlockEditor({
                   if (!file) return;
                   setError(null);
                   onChange({ ...block, uploading: true });
-                  const mediaType = file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'application/zip';
+                  const mediaType = file.name.toLowerCase().endsWith('.pdf')
+                    ? 'application/pdf'
+                    : 'application/zip';
                   const result = await uploadFile(file, mediaType, pageId);
                   if (result.ok) {
                     onChange({
@@ -360,16 +418,30 @@ export function BlockEditor({
     case 'image':
       return shell(
         pageId === null ? (
-          <p className="text-[12.5px] text-slate-400">Save this page first to attach images.</p>
+          <p className="text-[12.5px] text-slate-400">
+            Save this page first to attach images.
+          </p>
         ) : (
           <div className="flex flex-col gap-2">
             {block.previewUrl && (
               /* eslint-disable-next-line @next/next/no-img-element -- local object URL preview, not a static asset */
-              <img src={block.previewUrl} alt="" className="max-h-48 rounded-lg border border-slate-200 object-contain" />
+              <img
+                src={block.previewUrl}
+                alt=""
+                className="max-h-48 rounded-lg border border-slate-200 object-contain"
+              />
             )}
-            <label className="flex h-10 w-fit cursor-pointer items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 text-[12.5px] font-medium text-slate-600 hover:border-brand-400 hover:text-brand-700">
-              {block.uploading ? <Loader2 size={14} className="animate-spin" /> : <ImageUp size={14} strokeWidth={2} />}
-              {block.uploading ? 'Uploading...' : block.fileId ? 'Replace image' : 'Choose image'}
+            <label className="hover:border-brand-400 hover:text-brand-700 flex h-10 w-fit cursor-pointer items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 text-[12.5px] font-medium text-slate-600">
+              {block.uploading ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <ImageUp size={14} strokeWidth={2} />
+              )}
+              {block.uploading
+                ? 'Uploading...'
+                : block.fileId
+                  ? 'Replace image'
+                  : 'Choose image'}
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/webp,image/gif"
@@ -382,7 +454,13 @@ export function BlockEditor({
                   const previewUrl = URL.createObjectURL(file);
                   onChange({ ...block, uploading: true, previewUrl });
                   const mediaType = (
-                    { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif' } as const
+                    {
+                      png: 'image/png',
+                      jpg: 'image/jpeg',
+                      jpeg: 'image/jpeg',
+                      webp: 'image/webp',
+                      gif: 'image/gif',
+                    } as const
                   )[file.name.toLowerCase().split('.').pop() ?? ''];
                   if (!mediaType) {
                     setError('Unsupported image type.');
@@ -391,7 +469,12 @@ export function BlockEditor({
                   }
                   const result = await uploadFile(file, mediaType, pageId);
                   if (result.ok) {
-                    onChange({ ...block, uploading: false, fileId: result.fileId, previewUrl });
+                    onChange({
+                      ...block,
+                      uploading: false,
+                      fileId: result.fileId,
+                      previewUrl,
+                    });
                   } else {
                     setError(result.message);
                     onChange({ ...block, uploading: false, previewUrl });
@@ -409,7 +492,9 @@ export function BlockEditor({
             <input
               aria-label="Image caption"
               value={block.captionHtml}
-              onChange={(e) => onChange({ ...block, captionHtml: e.target.value })}
+              onChange={(e) =>
+                onChange({ ...block, captionHtml: e.target.value })
+              }
               placeholder="Caption (optional)"
               className={fieldClass}
             />

@@ -58,7 +58,13 @@ export interface FileDownload {
 export type UploadTicketResult = UploadTicket | FileServiceFailure;
 export type FileDownloadResult = FileDownload | FileServiceFailure;
 export type AttachFileResult = { readonly ok: true } | FileServiceFailure;
-export type CompleteUploadResult = { readonly ok: true } | FileServiceFailure;
+
+export interface FileStatus {
+  readonly ok: true;
+  readonly state: Database['public']['Enums']['file_state'];
+  readonly quarantineReason: string | null;
+}
+export type FileStatusResult = FileStatus | FileServiceFailure;
 
 function failure(error: unknown): FileServiceFailure {
   const code =
@@ -191,65 +197,33 @@ export async function beginFileUpload(
 }
 
 /**
- * Verifies a direct-to-storage upload actually landed, then marks it ready.
- *
- * There is no `files.state` UPDATE policy for ordinary users by design -
- * self-approving your own upload would defeat the point of verification.
- * This is the one narrowly-scoped place a service-role client is used: it
- * re-reads the object's real size from Storage (bypassing RLS, which is
- * fine here because the caller was already authenticated and confirmed to
- * own a matching `pending` row via the normal client before this runs) and
- * only flips state to `ready` when it matches what was declared at
- * `beginFileUpload` time. This is a size/existence check, not malware
- * scanning - a real content-scanning worker remains separate future work.
+ * Read-only status check for a file the caller owns. There is deliberately
+ * no way for a browser-reachable action to transition state at all - only
+ * scripts/verify-uploads.ts (run out-of-band with the service-role client,
+ * never imported by anything under app/ or components/) can move a file
+ * out of `pending`/`scanning`. The UI polls this to learn when an upload
+ * has actually been verified, rather than self-approving it.
  */
-export async function completeFileUpload(
-  authClient: Client,
-  serviceClient: Client,
+export async function getFileStatus(
+  client: Client,
   fileId: unknown,
-): Promise<CompleteUploadResult> {
+): Promise<FileStatusResult> {
   if (typeof fileId !== 'string' || !UUID.test(fileId))
     return invalid('File ID is invalid.');
 
-  const { data: file, error: readError } = await authClient
+  const { data: file, error } = await client
     .from('files')
-    .select('id, bucket_id, object_name, size_bytes, state')
+    .select('state, quarantine_reason')
     .eq('id', fileId)
     .maybeSingle();
-  if (readError) return failure(readError);
+  if (error) return failure(error);
   if (!file)
     return { ok: false, code: 'not_found', message: 'The file was not found.' };
-  if (file.state === 'ready') return { ok: true };
-  if (file.state !== 'pending') {
-    return {
-      ok: false,
-      code: 'not_ready',
-      message: 'This file is no longer awaiting verification.',
-    };
-  }
-
-  const folder = file.object_name.split('/').slice(0, -1).join('/');
-  const objectBasename = file.object_name.split('/').at(-1) ?? '';
-  const { data: listing, error: listError } = await serviceClient.storage
-    .from(file.bucket_id)
-    .list(folder, { search: objectBasename, limit: 1 });
-  if (listError) return failure(listError);
-  const uploaded = listing?.find((entry) => entry.name === objectBasename);
-  if (!uploaded || uploaded.metadata?.size !== file.size_bytes) {
-    return {
-      ok: false,
-      code: 'not_ready',
-      message: 'The uploaded file does not match what was declared.',
-    };
-  }
-
-  const { error: updateError } = await serviceClient
-    .from('files')
-    .update({ state: 'ready' })
-    .eq('id', fileId)
-    .eq('state', 'pending');
-  if (updateError) return failure(updateError);
-  return { ok: true };
+  return {
+    ok: true,
+    state: file.state,
+    quarantineReason: file.quarantine_reason,
+  };
 }
 
 /** Attaches a verified, actor-owned file to a page the actor may edit. */

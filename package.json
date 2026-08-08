@@ -17,6 +17,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "verify-uploads": "node --env-file=.env.local --import tsx scripts/verify-uploads.ts",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
@@ -50,6 +51,7 @@
     "prettier": "3.9.6",
     "prettier-plugin-tailwindcss": "0.8.1",
     "tailwindcss": "4.3.3",
+    "tsx": "^4.23.11",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   }

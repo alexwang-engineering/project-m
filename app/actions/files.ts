@@ -6,15 +6,14 @@ import type { Database } from '@/lib/database.types';
 import {
   attachFileToPage,
   beginFileUpload,
-  completeFileUpload,
   createFileDownload,
+  getFileStatus,
   type AttachFileResult,
-  type CompleteUploadResult,
   type FileDownloadResult,
+  type FileStatusResult,
   type UploadTicketResult,
 } from '@/lib/files/service';
 import { createServerClient } from '@/lib/supabase/server';
-import { createServiceRoleClient } from '@/lib/supabase/service';
 
 async function authenticatedClient(): Promise<SupabaseClient<Database> | null> {
   const client = (await createServerClient()) as SupabaseClient<Database>;
@@ -36,14 +35,16 @@ export async function beginFileUploadAction(
   return client ? beginFileUpload(client, input) : signedOut;
 }
 
-/** Verifies a direct-to-storage upload landed and marks it ready for use. */
-export async function completeFileUploadAction(
+/**
+ * Read-only poll for a file's verification state. There is no action that
+ * lets the browser move a file to `ready` itself - only the out-of-band
+ * verification worker (scripts/verify-uploads.ts) can do that.
+ */
+export async function getFileStatusAction(
   fileId: unknown,
-): Promise<CompleteUploadResult> {
+): Promise<FileStatusResult> {
   const client = await authenticatedClient();
-  return client
-    ? completeFileUpload(client, createServiceRoleClient(), fileId)
-    : signedOut;
+  return client ? getFileStatus(client, fileId) : signedOut;
 }
 
 /** Attaches a trusted-verifier-approved upload to an editable page. */

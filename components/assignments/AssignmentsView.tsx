@@ -9,21 +9,27 @@ import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
 import { SubPageHeader } from '@/components/ui/SubPageHeader';
 import { formatRelativeTime } from '@/lib/relative-time';
 import { createClient } from '@/lib/supabase/client';
-import { beginFileUploadAction, completeFileUploadAction } from '@/app/actions/files';
+import { beginFileUploadAction } from '@/app/actions/files';
 import { submitAssignmentAction } from '@/app/actions/assignments';
 import { sha256Hex } from '@/lib/files/client-hash';
+import { waitForFileReady } from '@/lib/files/poll-status';
 import type { AssignmentSummary } from '@/lib/content/assignments';
 
 interface AssignmentsViewProps {
   assignments: readonly AssignmentSummary[];
 }
 
-type SubmissionStep = 'hashing' | 'starting' | 'uploading' | 'verifying' | 'recording';
+type SubmissionStep =
+  'hashing' | 'starting' | 'uploading' | 'verifying' | 'recording';
 
 type SubmissionState =
   | { readonly status: 'idle' }
   | { readonly status: 'selected'; readonly file: File }
-  | { readonly status: 'working'; readonly file: File; readonly step: SubmissionStep }
+  | {
+      readonly status: 'working';
+      readonly file: File;
+      readonly step: SubmissionStep;
+    }
   | { readonly status: 'error'; readonly file: File; readonly message: string };
 
 const STEP_LABEL: Record<SubmissionStep, string> = {
@@ -38,12 +44,19 @@ function isOverdue(dueAt: string | null): boolean {
   return dueAt !== null && new Date(dueAt).getTime() < Date.now();
 }
 
-async function submitFile(assignmentId: string, file: File): Promise<
+async function submitFile(
+  assignmentId: string,
+  file: File,
+): Promise<
   { ok: true } | { ok: false; message: string; step: SubmissionStep }
 > {
-  const mediaType = file.type === 'application/pdf' ? 'application/pdf' : 'application/octet-stream';
+  const mediaType =
+    file.type === 'application/pdf'
+      ? 'application/pdf'
+      : 'application/octet-stream';
   const sha256 = await sha256Hex(file).catch(() => null);
-  if (!sha256) return { ok: false, message: 'Could not read this file.', step: 'hashing' };
+  if (!sha256)
+    return { ok: false, message: 'Could not read this file.', step: 'hashing' };
 
   const ticket = await beginFileUploadAction({
     filename: file.name,
@@ -51,19 +64,29 @@ async function submitFile(assignmentId: string, file: File): Promise<
     sha256,
     mediaType,
   });
-  if (!ticket.ok) return { ok: false, message: ticket.message, step: 'starting' };
+  if (!ticket.ok)
+    return { ok: false, message: ticket.message, step: 'starting' };
 
   const supabase = createClient();
   const { error: uploadError } = await supabase.storage
     .from(ticket.file.bucket)
-    .upload(ticket.file.objectName, file, { contentType: mediaType, upsert: false });
-  if (uploadError) return { ok: false, message: uploadError.message, step: 'uploading' };
+    .upload(ticket.file.objectName, file, {
+      contentType: mediaType,
+      upsert: false,
+    });
+  if (uploadError)
+    return { ok: false, message: uploadError.message, step: 'uploading' };
 
-  const verified = await completeFileUploadAction(ticket.file.id);
-  if (!verified.ok) return { ok: false, message: verified.message, step: 'verifying' };
+  const verified = await waitForFileReady(ticket.file.id);
+  if (!verified.ok)
+    return { ok: false, message: verified.message, step: 'verifying' };
 
-  const submitted = await submitAssignmentAction({ assignmentId, fileId: ticket.file.id });
-  if (!submitted.ok) return { ok: false, message: submitted.message, step: 'recording' };
+  const submitted = await submitAssignmentAction({
+    assignmentId,
+    fileId: ticket.file.id,
+  });
+  if (!submitted.ok)
+    return { ok: false, message: submitted.message, step: 'recording' };
 
   return { ok: true };
 }
@@ -87,8 +110,11 @@ function AssignmentCard({
     <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-[18px] shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[14px] font-semibold leading-snug tracking-tight text-slate-900">
-            <Link href={`/assignments/${assignment.id}`} className="transition hover:text-brand-600">
+          <p className="text-[14px] leading-snug font-semibold tracking-tight text-slate-900">
+            <Link
+              href={`/assignments/${assignment.id}`}
+              className="hover:text-brand-600 transition"
+            >
               {assignment.title}
             </Link>
           </p>
@@ -115,7 +141,11 @@ function AssignmentCard({
         <Clock size={13} strokeWidth={2} />
         {assignment.dueAt ? (
           <span
-            className={overdue && !assignment.hasSubmitted ? 'font-semibold text-[#c2483a]' : ''}
+            className={
+              overdue && !assignment.hasSubmitted
+                ? 'font-semibold text-[#c2483a]'
+                : ''
+            }
             suppressHydrationWarning
           >
             Due {formatRelativeTime(assignment.dueAt)}
@@ -127,7 +157,7 @@ function AssignmentCard({
 
       {canSubmit && (
         <div className="mt-1 flex flex-col gap-2 border-t border-slate-200 pt-3">
-          <label className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 text-[12.5px] font-medium text-slate-600 transition hover:border-brand-500 hover:text-brand-600">
+          <label className="hover:border-brand-500 hover:text-brand-600 flex h-10 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 text-[12.5px] font-medium text-slate-600 transition">
             <FileUp size={15} strokeWidth={2} />
             {state.status === 'idle' ? 'Choose a file' : state.file.name}
             <input
@@ -135,7 +165,9 @@ function AssignmentCard({
               accept=".pdf,.mpx,application/pdf,application/zip"
               className="hidden"
               disabled={working}
-              onChange={(event) => onSelectFile(event.target.files?.[0] ?? null)}
+              onChange={(event) =>
+                onSelectFile(event.target.files?.[0] ?? null)
+              }
             />
           </label>
 
@@ -144,11 +176,15 @@ function AssignmentCard({
               type="button"
               onClick={onSubmit}
               disabled={working}
-              className="flex h-10 items-center justify-center gap-2 rounded-xl bg-brand-600 text-[12.5px] font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="bg-brand-600 hover:bg-brand-700 flex h-10 items-center justify-center gap-2 rounded-xl text-[12.5px] font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60"
             >
               {working ? (
                 <>
-                  <Loader2 size={15} strokeWidth={2.4} className="animate-spin" />
+                  <Loader2
+                    size={15}
+                    strokeWidth={2.4}
+                    className="animate-spin"
+                  />
                   {STEP_LABEL[state.step]}
                 </>
               ) : assignment.hasSubmitted ? (
@@ -188,7 +224,10 @@ export default function AssignmentsView({ assignments }: AssignmentsViewProps) {
     if (current.status !== 'selected' && current.status !== 'error') return;
     const file = current.file;
 
-    setStates((prev) => ({ ...prev, [assignmentId]: { status: 'working', file, step: 'hashing' } }));
+    setStates((prev) => ({
+      ...prev,
+      [assignmentId]: { status: 'working', file, step: 'hashing' },
+    }));
     const result = await submitFile(assignmentId, file);
     if (result.ok) {
       setStates((prev) => ({ ...prev, [assignmentId]: { status: 'idle' } }));
@@ -202,7 +241,9 @@ export default function AssignmentsView({ assignments }: AssignmentsViewProps) {
   }
 
   const displayAssignments = assignments.map((assignment) =>
-    completed.has(assignment.id) ? { ...assignment, hasSubmitted: true } : assignment,
+    completed.has(assignment.id)
+      ? { ...assignment, hasSubmitted: true }
+      : assignment,
   );
 
   return (
@@ -215,7 +256,7 @@ export default function AssignmentsView({ assignments }: AssignmentsViewProps) {
         actions={
           <Link
             href="/assignments/new"
-            className="flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 text-[12.5px] font-semibold text-white transition hover:bg-brand-700"
+            className="bg-brand-600 hover:bg-brand-700 flex h-9 items-center gap-1.5 rounded-lg px-3.5 text-[12.5px] font-semibold text-white transition"
           >
             <Plus size={14} strokeWidth={2.4} />
             New assignment
@@ -223,7 +264,7 @@ export default function AssignmentsView({ assignments }: AssignmentsViewProps) {
         }
       />
 
-      <main id="main-content" className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
+      <main id="main-content" className="mx-auto max-w-[900px] px-8 pt-9 pb-24">
         {displayAssignments.length === 0 ? (
           <EmptyState
             icon={<FileUp size={20} strokeWidth={2} />}
