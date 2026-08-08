@@ -34,7 +34,12 @@ function GradeControl({
 
   async function handleSave() {
     const parsed = Number(value);
-    if (value.trim() === '' || !Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
+    if (
+      value.trim() === '' ||
+      !Number.isFinite(parsed) ||
+      parsed < 0 ||
+      parsed > 100
+    ) {
       setError('Grade must be 0-100.');
       return;
     }
@@ -68,7 +73,7 @@ function GradeControl({
             setSaved(false);
           }}
           placeholder="Grade"
-          className="w-16 rounded-lg border border-slate-200 px-2 py-1 text-[12.5px] text-slate-800 outline-none focus:border-brand-400"
+          className="focus:border-brand-400 w-16 rounded-lg border border-slate-200 px-2 py-1 text-[12.5px] text-slate-800 outline-none"
         />
         <span className="text-[11.5px] text-slate-400">/ 100</span>
         <input
@@ -79,15 +84,21 @@ function GradeControl({
             setSaved(false);
           }}
           placeholder="Feedback (optional)"
-          className="flex-1 rounded-lg border border-slate-200 px-2 py-1 text-[12.5px] text-slate-800 outline-none focus:border-brand-400"
+          className="focus:border-brand-400 flex-1 rounded-lg border border-slate-200 px-2 py-1 text-[12.5px] text-slate-800 outline-none"
         />
         <button
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="flex h-7 flex-shrink-0 items-center rounded-lg bg-brand-600 px-2.5 text-[11.5px] font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="bg-brand-600 hover:bg-brand-700 flex h-7 flex-shrink-0 items-center rounded-lg px-2.5 text-[11.5px] font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {saving ? <Loader2 size={12} className="animate-spin" /> : saved ? 'Saved' : 'Save'}
+          {saving ? (
+            <Loader2 size={12} className="animate-spin" />
+          ) : saved ? (
+            'Saved'
+          ) : (
+            'Save'
+          )}
         </button>
       </div>
       {error && <p className="text-[11px] text-[#c2483a]">{error}</p>}
@@ -124,25 +135,30 @@ function SubmissionRow({
     <div className="rounded-xl border border-slate-200 bg-white p-4">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] bg-brand-50 text-brand-600">
+          <div className="bg-brand-50 text-brand-600 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px]">
             <FileText size={17} strokeWidth={2} />
           </div>
           <div className="min-w-0">
             <p className="truncate text-[13.5px] font-semibold text-slate-900">
               {studentEmail ?? 'Unknown student'}
             </p>
-            <p className="text-[11.5px] text-slate-500" suppressHydrationWarning>
+            <p
+              className="text-[11.5px] text-slate-500"
+              suppressHydrationWarning
+            >
               Submitted {formatRelativeTime(submittedAt)}
             </p>
             {note && <p className="mt-1 text-[12px] text-slate-600">{note}</p>}
-            {error && <p className="mt-1 text-[11.5px] text-[#c2483a]">{error}</p>}
+            {error && (
+              <p className="mt-1 text-[11.5px] text-[#c2483a]">{error}</p>
+            )}
           </div>
         </div>
         <button
           type="button"
           onClick={handleDownload}
           disabled={downloading}
-          className="flex h-9 flex-shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 transition hover:border-brand-500 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+          className="hover:border-brand-500 hover:text-brand-600 flex h-9 flex-shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 transition disabled:cursor-not-allowed disabled:opacity-60"
         >
           {downloading ? (
             <Loader2 size={14} strokeWidth={2.4} className="animate-spin" />
@@ -152,7 +168,12 @@ function SubmissionRow({
           Download
         </button>
       </div>
-      <GradeControl assignmentId={assignmentId} submissionId={id} grade={grade} gradeFeedback={gradeFeedback} />
+      <GradeControl
+        assignmentId={assignmentId}
+        submissionId={id}
+        grade={grade}
+        gradeFeedback={gradeFeedback}
+      />
     </div>
   );
 }
@@ -161,17 +182,26 @@ export default function SubmissionsView({ assignment }: SubmissionsViewProps) {
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
       <SkipToContentLink />
-      <SubPageHeader backHref="/assignments" backLabel="Assignments" title={assignment.title} />
+      <SubPageHeader
+        backHref="/assignments"
+        backLabel="Assignments"
+        title={assignment.title}
+      />
 
-      <main id="main-content" className="mx-auto max-w-[720px] px-8 pb-24 pt-9">
+      <main id="main-content" className="mx-auto max-w-[720px] px-8 pt-9 pb-24">
         <div className="mb-6">
-          <h1 className="text-[20px] font-bold tracking-tight text-slate-900">Submissions</h1>
+          <h1 className="text-[20px] font-bold tracking-tight text-slate-900">
+            Submissions
+          </h1>
           <p className="mt-0.5 text-[13px] text-slate-500">
             {assignment.submissions.length === 1
               ? '1 submission'
               : `${assignment.submissions.length} submissions`}
             {assignment.dueAt && (
-              <span suppressHydrationWarning> — due {formatRelativeTime(assignment.dueAt)}</span>
+              <span suppressHydrationWarning>
+                {' '}
+                — due {formatRelativeTime(assignment.dueAt)}
+              </span>
             )}
           </p>
         </div>
@@ -185,7 +215,11 @@ export default function SubmissionsView({ assignment }: SubmissionsViewProps) {
         ) : (
           <div className="flex flex-col gap-2.5">
             {assignment.submissions.map((submission) => (
-              <SubmissionRow key={submission.id} assignmentId={assignment.id} {...submission} />
+              <SubmissionRow
+                key={submission.id}
+                assignmentId={assignment.id}
+                {...submission}
+              />
             ))}
           </div>
         )}

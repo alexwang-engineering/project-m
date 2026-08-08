@@ -19,5 +19,12 @@ export default async function CalendarPage() {
     isInstitutionAdmin(supabase),
   ]);
 
-  return <CalendarView items={items} writableTags={writableTags} currentUserId={data.user.id} isAdmin={admin} />;
+  return (
+    <CalendarView
+      items={items}
+      writableTags={writableTags}
+      currentUserId={data.user.id}
+      isAdmin={admin}
+    />
+  );
 }

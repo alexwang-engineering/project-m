@@ -124,7 +124,8 @@ export type SubmitAssignmentResult =
   | { readonly ok: true }
   | {
       readonly ok: false;
-      readonly code: 'invalid_input' | 'forbidden' | 'not_found' | 'not_ready' | 'failed';
+      readonly code:
+        'invalid_input' | 'forbidden' | 'not_found' | 'not_ready' | 'failed';
       readonly message: string;
     };
 
@@ -138,9 +139,17 @@ function failure(error: unknown): SubmitAssignmentResult {
       : undefined;
   switch (code) {
     case '42501':
-      return { ok: false, code: 'forbidden', message: 'You are not authorized to submit this assignment.' };
+      return {
+        ok: false,
+        code: 'forbidden',
+        message: 'You are not authorized to submit this assignment.',
+      };
     case 'P0002':
-      return { ok: false, code: 'not_found', message: 'The assignment or file was not found.' };
+      return {
+        ok: false,
+        code: 'not_found',
+        message: 'The assignment or file was not found.',
+      };
     case '55000':
       return {
         ok: false,
@@ -151,7 +160,11 @@ function failure(error: unknown): SubmitAssignmentResult {
             : 'This submission could not be accepted.',
       };
     default:
-      return { ok: false, code: 'failed', message: 'The submission could not be completed.' };
+      return {
+        ok: false,
+        code: 'failed',
+        message: 'The submission could not be completed.',
+      };
   }
 }
 
@@ -164,15 +177,34 @@ export async function submitAssignment(
     input !== null && typeof input === 'object' && !Array.isArray(input)
       ? (input as Record<string, unknown>)
       : null;
-  if (!value) return { ok: false, code: 'invalid_input', message: 'Submission input must be an object.' };
-  if (typeof value.assignmentId !== 'string' || !UUID.test(value.assignmentId)) {
-    return { ok: false, code: 'invalid_input', message: 'Assignment ID is invalid.' };
+  if (!value)
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Submission input must be an object.',
+    };
+  if (
+    typeof value.assignmentId !== 'string' ||
+    !UUID.test(value.assignmentId)
+  ) {
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Assignment ID is invalid.',
+    };
   }
   if (typeof value.fileId !== 'string' || !UUID.test(value.fileId)) {
     return { ok: false, code: 'invalid_input', message: 'File ID is invalid.' };
   }
-  if (value.note !== undefined && (typeof value.note !== 'string' || value.note.length > 2000)) {
-    return { ok: false, code: 'invalid_input', message: 'Note must be at most 2000 characters.' };
+  if (
+    value.note !== undefined &&
+    (typeof value.note !== 'string' || value.note.length > 2000)
+  ) {
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Note must be at most 2000 characters.',
+    };
   }
 
   const { error } = await client.rpc('submit_assignment', {
@@ -194,34 +226,80 @@ export type GradeSubmissionResult =
 
 function gradeFailure(error: unknown): GradeSubmissionResult {
   const code =
-    error !== null && typeof error === 'object' && 'code' in error && typeof error.code === 'string'
+    error !== null &&
+    typeof error === 'object' &&
+    'code' in error &&
+    typeof error.code === 'string'
       ? error.code
       : undefined;
   switch (code) {
     case '42501':
-      return { ok: false, code: 'forbidden', message: 'You do not manage this assignment.' };
+      return {
+        ok: false,
+        code: 'forbidden',
+        message: 'You do not manage this assignment.',
+      };
     case 'P0002':
-      return { ok: false, code: 'not_found', message: 'The submission was not found.' };
+      return {
+        ok: false,
+        code: 'not_found',
+        message: 'The submission was not found.',
+      };
     default:
-      return { ok: false, code: 'failed', message: 'The grade could not be saved.' };
+      return {
+        ok: false,
+        code: 'failed',
+        message: 'The grade could not be saved.',
+      };
   }
 }
 
 /** Records a percentage grade (0-100) and optional feedback via the audited RPC. */
-export async function gradeSubmission(client: Client, input: unknown): Promise<GradeSubmissionResult> {
+export async function gradeSubmission(
+  client: Client,
+  input: unknown,
+): Promise<GradeSubmissionResult> {
   const value =
     input !== null && typeof input === 'object' && !Array.isArray(input)
       ? (input as Record<string, unknown>)
       : null;
-  if (!value) return { ok: false, code: 'invalid_input', message: 'Grade input must be an object.' };
-  if (typeof value.submissionId !== 'string' || !UUID.test(value.submissionId)) {
-    return { ok: false, code: 'invalid_input', message: 'Submission ID is invalid.' };
+  if (!value)
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Grade input must be an object.',
+    };
+  if (
+    typeof value.submissionId !== 'string' ||
+    !UUID.test(value.submissionId)
+  ) {
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Submission ID is invalid.',
+    };
   }
-  if (typeof value.grade !== 'number' || !Number.isFinite(value.grade) || value.grade < 0 || value.grade > 100) {
-    return { ok: false, code: 'invalid_input', message: 'Grade must be a number between 0 and 100.' };
+  if (
+    typeof value.grade !== 'number' ||
+    !Number.isFinite(value.grade) ||
+    value.grade < 0 ||
+    value.grade > 100
+  ) {
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Grade must be a number between 0 and 100.',
+    };
   }
-  if (value.feedback !== undefined && (typeof value.feedback !== 'string' || value.feedback.length > 2000)) {
-    return { ok: false, code: 'invalid_input', message: 'Feedback must be at most 2000 characters.' };
+  if (
+    value.feedback !== undefined &&
+    (typeof value.feedback !== 'string' || value.feedback.length > 2000)
+  ) {
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Feedback must be at most 2000 characters.',
+    };
   }
 
   const { error } = await client.rpc('grade_assignment_submission', {
@@ -260,29 +338,64 @@ async function createAssignmentRpc(client: Client, args: NullableDueDateArgs) {
 }
 
 /** Validates and creates an assignment via the audited RPC. Teacher/manager on every audience tag, enforced server-side. */
-export async function createAssignment(client: Client, input: unknown): Promise<CreateAssignmentResult> {
+export async function createAssignment(
+  client: Client,
+  input: unknown,
+): Promise<CreateAssignmentResult> {
   const value =
     input !== null && typeof input === 'object' && !Array.isArray(input)
       ? (input as Record<string, unknown>)
       : null;
-  if (!value) return { ok: false, code: 'invalid_input', message: 'Assignment input must be an object.' };
+  if (!value)
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Assignment input must be an object.',
+    };
   const title = typeof value.title === 'string' ? value.title.trim() : '';
   if (!title || title.length > 240) {
-    return { ok: false, code: 'invalid_input', message: 'Title must be between 1 and 240 characters.' };
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Title must be between 1 and 240 characters.',
+    };
   }
-  const dueAt = value.dueAt === null || value.dueAt === undefined ? null : value.dueAt;
+  const dueAt =
+    value.dueAt === null || value.dueAt === undefined ? null : value.dueAt;
   if (dueAt !== null && typeof dueAt !== 'string') {
-    return { ok: false, code: 'invalid_input', message: 'Due date must be a string or null.' };
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Due date must be a string or null.',
+    };
   }
   if (typeof value.allowResubmission !== 'boolean') {
-    return { ok: false, code: 'invalid_input', message: 'Resubmission setting must be a boolean.' };
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Resubmission setting must be a boolean.',
+    };
   }
-  if (!Array.isArray(value.tagIds) || value.tagIds.length < 1 || value.tagIds.length > 100) {
-    return { ok: false, code: 'invalid_input', message: 'Between 1 and 100 audience tags are required.' };
+  if (
+    !Array.isArray(value.tagIds) ||
+    value.tagIds.length < 1 ||
+    value.tagIds.length > 100
+  ) {
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Between 1 and 100 audience tags are required.',
+    };
   }
-  const tagIds = value.tagIds.filter((tag): tag is string => typeof tag === 'string' && UUID.test(tag));
+  const tagIds = value.tagIds.filter(
+    (tag): tag is string => typeof tag === 'string' && UUID.test(tag),
+  );
   if (tagIds.length !== value.tagIds.length) {
-    return { ok: false, code: 'invalid_input', message: 'Every audience tag ID must be a UUID.' };
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Every audience tag ID must be a UUID.',
+    };
   }
 
   const { data, error } = await createAssignmentRpc(client, {
@@ -295,11 +408,23 @@ export async function createAssignment(client: Client, input: unknown): Promise<
   });
   if (error || !data) {
     const code =
-      error !== null && typeof error === 'object' && 'code' in error && typeof error.code === 'string'
+      error !== null &&
+      typeof error === 'object' &&
+      'code' in error &&
+      typeof error.code === 'string'
         ? error.code
         : undefined;
-    if (code === '42501') return { ok: false, code: 'forbidden', message: 'You do not manage every selected tag.' };
-    return { ok: false, code: 'failed', message: 'The assignment could not be created.' };
+    if (code === '42501')
+      return {
+        ok: false,
+        code: 'forbidden',
+        message: 'You do not manage every selected tag.',
+      };
+    return {
+      ok: false,
+      code: 'failed',
+      message: 'The assignment could not be created.',
+    };
   }
   return { ok: true, assignment: { id: data.id } };
 }

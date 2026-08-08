@@ -39,7 +39,7 @@ function AnnouncementCard({
       <div>
         <div className="flex items-center gap-2">
           {announcement.isBroadcast && (
-            <span className="flex items-center gap-1 rounded-md bg-brand-50 px-2 py-0.5 text-[10.5px] font-bold text-brand-700">
+            <span className="bg-brand-50 text-brand-700 flex items-center gap-1 rounded-md px-2 py-0.5 text-[10.5px] font-bold">
               <Globe2 size={11} strokeWidth={2.4} />
               Whole school
             </span>
@@ -48,10 +48,12 @@ function AnnouncementCard({
             {formatRelativeTime(announcement.createdAt)}
           </span>
         </div>
-        <p className="mt-1.5 text-[14px] font-semibold leading-snug tracking-tight text-slate-900">
+        <p className="mt-1.5 text-[14px] leading-snug font-semibold tracking-tight text-slate-900">
           {announcement.title}
         </p>
-        <p className="mt-1 whitespace-pre-wrap text-[13px] leading-relaxed text-slate-600">{announcement.body}</p>
+        <p className="mt-1 text-[13px] leading-relaxed whitespace-pre-wrap text-slate-600">
+          {announcement.body}
+        </p>
         <div className="mt-2 flex flex-wrap gap-1.5">
           {announcement.tags.map((tag) => (
             <span
@@ -71,15 +73,26 @@ function AnnouncementCard({
           aria-label="Retract announcement"
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {cancelling ? <Loader2 size={13} className="animate-spin" /> : <X size={14} strokeWidth={2.4} />}
+          {cancelling ? (
+            <Loader2 size={13} className="animate-spin" />
+          ) : (
+            <X size={14} strokeWidth={2.4} />
+          )}
         </button>
       )}
     </div>
   );
 }
 
-export function AnnouncementsView({ announcements, writableTags, currentUserId, isAdmin }: AnnouncementsViewProps) {
-  const [cancelledIds, setCancelledIds] = useState<ReadonlySet<string>>(new Set());
+export function AnnouncementsView({
+  announcements,
+  writableTags,
+  currentUserId,
+  isAdmin,
+}: AnnouncementsViewProps) {
+  const [cancelledIds, setCancelledIds] = useState<ReadonlySet<string>>(
+    new Set(),
+  );
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -104,7 +117,7 @@ export function AnnouncementsView({ announcements, writableTags, currentUserId, 
       <SkipToContentLink />
       <SubPageHeader backHref="/" backLabel="Dashboard" title="Announcements" />
 
-      <main id="main-content" className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
+      <main id="main-content" className="mx-auto max-w-[900px] px-8 pt-9 pb-24">
         <CreateAnnouncementForm writableTags={writableTags} isAdmin={isAdmin} />
 
         {error && <p className="mb-4 text-[12.5px] text-red-600">{error}</p>}

@@ -13,7 +13,9 @@
 const FORMULA_PREFIX_CHARS = new Set(['=', '+', '-', '@']);
 
 function escapeCell(value: string): string {
-  const guarded = FORMULA_PREFIX_CHARS.has(value[0] ?? '') ? `'${value}` : value;
+  const guarded = FORMULA_PREFIX_CHARS.has(value[0] ?? '')
+    ? `'${value}`
+    : value;
   if (/[",\n\r]/.test(guarded)) {
     return `"${guarded.replace(/"/g, '""')}"`;
   }
@@ -21,7 +23,12 @@ function escapeCell(value: string): string {
 }
 
 /** Builds a CSV document (CRLF line endings, per RFC4180) from a header row and data rows. Every cell is stringified with String() before escaping. */
-export function toCsv(header: readonly string[], rows: readonly (readonly unknown[])[]): string {
-  const lines = [header, ...rows].map((row) => row.map((cell) => escapeCell(String(cell ?? ''))).join(','));
+export function toCsv(
+  header: readonly string[],
+  rows: readonly (readonly unknown[])[],
+): string {
+  const lines = [header, ...rows].map((row) =>
+    row.map((cell) => escapeCell(String(cell ?? ''))).join(','),
+  );
   return lines.join('\r\n') + '\r\n';
 }

@@ -55,12 +55,16 @@ export function AssignmentEditor({ writableTags }: AssignmentEditorProps) {
         title="New assignment"
         actions={
           <>
-            {error && <p className="max-w-[280px] truncate text-[12px] text-red-600">{error}</p>}
+            {error && (
+              <p className="max-w-[280px] truncate text-[12px] text-red-600">
+                {error}
+              </p>
+            )}
             <button
               type="button"
               onClick={handleCreate}
               disabled={!canSave}
-              className="flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-4 text-[12.5px] font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="bg-brand-600 hover:bg-brand-700 flex h-9 items-center gap-1.5 rounded-lg px-4 text-[12.5px] font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving && <Loader2 size={13} className="animate-spin" />}
               Create assignment
@@ -69,7 +73,7 @@ export function AssignmentEditor({ writableTags }: AssignmentEditorProps) {
         }
       />
 
-      <main id="main-content" className="mx-auto max-w-[760px] px-8 pb-32 pt-9">
+      <main id="main-content" className="mx-auto max-w-[760px] px-8 pt-9 pb-32">
         <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <input
             aria-label="Assignment title"
@@ -79,7 +83,10 @@ export function AssignmentEditor({ writableTags }: AssignmentEditorProps) {
             className="w-full border-none text-[22px] font-semibold tracking-tight text-slate-950 outline-none placeholder:text-slate-300"
           />
           <div className="flex items-center gap-2">
-            <label htmlFor="assignment-due-at" className="text-[12.5px] font-medium text-slate-500">
+            <label
+              htmlFor="assignment-due-at"
+              className="text-[12.5px] font-medium text-slate-500"
+            >
               Due (optional)
             </label>
             <input
@@ -100,7 +107,9 @@ export function AssignmentEditor({ writableTags }: AssignmentEditorProps) {
           </label>
           <div className="flex flex-wrap gap-1.5 border-t border-slate-100 pt-3">
             {writableTags.length === 0 && (
-              <p className="text-[12.5px] text-slate-400">You have no tags you can publish to.</p>
+              <p className="text-[12.5px] text-slate-400">
+                You have no tags you can publish to.
+              </p>
             )}
             {writableTags.map((tag) => {
               const active = tagIds.has(tag.id);

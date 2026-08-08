@@ -31,7 +31,9 @@ const signedOutArchive: ArchiveBankItemResult = {
 };
 
 /** Creates a question bank item and refreshes the bank page. */
-export async function createBankItemAction(input: unknown): Promise<CreateBankItemResult> {
+export async function createBankItemAction(
+  input: unknown,
+): Promise<CreateBankItemResult> {
   const client = await authenticatedClient();
   if (!client) return signedOutCreate;
   const result = await createBankItem(client, input);
@@ -40,7 +42,9 @@ export async function createBankItemAction(input: unknown): Promise<CreateBankIt
 }
 
 /** Archives a question bank item and refreshes the bank page. */
-export async function archiveBankItemAction(input: unknown): Promise<ArchiveBankItemResult> {
+export async function archiveBankItemAction(
+  input: unknown,
+): Promise<ArchiveBankItemResult> {
   const client = await authenticatedClient();
   if (!client) return signedOutArchive;
   const result = await archiveBankItem(client, input);

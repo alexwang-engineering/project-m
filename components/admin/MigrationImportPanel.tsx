@@ -5,7 +5,10 @@ import { Loader2, Upload } from 'lucide-react';
 
 import { importMigrationManifestAction } from '@/app/actions/migration';
 import { parseMigrationManifest } from '@/lib/content/migration-parse';
-import type { MigrationManifest, MigrationReportEntry } from '@/lib/content/migration-types';
+import type {
+  MigrationManifest,
+  MigrationReportEntry,
+} from '@/lib/content/migration-types';
 
 const STATUS_LABEL: Record<MigrationReportEntry['status'], string> = {
   imported: 'Imported',
@@ -30,7 +33,9 @@ export function MigrationImportPanel() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [manifest, setManifest] = useState<MigrationManifest | null>(null);
   const [parseErrors, setParseErrors] = useState<readonly string[]>([]);
-  const [report, setReport] = useState<readonly MigrationReportEntry[] | null>(null);
+  const [report, setReport] = useState<readonly MigrationReportEntry[] | null>(
+    null,
+  );
   const [runId, setRunId] = useState<string | null>(null);
   const [busy, setBusy] = useState<'preview' | 'apply' | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +58,11 @@ export function MigrationImportPanel() {
     setError(null);
     const activeRunId = runId ?? crypto.randomUUID();
     setRunId(activeRunId);
-    const result = await importMigrationManifestAction(manifest, activeRunId, dryRun);
+    const result = await importMigrationManifestAction(
+      manifest,
+      activeRunId,
+      dryRun,
+    );
     setBusy(null);
     if ('error' in result) {
       setError(result.error);
@@ -63,17 +72,26 @@ export function MigrationImportPanel() {
     if (!dryRun) setApplied(true);
   }
 
-  const itemCount = manifest ? manifest.resources.length + manifest.assignments.length + manifest.quizzes.length : 0;
+  const itemCount = manifest
+    ? manifest.resources.length +
+      manifest.assignments.length +
+      manifest.quizzes.length
+    : 0;
 
   return (
     <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4">
-      <p className="mb-1 text-[13px] font-semibold text-slate-900">Content migration import</p>
+      <p className="mb-1 text-[13px] font-semibold text-slate-900">
+        Content migration import
+      </p>
       <p className="mb-3 text-[12.5px] text-slate-600">
-        Upload a migration manifest (JSON with <code className="rounded bg-slate-100 px-1">resources</code>,{' '}
+        Upload a migration manifest (JSON with{' '}
+        <code className="rounded bg-slate-100 px-1">resources</code>,{' '}
         <code className="rounded bg-slate-100 px-1">assignments</code>, and{' '}
-        <code className="rounded bg-slate-100 px-1">quizzes</code> arrays, each item tagged to an existing tag by
-        name). Every item becomes a draft page/assignment/quiz - review and publish manually. Re-uploading the same
-        manifest skips anything unchanged; a changed item is reported as a conflict, never silently overwritten.
+        <code className="rounded bg-slate-100 px-1">quizzes</code> arrays, each
+        item tagged to an existing tag by name). Every item becomes a draft
+        page/assignment/quiz - review and publish manually. Re-uploading the
+        same manifest skips anything unchanged; a changed item is reported as a
+        conflict, never silently overwritten.
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -106,7 +124,9 @@ export function MigrationImportPanel() {
               disabled={itemCount === 0 || busy !== null}
               className="flex h-8 items-center gap-1.5 rounded-lg bg-slate-800 px-3 text-[12px] font-semibold text-white hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {busy === 'preview' && <Loader2 size={12} className="animate-spin" />}
+              {busy === 'preview' && (
+                <Loader2 size={12} className="animate-spin" />
+              )}
               Preview (dry run)
             </button>
             {report && !applied && (
@@ -114,9 +134,11 @@ export function MigrationImportPanel() {
                 type="button"
                 onClick={() => run(false)}
                 disabled={busy !== null}
-                className="flex h-8 items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-[12px] font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="bg-brand-600 hover:bg-brand-700 flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {busy === 'apply' && <Loader2 size={12} className="animate-spin" />}
+                {busy === 'apply' && (
+                  <Loader2 size={12} className="animate-spin" />
+                )}
                 Apply
               </button>
             )}
@@ -137,14 +159,22 @@ export function MigrationImportPanel() {
 
       {report && (
         <div className="mt-4 border-t border-slate-100 pt-3">
-          <p className="mb-2 text-[12.5px] font-semibold text-slate-900">{applied ? 'Applied' : 'Preview'}</p>
+          <p className="mb-2 text-[12.5px] font-semibold text-slate-900">
+            {applied ? 'Applied' : 'Preview'}
+          </p>
           <ul className="flex flex-col gap-1">
             {report.map((entry) => (
-              <li key={`${entry.kind}:${entry.externalId}`} className="flex items-center justify-between gap-2 text-[12.5px]">
+              <li
+                key={`${entry.kind}:${entry.externalId}`}
+                className="flex items-center justify-between gap-2 text-[12.5px]"
+              >
                 <span className="truncate text-slate-700">
-                  <span className="text-slate-400">[{entry.kind}]</span> {entry.title}
+                  <span className="text-slate-400">[{entry.kind}]</span>{' '}
+                  {entry.title}
                 </span>
-                <span className={`shrink-0 font-semibold ${STATUS_COLOR[entry.status]}`}>
+                <span
+                  className={`shrink-0 font-semibold ${STATUS_COLOR[entry.status]}`}
+                >
                   {STATUS_LABEL[entry.status]}
                   {entry.message ? ` — ${entry.message}` : ''}
                 </span>

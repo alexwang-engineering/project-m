@@ -44,16 +44,18 @@ export default async function AdminPage() {
         }
       />
 
-      <main id="main-content" className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
+      <main id="main-content" className="mx-auto max-w-[900px] px-8 pt-9 pb-24">
         <CreateTagForm />
         <RosterSyncPanel />
         <MigrationImportPanel />
 
         <div className="mb-6">
-          <h1 className="text-[20px] font-bold tracking-tight text-slate-900">Roster</h1>
+          <h1 className="text-[20px] font-bold tracking-tight text-slate-900">
+            Roster
+          </h1>
           <p className="mt-0.5 text-[13px] text-slate-500">
-            {users.length} {users.length === 1 ? 'account' : 'accounts'}. Every grant, membership, and state
-            change here is audited.
+            {users.length} {users.length === 1 ? 'account' : 'accounts'}. Every
+            grant, membership, and state change here is audited.
           </p>
         </div>
         <AdminRoster users={users} tags={tags} guardianLinks={guardianLinks} />

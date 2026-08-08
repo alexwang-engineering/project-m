@@ -80,10 +80,10 @@ function Block({
     }
     case 'quote':
       return (
-        <blockquote className="border-l-2 border-brand-500 pl-4 text-[15px] italic leading-relaxed text-slate-600">
+        <blockquote className="border-brand-500 border-l-2 pl-4 text-[15px] leading-relaxed text-slate-600 italic">
           <div dangerouslySetInnerHTML={{ __html: block.html }} />
           {block.attribution && (
-            <cite className="mt-1 block text-[12.5px] not-italic text-slate-400">
+            <cite className="mt-1 block text-[12.5px] text-slate-400 not-italic">
               — {block.attribution}
             </cite>
           )}
@@ -93,7 +93,7 @@ function Block({
       return (
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-950">
           {block.language && (
-            <div className="border-b border-slate-800 px-4 py-1.5 text-[10.5px] font-semibold uppercase tracking-wide text-slate-400">
+            <div className="border-b border-slate-800 px-4 py-1.5 text-[10.5px] font-semibold tracking-wide text-slate-400 uppercase">
               {block.language}
             </div>
           )}
@@ -128,7 +128,7 @@ function Block({
         <a
           href={file.url}
           download={file.filename}
-          className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-[13.5px] font-medium text-slate-800 shadow-sm transition hover:border-brand-400 hover:text-brand-700"
+          className="hover:border-brand-400 hover:text-brand-700 flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-[13.5px] font-medium text-slate-800 shadow-sm transition"
         >
           <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#eef2fa] text-[#254889]">
             <FileText size={16} strokeWidth={2} />
@@ -185,7 +185,7 @@ export function PageRenderer({ page, files, editHref }: PageRendererProps) {
           {editHref && (
             <Link
               href={editHref}
-              className="flex h-9 flex-shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-[12.5px] font-semibold text-slate-600 transition hover:border-brand-400 hover:text-brand-700"
+              className="hover:border-brand-400 hover:text-brand-700 flex h-9 flex-shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-[12.5px] font-semibold text-slate-600 transition"
             >
               <Pencil size={14} strokeWidth={2.2} />
               Edit
@@ -194,7 +194,9 @@ export function PageRenderer({ page, files, editHref }: PageRendererProps) {
         </div>
         <div className="flex flex-col gap-5">
           {page.content.blocks.length === 0 ? (
-            <p className="text-[14px] text-slate-400">This page has no content yet.</p>
+            <p className="text-[14px] text-slate-400">
+              This page has no content yet.
+            </p>
           ) : (
             page.content.blocks.map((block) => (
               <Block key={block.id} block={block} files={files} />

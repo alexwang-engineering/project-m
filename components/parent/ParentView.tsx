@@ -8,7 +8,12 @@ import { formatRelativeTime } from '@/lib/relative-time';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
 import { SubPageHeader } from '@/components/ui/SubPageHeader';
-import type { Pupil, PupilAnnouncement, PupilCalendarItem, PupilGrade } from '@/lib/content/guardians';
+import type {
+  Pupil,
+  PupilAnnouncement,
+  PupilCalendarItem,
+  PupilGrade,
+} from '@/lib/content/guardians';
 
 export interface PupilData {
   readonly pupil: Pupil;
@@ -44,15 +49,23 @@ function Section({
 function PupilPanel({ data }: { data: PupilData }) {
   return (
     <div className="grid gap-4 sm:grid-cols-3">
-      <Section icon={<CalendarDays size={15} strokeWidth={2.2} />} title="Upcoming">
+      <Section
+        icon={<CalendarDays size={15} strokeWidth={2.2} />}
+        title="Upcoming"
+      >
         {data.calendar.length === 0 ? (
           <p className="text-[12.5px] text-slate-400">Nothing upcoming.</p>
         ) : (
           <ul className="flex flex-col gap-2.5">
             {data.calendar.map((item) => (
               <li key={`${item.kind}:${item.id}`}>
-                <p className="text-[12.5px] font-semibold text-slate-800">{item.title}</p>
-                <p className="text-[11.5px] text-slate-500" suppressHydrationWarning>
+                <p className="text-[12.5px] font-semibold text-slate-800">
+                  {item.title}
+                </p>
+                <p
+                  className="text-[11.5px] text-slate-500"
+                  suppressHydrationWarning
+                >
                   {formatRelativeTime(item.occursAt)}
                 </p>
               </li>
@@ -61,7 +74,10 @@ function PupilPanel({ data }: { data: PupilData }) {
         )}
       </Section>
 
-      <Section icon={<Megaphone size={15} strokeWidth={2.2} />} title="Announcements">
+      <Section
+        icon={<Megaphone size={15} strokeWidth={2.2} />}
+        title="Announcements"
+      >
         {data.announcements.length === 0 ? (
           <p className="text-[12.5px] text-slate-400">No announcements.</p>
         ) : (
@@ -69,8 +85,16 @@ function PupilPanel({ data }: { data: PupilData }) {
             {data.announcements.map((a) => (
               <li key={a.id}>
                 <div className="flex items-center gap-1.5">
-                  {a.isBroadcast && <Globe2 size={11} strokeWidth={2.4} className="text-brand-600" />}
-                  <p className="text-[12.5px] font-semibold text-slate-800">{a.title}</p>
+                  {a.isBroadcast && (
+                    <Globe2
+                      size={11}
+                      strokeWidth={2.4}
+                      className="text-brand-600"
+                    />
+                  )}
+                  <p className="text-[12.5px] font-semibold text-slate-800">
+                    {a.title}
+                  </p>
                 </div>
                 <p className="mt-0.5 text-[12px] text-slate-600">{a.body}</p>
               </li>
@@ -79,7 +103,10 @@ function PupilPanel({ data }: { data: PupilData }) {
         )}
       </Section>
 
-      <Section icon={<GraduationCap size={15} strokeWidth={2.2} />} title="Grades">
+      <Section
+        icon={<GraduationCap size={15} strokeWidth={2.2} />}
+        title="Grades"
+      >
         {data.grades.length === 0 ? (
           <p className="text-[12.5px] text-slate-400">No grades yet.</p>
         ) : (
@@ -87,12 +114,18 @@ function PupilPanel({ data }: { data: PupilData }) {
             {data.grades.map((g) => (
               <li key={g.submissionId}>
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-[12.5px] font-semibold text-slate-800">{g.assignmentTitle}</p>
+                  <p className="text-[12.5px] font-semibold text-slate-800">
+                    {g.assignmentTitle}
+                  </p>
                   <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[11px] font-bold text-emerald-700">
                     {g.grade}/100
                   </span>
                 </div>
-                {g.gradeFeedback && <p className="mt-0.5 text-[12px] text-slate-600">{g.gradeFeedback}</p>}
+                {g.gradeFeedback && (
+                  <p className="mt-0.5 text-[12px] text-slate-600">
+                    {g.gradeFeedback}
+                  </p>
+                )}
               </li>
             ))}
           </ul>
@@ -104,14 +137,15 @@ function PupilPanel({ data }: { data: PupilData }) {
 
 export function ParentView({ pupilData }: ParentViewProps) {
   const [selectedId, setSelectedId] = useState(pupilData[0]?.pupil.id ?? null);
-  const selected = pupilData.find((d) => d.pupil.id === selectedId) ?? pupilData[0];
+  const selected =
+    pupilData.find((d) => d.pupil.id === selectedId) ?? pupilData[0];
 
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
       <SkipToContentLink />
       <SubPageHeader title="Parent view" />
 
-      <main id="main-content" className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
+      <main id="main-content" className="mx-auto max-w-[900px] px-8 pt-9 pb-24">
         {pupilData.length === 0 ? (
           <EmptyState
             icon={<GraduationCap size={20} strokeWidth={2} />}

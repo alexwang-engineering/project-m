@@ -18,15 +18,32 @@ describe('parseMigrationManifest', () => {
   it('parses a well-formed manifest with all three item types', () => {
     const { manifest, errors } = parseMigrationManifest(
       JSON.stringify({
-        resources: [{ externalId: 'r1', tagName: 'Y10MA1', title: 'Notes', html: '<p>hi</p>' }],
-        assignments: [{ externalId: 'a1', tagName: 'Y10MA1', title: 'HW1', dueAt: null, allowResubmission: true }],
+        resources: [
+          {
+            externalId: 'r1',
+            tagName: 'Y10MA1',
+            title: 'Notes',
+            html: '<p>hi</p>',
+          },
+        ],
+        assignments: [
+          {
+            externalId: 'a1',
+            tagName: 'Y10MA1',
+            title: 'HW1',
+            dueAt: null,
+            allowResubmission: true,
+          },
+        ],
         quizzes: [
           {
             externalId: 'q1',
             tagName: 'Y10MA1',
             title: 'Quiz 1',
             dueAt: null,
-            questions: [{ prompt: '2+2?', choices: ['3', '4'], correctChoiceIndex: 1 }],
+            questions: [
+              { prompt: '2+2?', choices: ['3', '4'], correctChoiceIndex: 1 },
+            ],
           },
         ],
       }),
@@ -39,7 +56,9 @@ describe('parseMigrationManifest', () => {
   });
 
   it('reports a missing-field resource without crashing and drops it from the parsed manifest', () => {
-    const { manifest, errors } = parseMigrationManifest(JSON.stringify({ resources: [{ externalId: 'r1' }] }));
+    const { manifest, errors } = parseMigrationManifest(
+      JSON.stringify({ resources: [{ externalId: 'r1' }] }),
+    );
     expect(manifest?.resources).toHaveLength(0);
     expect(errors.some((e) => e.includes('resources[0]'))).toBe(true);
   });
@@ -47,15 +66,28 @@ describe('parseMigrationManifest', () => {
   it('quarantines a quiz question with fewer than 2 choices at parse time', () => {
     const { manifest, errors } = parseMigrationManifest(
       JSON.stringify({
-        quizzes: [{ externalId: 'q1', tagName: 'Y10MA1', title: 'Bad quiz', questions: [{ prompt: 'x?', choices: ['only one'], correctChoiceIndex: 0 }] }],
+        quizzes: [
+          {
+            externalId: 'q1',
+            tagName: 'Y10MA1',
+            title: 'Bad quiz',
+            questions: [
+              { prompt: 'x?', choices: ['only one'], correctChoiceIndex: 0 },
+            ],
+          },
+        ],
       }),
     );
     expect(manifest?.quizzes).toHaveLength(0);
-    expect(errors.some((e) => e.includes('needs at least 2 choices'))).toBe(true);
+    expect(errors.some((e) => e.includes('needs at least 2 choices'))).toBe(
+      true,
+    );
   });
 
   it('reports an empty manifest as an error rather than silently succeeding', () => {
     const { errors } = parseMigrationManifest(JSON.stringify({}));
-    expect(errors).toContain('The manifest has no resources, assignments, or quizzes to import.');
+    expect(errors).toContain(
+      'The manifest has no resources, assignments, or quizzes to import.',
+    );
   });
 });

@@ -40,6 +40,12 @@ export interface MigrationReportEntry {
   readonly externalId: string;
   readonly kind: 'page' | 'assignment' | 'quiz';
   readonly title: string;
-  readonly status: 'imported' | 'unchanged' | 'conflict' | 'quarantined' | 'failed' | 'would_import';
+  readonly status:
+    | 'imported'
+    | 'unchanged'
+    | 'conflict'
+    | 'quarantined'
+    | 'failed'
+    | 'would_import';
   readonly message?: string;
 }

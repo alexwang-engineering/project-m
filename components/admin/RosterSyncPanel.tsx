@@ -9,10 +9,20 @@ import type { RosterSyncReport } from '@/lib/content/roster-sync';
 
 const fieldClass = 'text-[12.5px] text-slate-600';
 
-function ReportList({ title, items, empty }: { title: string; items: readonly string[]; empty: string }) {
+function ReportList({
+  title,
+  items,
+  empty,
+}: {
+  title: string;
+  items: readonly string[];
+  empty: string;
+}) {
   return (
     <div>
-      <p className="text-[11.5px] font-bold uppercase tracking-wide text-slate-500">{title}</p>
+      <p className="text-[11.5px] font-bold tracking-wide text-slate-500 uppercase">
+        {title}
+      </p>
       {items.length === 0 ? (
         <p className="mt-1 text-[12.5px] text-slate-400">{empty}</p>
       ) : (
@@ -64,11 +74,18 @@ export function RosterSyncPanel() {
 
   return (
     <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4">
-      <p className="mb-1 text-[13px] font-semibold text-slate-900">Roster sync</p>
+      <p className="mb-1 text-[13px] font-semibold text-slate-900">
+        Roster sync
+      </p>
       <p className={`mb-3 ${fieldClass}`}>
-        Upload a CSV (header: <code className="rounded bg-slate-100 px-1">email,systemRole,tags</code>, tags like{' '}
-        <code className="rounded bg-slate-100 px-1">Y10MA1:member;Y11SCI:teacher</code>) to reconcile roles and tag
-        memberships. Preview the diff before applying it - nothing is written until you apply.
+        Upload a CSV (header:{' '}
+        <code className="rounded bg-slate-100 px-1">email,systemRole,tags</code>
+        , tags like{' '}
+        <code className="rounded bg-slate-100 px-1">
+          Y10MA1:member;Y11SCI:teacher
+        </code>
+        ) to reconcile roles and tag memberships. Preview the diff before
+        applying it - nothing is written until you apply.
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -92,14 +109,18 @@ export function RosterSyncPanel() {
         />
         {fileName && (
           <>
-            <span className="text-[12px] text-slate-400">{rows.length} valid row{rows.length === 1 ? '' : 's'}</span>
+            <span className="text-[12px] text-slate-400">
+              {rows.length} valid row{rows.length === 1 ? '' : 's'}
+            </span>
             <button
               type="button"
               onClick={() => runSync(true)}
               disabled={rows.length === 0 || busy !== null}
               className="flex h-8 items-center gap-1.5 rounded-lg bg-slate-800 px-3 text-[12px] font-semibold text-white hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {busy === 'preview' && <Loader2 size={12} className="animate-spin" />}
+              {busy === 'preview' && (
+                <Loader2 size={12} className="animate-spin" />
+              )}
               Preview (dry run)
             </button>
             {report && !applied && (
@@ -107,9 +128,11 @@ export function RosterSyncPanel() {
                 type="button"
                 onClick={() => runSync(false)}
                 disabled={busy !== null}
-                className="flex h-8 items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-[12px] font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="bg-brand-600 hover:bg-brand-700 flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {busy === 'apply' && <Loader2 size={12} className="animate-spin" />}
+                {busy === 'apply' && (
+                  <Loader2 size={12} className="animate-spin" />
+                )}
                 Apply
               </button>
             )}
@@ -127,8 +150,8 @@ export function RosterSyncPanel() {
       {report && (
         <div className="mt-4 grid grid-cols-2 gap-4 border-t border-slate-100 pt-3">
           <p className="col-span-2 text-[12.5px] font-semibold text-slate-900">
-            {applied ? 'Applied' : 'Preview'}: {report.rowsProcessed} rows processed, {report.peopleValidated} people
-            validated
+            {applied ? 'Applied' : 'Preview'}: {report.rowsProcessed} rows
+            processed, {report.peopleValidated} people validated
           </p>
           <ReportList
             title="Role grants"
@@ -137,12 +160,16 @@ export function RosterSyncPanel() {
           />
           <ReportList
             title="Membership grants"
-            items={report.membershipGrants.map((g) => `${g.email} → ${g.tag} (${g.role})`)}
+            items={report.membershipGrants.map(
+              (g) => `${g.email} → ${g.tag} (${g.role})`,
+            )}
             empty="None"
           />
           <ReportList
             title="Membership closures"
-            items={report.membershipClosures.map((c) => `${c.email} ← ${c.tag} (${c.role})`)}
+            items={report.membershipClosures.map(
+              (c) => `${c.email} ← ${c.tag} (${c.role})`,
+            )}
             empty="None"
           />
           <ReportList

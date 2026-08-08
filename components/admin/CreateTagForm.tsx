@@ -20,7 +20,11 @@ export function CreateTagForm() {
     setSaving(true);
     setError(null);
     setMessage(null);
-    const result = await createTagAction({ name, displayName, reason: reason.trim() || undefined });
+    const result = await createTagAction({
+      name,
+      displayName,
+      reason: reason.trim() || undefined,
+    });
     setSaving(false);
     if (!result.ok) {
       setError(result.message);
@@ -34,7 +38,9 @@ export function CreateTagForm() {
 
   return (
     <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4">
-      <p className="mb-3 text-[13px] font-semibold text-slate-900">Create a tag</p>
+      <p className="mb-3 text-[13px] font-semibold text-slate-900">
+        Create a tag
+      </p>
       <div className="flex flex-wrap items-center gap-2">
         <input
           aria-label="Tag name (short code)"
@@ -48,27 +54,33 @@ export function CreateTagForm() {
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           placeholder="Year 9 Maths Set 1"
-          className={`${fieldClass} flex-1 min-w-[160px]`}
+          className={`${fieldClass} min-w-[160px] flex-1`}
         />
         <input
           aria-label="Reason for creating this tag"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder="Reason (optional)"
-          className={`${fieldClass} flex-1 min-w-[140px]`}
+          className={`${fieldClass} min-w-[140px] flex-1`}
         />
         <button
           type="button"
           onClick={handleCreate}
           disabled={saving || !name.trim() || !displayName.trim()}
-          className="flex h-8 items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-[12px] font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="bg-brand-600 hover:bg-brand-700 flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {saving ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} strokeWidth={2.4} />}
+          {saving ? (
+            <Loader2 size={12} className="animate-spin" />
+          ) : (
+            <Plus size={12} strokeWidth={2.4} />
+          )}
           Create
         </button>
       </div>
       {error && <p className="mt-2 text-[12px] text-red-600">{error}</p>}
-      {message && <p className="mt-2 text-[12px] text-emerald-700">{message}</p>}
+      {message && (
+        <p className="mt-2 text-[12px] text-emerald-700">{message}</p>
+      )}
     </div>
   );
 }

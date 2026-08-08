@@ -22,23 +22,34 @@ async function adminClient(): Promise<SupabaseClient<Database> | null> {
   return (await isInstitutionAdmin(client)) ? client : null;
 }
 
-export type ReportResult<T> = { readonly ok: true; readonly data: T } | { readonly ok: false; readonly message: string };
+export type ReportResult<T> =
+  | { readonly ok: true; readonly data: T }
+  | { readonly ok: false; readonly message: string };
 
-const forbidden = { ok: false as const, message: 'Institution administrator role required to view reports.' };
+const forbidden = {
+  ok: false as const,
+  message: 'Institution administrator role required to view reports.',
+};
 
-export async function getAuditLogAction(filters: AuditLogFilters): Promise<ReportResult<readonly AuditLogEntry[]>> {
+export async function getAuditLogAction(
+  filters: AuditLogFilters,
+): Promise<ReportResult<readonly AuditLogEntry[]>> {
   const client = await adminClient();
   if (!client) return forbidden;
   return { ok: true, data: await getAuditLog(client, filters) };
 }
 
-export async function getRosterSummaryAction(): Promise<ReportResult<RosterSummary>> {
+export async function getRosterSummaryAction(): Promise<
+  ReportResult<RosterSummary>
+> {
   const client = await adminClient();
   if (!client) return forbidden;
   return { ok: true, data: await getRosterSummary(client) };
 }
 
-export async function getContentSummaryAction(): Promise<ReportResult<ContentSummary>> {
+export async function getContentSummaryAction(): Promise<
+  ReportResult<ContentSummary>
+> {
   const client = await adminClient();
   if (!client) return forbidden;
   return { ok: true, data: await getContentSummary(client) };

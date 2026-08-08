@@ -18,7 +18,10 @@ interface CreateAnnouncementFormProps {
 const fieldClass =
   'rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] text-slate-800 outline-none focus:border-brand-400';
 
-export function CreateAnnouncementForm({ writableTags, isAdmin }: CreateAnnouncementFormProps) {
+export function CreateAnnouncementForm({
+  writableTags,
+  isAdmin,
+}: CreateAnnouncementFormProps) {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [broadcast, setBroadcast] = useState(false);
@@ -27,7 +30,11 @@ export function CreateAnnouncementForm({ writableTags, isAdmin }: CreateAnnounce
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const canSave = title.trim() !== '' && body.trim() !== '' && (broadcast || tagIds.size > 0) && !saving;
+  const canSave =
+    title.trim() !== '' &&
+    body.trim() !== '' &&
+    (broadcast || tagIds.size > 0) &&
+    !saving;
 
   async function handleCreate() {
     setSaving(true);
@@ -53,7 +60,9 @@ export function CreateAnnouncementForm({ writableTags, isAdmin }: CreateAnnounce
 
   return (
     <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4">
-      <p className="mb-3 text-[13px] font-semibold text-slate-900">Post an announcement</p>
+      <p className="mb-3 text-[13px] font-semibold text-slate-900">
+        Post an announcement
+      </p>
       <div className="flex flex-col gap-2.5">
         <input
           aria-label="Announcement title"
@@ -88,7 +97,9 @@ export function CreateAnnouncementForm({ writableTags, isAdmin }: CreateAnnounce
         {!broadcast && (
           <div className="flex flex-wrap gap-1.5">
             {writableTags.length === 0 && (
-              <p className="text-[12px] text-slate-400">You have no tags you can publish to.</p>
+              <p className="text-[12px] text-slate-400">
+                You have no tags you can publish to.
+              </p>
             )}
             {writableTags.map((tag) => {
               const active = tagIds.has(tag.id);
@@ -122,15 +133,21 @@ export function CreateAnnouncementForm({ writableTags, isAdmin }: CreateAnnounce
             type="button"
             onClick={handleCreate}
             disabled={!canSave}
-            className="flex h-8 items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-[12px] font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="bg-brand-600 hover:bg-brand-700 flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {saving ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} strokeWidth={2.4} />}
+            {saving ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <Plus size={12} strokeWidth={2.4} />
+            )}
             Post
           </button>
         </div>
       </div>
       {error && <p className="mt-2 text-[12px] text-red-600">{error}</p>}
-      {message && <p className="mt-2 text-[12px] text-emerald-700">{message}</p>}
+      {message && (
+        <p className="mt-2 text-[12px] text-emerald-700">{message}</p>
+      )}
     </div>
   );
 }

@@ -18,7 +18,10 @@ interface CreateEventFormProps {
 const fieldClass =
   'rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] text-slate-800 outline-none focus:border-brand-400';
 
-export function CreateEventForm({ writableTags, isAdmin }: CreateEventFormProps) {
+export function CreateEventForm({
+  writableTags,
+  isAdmin,
+}: CreateEventFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startsAt, setStartsAt] = useState('');
@@ -29,7 +32,11 @@ export function CreateEventForm({ writableTags, isAdmin }: CreateEventFormProps)
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const canSave = title.trim() !== '' && startsAt !== '' && (broadcast || tagIds.size > 0) && !saving;
+  const canSave =
+    title.trim() !== '' &&
+    startsAt !== '' &&
+    (broadcast || tagIds.size > 0) &&
+    !saving;
 
   async function handleCreate() {
     setSaving(true);
@@ -59,7 +66,9 @@ export function CreateEventForm({ writableTags, isAdmin }: CreateEventFormProps)
 
   return (
     <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4">
-      <p className="mb-3 text-[13px] font-semibold text-slate-900">Create an event</p>
+      <p className="mb-3 text-[13px] font-semibold text-slate-900">
+        Create an event
+      </p>
       <div className="flex flex-col gap-2.5">
         <div className="flex flex-wrap items-center gap-2">
           <input
@@ -67,7 +76,7 @@ export function CreateEventForm({ writableTags, isAdmin }: CreateEventFormProps)
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Event title"
-            className={`${fieldClass} flex-1 min-w-[180px]`}
+            className={`${fieldClass} min-w-[180px] flex-1`}
           />
           <input
             aria-label="Starts at"
@@ -110,7 +119,9 @@ export function CreateEventForm({ writableTags, isAdmin }: CreateEventFormProps)
         {!broadcast && (
           <div className="flex flex-wrap gap-1.5">
             {writableTags.length === 0 && (
-              <p className="text-[12px] text-slate-400">You have no tags you can publish to.</p>
+              <p className="text-[12px] text-slate-400">
+                You have no tags you can publish to.
+              </p>
             )}
             {writableTags.map((tag) => {
               const active = tagIds.has(tag.id);
@@ -144,15 +155,21 @@ export function CreateEventForm({ writableTags, isAdmin }: CreateEventFormProps)
             type="button"
             onClick={handleCreate}
             disabled={!canSave}
-            className="flex h-8 items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-[12px] font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="bg-brand-600 hover:bg-brand-700 flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {saving ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} strokeWidth={2.4} />}
+            {saving ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <Plus size={12} strokeWidth={2.4} />
+            )}
             Create
           </button>
         </div>
       </div>
       {error && <p className="mt-2 text-[12px] text-red-600">{error}</p>}
-      {message && <p className="mt-2 text-[12px] text-emerald-700">{message}</p>}
+      {message && (
+        <p className="mt-2 text-[12px] text-emerald-700">{message}</p>
+      )}
     </div>
   );
 }

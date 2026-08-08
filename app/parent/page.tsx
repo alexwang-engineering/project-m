@@ -2,7 +2,12 @@ import { redirect } from 'next/navigation';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { createServerClient } from '@/lib/supabase/server';
-import { getPupilAnnouncements, getPupilCalendar, getPupilGrades, listMyPupils } from '@/lib/content/guardians';
+import {
+  getPupilAnnouncements,
+  getPupilCalendar,
+  getPupilGrades,
+  listMyPupils,
+} from '@/lib/content/guardians';
 import { ParentView, type PupilData } from '@/components/parent/ParentView';
 import type { Database } from '@/lib/database.types';
 

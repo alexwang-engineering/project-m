@@ -8,7 +8,10 @@ import {
   assignTagMembershipAction,
   setProfileStateAction,
 } from '@/app/actions/admin';
-import { linkGuardianAction, revokeGuardianLinkAction } from '@/app/actions/guardians';
+import {
+  linkGuardianAction,
+  revokeGuardianLinkAction,
+} from '@/app/actions/guardians';
 import type { AdminTag, AdminUser } from '@/lib/content/admin';
 import type { GuardianLink } from '@/lib/content/guardians';
 
@@ -36,10 +39,13 @@ function ManageUserPanel({
   const [role, setRole] = useState<(typeof SYSTEM_ROLES)[number]>('teacher');
   const [roleReason, setRoleReason] = useState('');
   const [tagId, setTagId] = useState(tags[0]?.id ?? '');
-  const [membershipRole, setMembershipRole] = useState<(typeof MEMBERSHIP_ROLES)[number]>('member');
+  const [membershipRole, setMembershipRole] =
+    useState<(typeof MEMBERSHIP_ROLES)[number]>('member');
   const [guardianEmail, setGuardianEmail] = useState('');
   const [guardianReason, setGuardianReason] = useState('');
-  const [busy, setBusy] = useState<'role' | 'tag' | 'state' | 'guardian' | string | null>(null);
+  const [busy, setBusy] = useState<
+    'role' | 'tag' | 'state' | 'guardian' | string | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -51,7 +57,11 @@ function ManageUserPanel({
     setBusy('role');
     setError(null);
     setMessage(null);
-    const result = await assignSystemRoleAction({ profileId: user.id, role, reason: roleReason.trim() });
+    const result = await assignSystemRoleAction({
+      profileId: user.id,
+      role,
+      reason: roleReason.trim(),
+    });
     setBusy(null);
     if (!result.ok) {
       setError(result.message);
@@ -69,7 +79,11 @@ function ManageUserPanel({
     setBusy('tag');
     setError(null);
     setMessage(null);
-    const result = await assignTagMembershipAction({ profileId: user.id, tagId, role: membershipRole });
+    const result = await assignTagMembershipAction({
+      profileId: user.id,
+      tagId,
+      role: membershipRole,
+    });
     setBusy(null);
     if (!result.ok) {
       setError(result.message);
@@ -81,19 +95,27 @@ function ManageUserPanel({
   async function handleToggleState() {
     const nextState = user.state === 'active' ? 'disabled' : 'active';
     const reason = window.prompt(
-      nextState === 'disabled' ? 'Reason for disabling this account:' : 'Reason for re-enabling this account:',
+      nextState === 'disabled'
+        ? 'Reason for disabling this account:'
+        : 'Reason for re-enabling this account:',
     );
     if (!reason || !reason.trim()) return;
     setBusy('state');
     setError(null);
     setMessage(null);
-    const result = await setProfileStateAction({ profileId: user.id, state: nextState, reason: reason.trim() });
+    const result = await setProfileStateAction({
+      profileId: user.id,
+      state: nextState,
+      reason: reason.trim(),
+    });
     setBusy(null);
     if (!result.ok) {
       setError(result.message);
       return;
     }
-    setMessage(nextState === 'disabled' ? 'Account disabled.' : 'Account re-enabled.');
+    setMessage(
+      nextState === 'disabled' ? 'Account disabled.' : 'Account re-enabled.',
+    );
   }
 
   async function handleLinkGuardian() {
@@ -135,11 +157,15 @@ function ManageUserPanel({
   return (
     <div className="flex flex-col gap-3 border-t border-slate-100 bg-slate-50/60 p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[11.5px] font-semibold text-slate-500">Grant role</span>
+        <span className="text-[11.5px] font-semibold text-slate-500">
+          Grant role
+        </span>
         <select
           aria-label="Role to grant"
           value={role}
-          onChange={(e) => setRole(e.target.value as (typeof SYSTEM_ROLES)[number])}
+          onChange={(e) =>
+            setRole(e.target.value as (typeof SYSTEM_ROLES)[number])
+          }
           className={fieldClass}
         >
           {SYSTEM_ROLES.map((r) => (
@@ -153,13 +179,13 @@ function ManageUserPanel({
           value={roleReason}
           onChange={(e) => setRoleReason(e.target.value)}
           placeholder="Reason (required)"
-          className={`${fieldClass} flex-1 min-w-[140px]`}
+          className={`${fieldClass} min-w-[140px] flex-1`}
         />
         <button
           type="button"
           onClick={handleAssignRole}
           disabled={busy !== null}
-          className="flex h-8 items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-[12px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+          className="bg-brand-600 hover:bg-brand-700 flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold text-white disabled:opacity-60"
         >
           {busy === 'role' && <Loader2 size={12} className="animate-spin" />}
           Grant
@@ -167,8 +193,15 @@ function ManageUserPanel({
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[11.5px] font-semibold text-slate-500">Add tag</span>
-        <select aria-label="Tag to add" value={tagId} onChange={(e) => setTagId(e.target.value)} className={fieldClass}>
+        <span className="text-[11.5px] font-semibold text-slate-500">
+          Add tag
+        </span>
+        <select
+          aria-label="Tag to add"
+          value={tagId}
+          onChange={(e) => setTagId(e.target.value)}
+          className={fieldClass}
+        >
           {tags.map((tag) => (
             <option key={tag.id} value={tag.id}>
               {tag.name}
@@ -178,7 +211,11 @@ function ManageUserPanel({
         <select
           aria-label="Membership role"
           value={membershipRole}
-          onChange={(e) => setMembershipRole(e.target.value as (typeof MEMBERSHIP_ROLES)[number])}
+          onChange={(e) =>
+            setMembershipRole(
+              e.target.value as (typeof MEMBERSHIP_ROLES)[number],
+            )
+          }
           className={fieldClass}
         >
           {MEMBERSHIP_ROLES.map((r) => (
@@ -191,7 +228,7 @@ function ManageUserPanel({
           type="button"
           onClick={handleAssignTag}
           disabled={busy !== null || tags.length === 0}
-          className="flex h-8 items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-[12px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+          className="bg-brand-600 hover:bg-brand-700 flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold text-white disabled:opacity-60"
         >
           {busy === 'tag' && <Loader2 size={12} className="animate-spin" />}
           Add
@@ -215,12 +252,21 @@ function ManageUserPanel({
       </div>
 
       <div className="flex flex-col gap-2 border-t border-slate-200 pt-3">
-        <span className="text-[11.5px] font-semibold text-slate-500">Guardians</span>
+        <span className="text-[11.5px] font-semibold text-slate-500">
+          Guardians
+        </span>
         {guardianLinks.map((link) => (
-          <div key={link.id} className="flex items-center gap-2 text-[12px] text-slate-600">
+          <div
+            key={link.id}
+            className="flex items-center gap-2 text-[12px] text-slate-600"
+          >
             <span className="flex-1 truncate">
               {link.guardianEmail}
-              {link.revokedAt ? ' (revoked)' : link.activatedAt ? ' (active)' : ' (pending sign-in)'}
+              {link.revokedAt
+                ? ' (revoked)'
+                : link.activatedAt
+                  ? ' (active)'
+                  : ' (pending sign-in)'}
             </span>
             {!link.revokedAt && (
               <button
@@ -229,7 +275,9 @@ function ManageUserPanel({
                 disabled={busy !== null}
                 className="rounded-md border border-red-200 px-2 py-1 text-[11px] font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
               >
-                {busy === link.id && <Loader2 size={11} className="mr-1 inline animate-spin" />}
+                {busy === link.id && (
+                  <Loader2 size={11} className="mr-1 inline animate-spin" />
+                )}
                 Revoke
               </button>
             )}
@@ -241,22 +289,24 @@ function ManageUserPanel({
             value={guardianEmail}
             onChange={(e) => setGuardianEmail(e.target.value)}
             placeholder="guardian@example.com"
-            className={`${fieldClass} flex-1 min-w-[160px]`}
+            className={`${fieldClass} min-w-[160px] flex-1`}
           />
           <input
             aria-label="Reason for linking this guardian"
             value={guardianReason}
             onChange={(e) => setGuardianReason(e.target.value)}
             placeholder="Reason (required)"
-            className={`${fieldClass} flex-1 min-w-[140px]`}
+            className={`${fieldClass} min-w-[140px] flex-1`}
           />
           <button
             type="button"
             onClick={handleLinkGuardian}
             disabled={busy !== null}
-            className="flex h-8 items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-[12px] font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+            className="bg-brand-600 hover:bg-brand-700 flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold text-white disabled:opacity-60"
           >
-            {busy === 'guardian' && <Loader2 size={12} className="animate-spin" />}
+            {busy === 'guardian' && (
+              <Loader2 size={12} className="animate-spin" />
+            )}
             Link
           </button>
         </div>
@@ -286,17 +336,24 @@ function UserRow({
         className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left hover:bg-slate-50"
       >
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13.5px] font-semibold text-slate-900">{user.email}</p>
+          <p className="truncate text-[13.5px] font-semibold text-slate-900">
+            {user.email}
+          </p>
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                user.state === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'
+              className={`rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase ${
+                user.state === 'active'
+                  ? 'bg-emerald-50 text-emerald-700'
+                  : 'bg-red-50 text-red-600'
               }`}
             >
               {user.state}
             </span>
             {user.systemRoles.map((role) => (
-              <span key={role} className="rounded-md bg-[#eef2fa] px-2 py-0.5 text-[10.5px] font-bold text-[#254889]">
+              <span
+                key={role}
+                className="rounded-md bg-[#eef2fa] px-2 py-0.5 text-[10.5px] font-bold text-[#254889]"
+              >
                 {role}
               </span>
             ))}
@@ -311,12 +368,26 @@ function UserRow({
           </div>
         </div>
         {open ? (
-          <ChevronUp size={16} strokeWidth={2.2} className="flex-shrink-0 text-slate-400" />
+          <ChevronUp
+            size={16}
+            strokeWidth={2.2}
+            className="flex-shrink-0 text-slate-400"
+          />
         ) : (
-          <ChevronDown size={16} strokeWidth={2.2} className="flex-shrink-0 text-slate-400" />
+          <ChevronDown
+            size={16}
+            strokeWidth={2.2}
+            className="flex-shrink-0 text-slate-400"
+          />
         )}
       </button>
-      {open && <ManageUserPanel user={user} tags={tags} guardianLinks={guardianLinks} />}
+      {open && (
+        <ManageUserPanel
+          user={user}
+          tags={tags}
+          guardianLinks={guardianLinks}
+        />
+      )}
     </div>
   );
 }
@@ -329,7 +400,9 @@ export function AdminRoster({ users, tags, guardianLinks }: AdminRosterProps) {
           key={user.id}
           user={user}
           tags={tags}
-          guardianLinks={guardianLinks.filter((link) => link.pupilId === user.id)}
+          guardianLinks={guardianLinks.filter(
+            (link) => link.pupilId === user.id,
+          )}
         />
       ))}
     </div>

@@ -100,10 +100,16 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
     title.trim() !== '' &&
     tagIds.size > 0 &&
     questions.length > 0 &&
-    questions.every((q) => q.prompt.trim() !== '' && q.choices.every((c) => c.label.trim() !== '')) &&
+    questions.every(
+      (q) =>
+        q.prompt.trim() !== '' && q.choices.every((c) => c.label.trim() !== ''),
+    ) &&
     !saving;
 
-  function updateQuestion(key: string, updater: (q: QuestionDraft) => QuestionDraft) {
+  function updateQuestion(
+    key: string,
+    updater: (q: QuestionDraft) => QuestionDraft,
+  ) {
     setQuestions((prev) => prev.map((q) => (q.key === key ? updater(q) : q)));
   }
 
@@ -119,7 +125,10 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
           ? { bankItemId: q.bankItemId }
           : {
               prompt: q.prompt.trim(),
-              choices: q.choices.map((c) => ({ id: c.id, label: c.label.trim() })),
+              choices: q.choices.map((c) => ({
+                id: c.id,
+                label: c.label.trim(),
+              })),
               correctChoiceId: q.correctChoiceId,
             },
       ),
@@ -141,12 +150,16 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
         title="New quiz"
         actions={
           <>
-            {error && <p className="max-w-[280px] truncate text-[12px] text-red-600">{error}</p>}
+            {error && (
+              <p className="max-w-[280px] truncate text-[12px] text-red-600">
+                {error}
+              </p>
+            )}
             <button
               type="button"
               onClick={handleSave}
               disabled={!canSave}
-              className="flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-4 text-[12.5px] font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="bg-brand-600 hover:bg-brand-700 flex h-9 items-center gap-1.5 rounded-lg px-4 text-[12.5px] font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving && <Loader2 size={13} className="animate-spin" />}
               Create quiz
@@ -155,7 +168,7 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
         }
       />
 
-      <main id="main-content" className="mx-auto max-w-[760px] px-8 pb-32 pt-9">
+      <main id="main-content" className="mx-auto max-w-[760px] px-8 pt-9 pb-32">
         <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <input
             aria-label="Quiz title"
@@ -165,7 +178,10 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
             className="w-full border-none text-[22px] font-semibold tracking-tight text-slate-950 outline-none placeholder:text-slate-300"
           />
           <div className="flex items-center gap-2">
-            <label htmlFor="quiz-due-at" className="text-[12.5px] font-medium text-slate-500">
+            <label
+              htmlFor="quiz-due-at"
+              className="text-[12.5px] font-medium text-slate-500"
+            >
               Due (optional)
             </label>
             <input
@@ -178,7 +194,9 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
           </div>
           <div className="flex flex-wrap gap-1.5 border-t border-slate-100 pt-3">
             {writableTags.length === 0 && (
-              <p className="text-[12.5px] text-slate-400">You have no tags you can publish to.</p>
+              <p className="text-[12.5px] text-slate-400">
+                You have no tags you can publish to.
+              </p>
             )}
             {writableTags.map((tag) => {
               const active = tagIds.has(tag.id);
@@ -211,16 +229,26 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
           {questions.map((question, qIndex) => {
             const fromBank = question.bankItemId !== null;
             return (
-              <div key={question.key} className="rounded-xl border border-slate-200 bg-white p-4">
+              <div
+                key={question.key}
+                className="rounded-xl border border-slate-200 bg-white p-4"
+              >
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div className="flex-1">
                     {fromBank && (
-                      <p className="mb-1 text-[10.5px] font-bold uppercase tracking-wide text-brand-600">From question bank</p>
+                      <p className="text-brand-600 mb-1 text-[10.5px] font-bold tracking-wide uppercase">
+                        From question bank
+                      </p>
                     )}
                     <input
                       aria-label={`Question ${qIndex + 1} prompt`}
                       value={question.prompt}
-                      onChange={(e) => updateQuestion(question.key, (q) => ({ ...q, prompt: e.target.value }))}
+                      onChange={(e) =>
+                        updateQuestion(question.key, (q) => ({
+                          ...q,
+                          prompt: e.target.value,
+                        }))
+                      }
                       placeholder={`Question ${qIndex + 1}`}
                       readOnly={fromBank}
                       className={`${fieldClass} font-medium ${fromBank ? 'bg-slate-50 text-slate-500' : ''}`}
@@ -228,7 +256,11 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setQuestions((prev) => prev.filter((q) => q.key !== question.key))}
+                    onClick={() =>
+                      setQuestions((prev) =>
+                        prev.filter((q) => q.key !== question.key),
+                      )
+                    }
                     disabled={questions.length <= 1}
                     className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-30"
                     aria-label="Remove question"
@@ -244,7 +276,12 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
                         name={`correct-${question.key}`}
                         checked={question.correctChoiceId === choice.id}
                         disabled={fromBank}
-                        onChange={() => updateQuestion(question.key, (q) => ({ ...q, correctChoiceId: choice.id }))}
+                        onChange={() =>
+                          updateQuestion(question.key, (q) => ({
+                            ...q,
+                            correctChoiceId: choice.id,
+                          }))
+                        }
                         aria-label={`Mark choice ${cIndex + 1} as correct`}
                       />
                       <input
@@ -254,7 +291,11 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
                         onChange={(e) =>
                           updateQuestion(question.key, (q) => ({
                             ...q,
-                            choices: q.choices.map((c) => (c.id === choice.id ? { ...c, label: e.target.value } : c)),
+                            choices: q.choices.map((c) =>
+                              c.id === choice.id
+                                ? { ...c, label: e.target.value }
+                                : c,
+                            ),
                           }))
                         }
                         placeholder={`Choice ${cIndex + 1}`}
@@ -266,8 +307,13 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
                           onClick={() =>
                             updateQuestion(question.key, (q) => ({
                               ...q,
-                              choices: q.choices.filter((c) => c.id !== choice.id),
-                              correctChoiceId: q.correctChoiceId === choice.id ? (q.choices[0]?.id ?? 'a') : q.correctChoiceId,
+                              choices: q.choices.filter(
+                                (c) => c.id !== choice.id,
+                              ),
+                              correctChoiceId:
+                                q.correctChoiceId === choice.id
+                                  ? (q.choices[0]?.id ?? 'a')
+                                  : q.correctChoiceId,
                             }))
                           }
                           disabled={question.choices.length <= 2}
@@ -285,11 +331,19 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
                       onClick={() =>
                         updateQuestion(question.key, (q) => {
                           const nextId = CHOICE_IDS[q.choices.length];
-                          return nextId ? { ...q, choices: [...q.choices, { id: nextId, label: '' }] } : q;
+                          return nextId
+                            ? {
+                                ...q,
+                                choices: [
+                                  ...q.choices,
+                                  { id: nextId, label: '' },
+                                ],
+                              }
+                            : q;
                         })
                       }
                       disabled={question.choices.length >= CHOICE_IDS.length}
-                      className="self-start text-[12.5px] font-semibold text-brand-600 hover:text-brand-700 disabled:opacity-40"
+                      className="text-brand-600 hover:text-brand-700 self-start text-[12.5px] font-semibold disabled:opacity-40"
                     >
                       + Add choice
                     </button>
@@ -304,7 +358,7 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
           <button
             type="button"
             onClick={() => setQuestions((prev) => [...prev, newQuestion()])}
-            className="flex h-10 items-center gap-2 rounded-lg border border-dashed border-slate-300 px-4 text-[12.5px] font-semibold text-slate-500 hover:border-brand-400 hover:text-brand-700"
+            className="hover:border-brand-400 hover:text-brand-700 flex h-10 items-center gap-2 rounded-lg border border-dashed border-slate-300 px-4 text-[12.5px] font-semibold text-slate-500"
           >
             <Plus size={14} strokeWidth={2.4} />
             Add question
@@ -313,7 +367,7 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
             type="button"
             onClick={() => setBankPickerOpen((open) => !open)}
             disabled={bankItems.length === 0}
-            className="flex h-10 items-center gap-2 rounded-lg border border-dashed border-slate-300 px-4 text-[12.5px] font-semibold text-slate-500 hover:border-brand-400 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="hover:border-brand-400 hover:text-brand-700 flex h-10 items-center gap-2 rounded-lg border border-dashed border-slate-300 px-4 text-[12.5px] font-semibold text-slate-500 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Plus size={14} strokeWidth={2.4} />
             Add from bank
@@ -323,15 +377,27 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
         {bankPickerOpen && (
           <div className="mt-3 flex flex-col gap-1.5 rounded-xl border border-slate-200 bg-white p-3">
             {bankItems.length === 0 ? (
-              <p className="text-[12.5px] text-slate-400">No bank items available.</p>
+              <p className="text-[12.5px] text-slate-400">
+                No bank items available.
+              </p>
             ) : (
               bankItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 hover:bg-slate-50">
-                  <span className="truncate text-[13px] text-slate-700">{item.prompt}</span>
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 hover:bg-slate-50"
+                >
+                  <span className="truncate text-[13px] text-slate-700">
+                    {item.prompt}
+                  </span>
                   <button
                     type="button"
-                    onClick={() => setQuestions((prev) => [...prev, bankQuestionDraft(nextQuestionKey(), item)])}
-                    className="flex-shrink-0 text-[12px] font-semibold text-brand-600 hover:text-brand-700"
+                    onClick={() =>
+                      setQuestions((prev) => [
+                        ...prev,
+                        bankQuestionDraft(nextQuestionKey(), item),
+                      ])
+                    }
+                    className="text-brand-600 hover:text-brand-700 flex-shrink-0 text-[12px] font-semibold"
                   >
                     + Add
                   </button>

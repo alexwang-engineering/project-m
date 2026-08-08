@@ -31,7 +31,9 @@ const signedOutCancel: CancelCalendarEventResult = {
 };
 
 /** Creates a calendar event and refreshes the calendar page. */
-export async function createCalendarEventAction(input: unknown): Promise<CreateCalendarEventResult> {
+export async function createCalendarEventAction(
+  input: unknown,
+): Promise<CreateCalendarEventResult> {
   const client = await authenticatedClient();
   if (!client) return signedOutCreate;
   const result = await createCalendarEvent(client, input);
@@ -40,7 +42,9 @@ export async function createCalendarEventAction(input: unknown): Promise<CreateC
 }
 
 /** Cancels a calendar event and refreshes the calendar page. */
-export async function cancelCalendarEventAction(input: unknown): Promise<CancelCalendarEventResult> {
+export async function cancelCalendarEventAction(
+  input: unknown,
+): Promise<CancelCalendarEventResult> {
   const client = await authenticatedClient();
   if (!client) return signedOutCancel;
   const result = await cancelCalendarEvent(client, input);

@@ -12,7 +12,13 @@ interface SubPageHeaderProps {
 }
 
 /** Shared sticky header shell for every non-dashboard page - back link, title, optional badge/actions. */
-export function SubPageHeader({ backHref, backLabel, title, badge, actions }: SubPageHeaderProps) {
+export function SubPageHeader({
+  backHref,
+  backLabel,
+  title,
+  badge,
+  actions,
+}: SubPageHeaderProps) {
   return (
     <header className="sticky top-0 z-40 flex h-[68px] items-center justify-between gap-4 border-b border-slate-200 bg-white/85 px-8 backdrop-blur">
       <div className="flex items-center gap-4">
@@ -29,7 +35,9 @@ export function SubPageHeader({ backHref, backLabel, title, badge, actions }: Su
             M
           </div>
         )}
-        <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">{title}</span>
+        <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">
+          {title}
+        </span>
         {badge}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}

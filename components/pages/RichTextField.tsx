@@ -65,7 +65,7 @@ export function RichTextField({
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white focus-within:border-brand-400">
+    <div className="focus-within:border-brand-400 rounded-lg border border-slate-200 bg-white">
       {toolbar && (
         <div className="flex items-center gap-1 border-b border-slate-200 px-2 py-1">
           <button

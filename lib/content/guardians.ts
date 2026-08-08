@@ -25,15 +25,24 @@ export interface GuardianLink {
 }
 
 /** Lists all guardian links for admin management. RLS scopes this to institution_admin. */
-export async function listGuardianLinks(client: Client): Promise<readonly GuardianLink[]> {
+export async function listGuardianLinks(
+  client: Client,
+): Promise<readonly GuardianLink[]> {
   const { data, error } = await client
     .from('guardian_links')
-    .select('id, pupil_id, guardian_email, reason, created_at, activated_at, revoked_at, profiles!guardian_links_pupil_id_fkey(email)')
+    .select(
+      'id, pupil_id, guardian_email, reason, created_at, activated_at, revoked_at, profiles!guardian_links_pupil_id_fkey(email)',
+    )
     .order('created_at', { ascending: false });
   if (error) throw error;
 
   return (data ?? [])
-    .filter((row): row is typeof row & { profiles: NonNullable<typeof row.profiles> } => row.profiles !== null)
+    .filter(
+      (
+        row,
+      ): row is typeof row & { profiles: NonNullable<typeof row.profiles> } =>
+        row.profiles !== null,
+    )
     .map((row) => ({
       id: row.id,
       pupilId: row.pupil_id,
@@ -48,24 +57,51 @@ export async function listGuardianLinks(client: Client): Promise<readonly Guardi
 
 export type LinkGuardianResult =
   | { readonly ok: true; readonly link: { readonly id: string } }
-  | { readonly ok: false; readonly code: 'invalid_input' | 'forbidden' | 'not_found' | 'conflict' | 'failed'; readonly message: string };
+  | {
+      readonly ok: false;
+      readonly code:
+        'invalid_input' | 'forbidden' | 'not_found' | 'conflict' | 'failed';
+      readonly message: string;
+    };
 
 /** Validates and creates a guardian link via the audited RPC. institution_admin only. */
-export async function linkGuardian(client: Client, input: unknown): Promise<LinkGuardianResult> {
+export async function linkGuardian(
+  client: Client,
+  input: unknown,
+): Promise<LinkGuardianResult> {
   const value =
     input !== null && typeof input === 'object' && !Array.isArray(input)
       ? (input as Record<string, unknown>)
       : null;
-  if (!value || typeof value.pupilId !== 'string' || !UUID.test(value.pupilId)) {
-    return { ok: false, code: 'invalid_input', message: 'Pupil ID is invalid.' };
+  if (
+    !value ||
+    typeof value.pupilId !== 'string' ||
+    !UUID.test(value.pupilId)
+  ) {
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Pupil ID is invalid.',
+    };
   }
-  const guardianEmail = typeof value.guardianEmail === 'string' ? value.guardianEmail.trim().toLowerCase() : '';
+  const guardianEmail =
+    typeof value.guardianEmail === 'string'
+      ? value.guardianEmail.trim().toLowerCase()
+      : '';
   if (!EMAIL.test(guardianEmail)) {
-    return { ok: false, code: 'invalid_input', message: 'A valid guardian email address is required.' };
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'A valid guardian email address is required.',
+    };
   }
   const reason = typeof value.reason === 'string' ? value.reason.trim() : '';
   if (!reason) {
-    return { ok: false, code: 'invalid_input', message: 'A reason is required to link a guardian.' };
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'A reason is required to link a guardian.',
+    };
   }
 
   const { data, error } = await client.rpc('link_guardian', {
@@ -76,12 +112,26 @@ export async function linkGuardian(client: Client, input: unknown): Promise<Link
   });
   if (error || !data) {
     const code =
-      error !== null && typeof error === 'object' && 'code' in error && typeof error.code === 'string'
+      error !== null &&
+      typeof error === 'object' &&
+      'code' in error &&
+      typeof error.code === 'string'
         ? error.code
         : undefined;
-    if (code === '42501') return { ok: false, code: 'forbidden', message: 'You must be an institution administrator to do this.' };
-    if (code === 'P0002') return { ok: false, code: 'not_found', message: 'Pupil not found.' };
-    if (code === '23505') return { ok: false, code: 'conflict', message: 'This guardian is already linked to this pupil.' };
+    if (code === '42501')
+      return {
+        ok: false,
+        code: 'forbidden',
+        message: 'You must be an institution administrator to do this.',
+      };
+    if (code === 'P0002')
+      return { ok: false, code: 'not_found', message: 'Pupil not found.' };
+    if (code === '23505')
+      return {
+        ok: false,
+        code: 'conflict',
+        message: 'This guardian is already linked to this pupil.',
+      };
     if (code === '22023') {
       return {
         ok: false,
@@ -92,17 +142,28 @@ export async function linkGuardian(client: Client, input: unknown): Promise<Link
             : 'Invalid guardian link details.',
       };
     }
-    return { ok: false, code: 'failed', message: 'The guardian link could not be created.' };
+    return {
+      ok: false,
+      code: 'failed',
+      message: 'The guardian link could not be created.',
+    };
   }
   return { ok: true, link: { id: data.id } };
 }
 
 export type RevokeGuardianLinkResult =
   | { readonly ok: true }
-  | { readonly ok: false; readonly code: 'invalid_input' | 'forbidden' | 'not_found' | 'failed'; readonly message: string };
+  | {
+      readonly ok: false;
+      readonly code: 'invalid_input' | 'forbidden' | 'not_found' | 'failed';
+      readonly message: string;
+    };
 
 /** Revokes a guardian link via the audited RPC. institution_admin only. */
-export async function revokeGuardianLink(client: Client, input: unknown): Promise<RevokeGuardianLinkResult> {
+export async function revokeGuardianLink(
+  client: Client,
+  input: unknown,
+): Promise<RevokeGuardianLinkResult> {
   const value =
     input !== null && typeof input === 'object' && !Array.isArray(input)
       ? (input as Record<string, unknown>)
@@ -117,12 +178,29 @@ export async function revokeGuardianLink(client: Client, input: unknown): Promis
   });
   if (!error) return { ok: true };
   const code =
-    error !== null && typeof error === 'object' && 'code' in error && typeof error.code === 'string'
+    error !== null &&
+    typeof error === 'object' &&
+    'code' in error &&
+    typeof error.code === 'string'
       ? error.code
       : undefined;
-  if (code === '42501') return { ok: false, code: 'forbidden', message: 'You must be an institution administrator to do this.' };
-  if (code === 'P0002') return { ok: false, code: 'not_found', message: 'Guardian link not found.' };
-  return { ok: false, code: 'failed', message: 'The guardian link could not be revoked.' };
+  if (code === '42501')
+    return {
+      ok: false,
+      code: 'forbidden',
+      message: 'You must be an institution administrator to do this.',
+    };
+  if (code === 'P0002')
+    return {
+      ok: false,
+      code: 'not_found',
+      message: 'Guardian link not found.',
+    };
+  return {
+    ok: false,
+    code: 'failed',
+    message: 'The guardian link could not be revoked.',
+  };
 }
 
 // -----------------------------------------------------------------------
@@ -138,7 +216,10 @@ export interface Pupil {
 export async function listMyPupils(client: Client): Promise<readonly Pupil[]> {
   const { data, error } = await client.rpc('list_my_pupils');
   if (error) throw error;
-  return (data ?? []).map((row) => ({ id: row.pupil_id, email: row.pupil_email }));
+  return (data ?? []).map((row) => ({
+    id: row.pupil_id,
+    email: row.pupil_email,
+  }));
 }
 
 export interface PupilCalendarItem {
@@ -151,8 +232,13 @@ export interface PupilCalendarItem {
 }
 
 /** Returns a linked pupil's upcoming deadlines and events. Fails closed if the caller isn't an authorized guardian of this pupil. */
-export async function getPupilCalendar(client: Client, pupilId: string): Promise<readonly PupilCalendarItem[]> {
-  const { data, error } = await client.rpc('guardian_view_calendar', { target_pupil_id: pupilId });
+export async function getPupilCalendar(
+  client: Client,
+  pupilId: string,
+): Promise<readonly PupilCalendarItem[]> {
+  const { data, error } = await client.rpc('guardian_view_calendar', {
+    target_pupil_id: pupilId,
+  });
   if (error) throw error;
   return (data ?? []).map((row) => ({
     id: row.item_id,
@@ -173,8 +259,13 @@ export interface PupilAnnouncement {
 }
 
 /** Returns a linked pupil's authorized announcements. Fails closed if the caller isn't an authorized guardian of this pupil. */
-export async function getPupilAnnouncements(client: Client, pupilId: string): Promise<readonly PupilAnnouncement[]> {
-  const { data, error } = await client.rpc('guardian_view_announcements', { target_pupil_id: pupilId });
+export async function getPupilAnnouncements(
+  client: Client,
+  pupilId: string,
+): Promise<readonly PupilAnnouncement[]> {
+  const { data, error } = await client.rpc('guardian_view_announcements', {
+    target_pupil_id: pupilId,
+  });
   if (error) throw error;
   return (data ?? []).map((row) => ({
     id: row.item_id,
@@ -194,8 +285,13 @@ export interface PupilGrade {
 }
 
 /** Returns a linked pupil's graded assignment submissions. Fails closed if the caller isn't an authorized guardian of this pupil. */
-export async function getPupilGrades(client: Client, pupilId: string): Promise<readonly PupilGrade[]> {
-  const { data, error } = await client.rpc('guardian_view_grades', { target_pupil_id: pupilId });
+export async function getPupilGrades(
+  client: Client,
+  pupilId: string,
+): Promise<readonly PupilGrade[]> {
+  const { data, error } = await client.rpc('guardian_view_grades', {
+    target_pupil_id: pupilId,
+  });
   if (error) throw error;
   return (data ?? [])
     .filter((row): row is typeof row & { grade: number } => row.grade !== null)

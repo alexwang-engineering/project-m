@@ -24,13 +24,33 @@ async function toDraftBlocks(
         case 'paragraph':
           return { id: block.id, type: 'paragraph', html: block.html };
         case 'heading':
-          return { id: block.id, type: 'heading', level: block.level, html: block.html };
+          return {
+            id: block.id,
+            type: 'heading',
+            level: block.level,
+            html: block.html,
+          };
         case 'list':
-          return { id: block.id, type: 'list', ordered: block.ordered, items: [...block.items] };
+          return {
+            id: block.id,
+            type: 'list',
+            ordered: block.ordered,
+            items: [...block.items],
+          };
         case 'quote':
-          return { id: block.id, type: 'quote', html: block.html, attribution: block.attribution ?? '' };
+          return {
+            id: block.id,
+            type: 'quote',
+            html: block.html,
+            attribution: block.attribution ?? '',
+          };
         case 'code':
-          return { id: block.id, type: 'code', code: block.code, language: block.language ?? '' };
+          return {
+            id: block.id,
+            type: 'code',
+            code: block.code,
+            language: block.language ?? '',
+          };
         case 'callout':
           return {
             id: block.id,
@@ -40,7 +60,13 @@ async function toDraftBlocks(
             html: block.html,
           };
         case 'file':
-          return { id: block.id, type: 'file', fileId: block.fileId, label: block.label, uploading: false };
+          return {
+            id: block.id,
+            type: 'file',
+            fileId: block.fileId,
+            label: block.label,
+            uploading: false,
+          };
         case 'image': {
           const download = await createFileDownload(client, block.fileId);
           return {

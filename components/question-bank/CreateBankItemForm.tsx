@@ -24,7 +24,10 @@ const CHOICE_IDS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const fieldClass =
   'rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] text-slate-800 outline-none focus:border-brand-400';
 
-export function CreateBankItemForm({ writableTags, onCreated }: CreateBankItemFormProps) {
+export function CreateBankItemForm({
+  writableTags,
+  onCreated,
+}: CreateBankItemFormProps) {
   const [prompt, setPrompt] = useState('');
   const [choices, setChoices] = useState<ChoiceDraft[]>([
     { id: 'a', label: '' },
@@ -36,7 +39,10 @@ export function CreateBankItemForm({ writableTags, onCreated }: CreateBankItemFo
   const [error, setError] = useState<string | null>(null);
 
   const canSave =
-    prompt.trim() !== '' && choices.every((c) => c.label.trim() !== '') && tagIds.size > 0 && !saving;
+    prompt.trim() !== '' &&
+    choices.every((c) => c.label.trim() !== '') &&
+    tagIds.size > 0 &&
+    !saving;
 
   async function handleCreate() {
     setSaving(true);
@@ -64,7 +70,9 @@ export function CreateBankItemForm({ writableTags, onCreated }: CreateBankItemFo
 
   return (
     <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4">
-      <p className="mb-3 text-[13px] font-semibold text-slate-900">Create a bank item</p>
+      <p className="mb-3 text-[13px] font-semibold text-slate-900">
+        Create a bank item
+      </p>
       <div className="flex flex-col gap-2.5">
         <input
           aria-label="Question prompt"
@@ -88,7 +96,11 @@ export function CreateBankItemForm({ writableTags, onCreated }: CreateBankItemFo
                 aria-label={`Choice ${cIndex + 1} text`}
                 value={choice.label}
                 onChange={(e) =>
-                  setChoices((prev) => prev.map((c) => (c.id === choice.id ? { ...c, label: e.target.value } : c)))
+                  setChoices((prev) =>
+                    prev.map((c) =>
+                      c.id === choice.id ? { ...c, label: e.target.value } : c,
+                    ),
+                  )
                 }
                 placeholder={`Choice ${cIndex + 1}`}
                 className={`${fieldClass} flex-1`}
@@ -98,7 +110,8 @@ export function CreateBankItemForm({ writableTags, onCreated }: CreateBankItemFo
                 onClick={() =>
                   setChoices((prev) => {
                     const next = prev.filter((c) => c.id !== choice.id);
-                    if (correctChoiceId === choice.id) setCorrectChoiceId(next[0]?.id ?? 'a');
+                    if (correctChoiceId === choice.id)
+                      setCorrectChoiceId(next[0]?.id ?? 'a');
                     return next;
                   })
                 }
@@ -119,7 +132,7 @@ export function CreateBankItemForm({ writableTags, onCreated }: CreateBankItemFo
               })
             }
             disabled={choices.length >= CHOICE_IDS.length}
-            className="self-start text-[12.5px] font-semibold text-brand-600 hover:text-brand-700 disabled:opacity-40"
+            className="text-brand-600 hover:text-brand-700 self-start text-[12.5px] font-semibold disabled:opacity-40"
           >
             + Add choice
           </button>
@@ -127,7 +140,9 @@ export function CreateBankItemForm({ writableTags, onCreated }: CreateBankItemFo
 
         <div className="flex flex-wrap gap-1.5 border-t border-slate-100 pt-3">
           {writableTags.length === 0 && (
-            <p className="text-[12px] text-slate-400">You have no tags you can publish to.</p>
+            <p className="text-[12px] text-slate-400">
+              You have no tags you can publish to.
+            </p>
           )}
           {writableTags.map((tag) => {
             const active = tagIds.has(tag.id);
@@ -160,9 +175,13 @@ export function CreateBankItemForm({ writableTags, onCreated }: CreateBankItemFo
             type="button"
             onClick={handleCreate}
             disabled={!canSave}
-            className="flex h-8 items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-[12px] font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="bg-brand-600 hover:bg-brand-700 flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {saving ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} strokeWidth={2.4} />}
+            {saving ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <Plus size={12} strokeWidth={2.4} />
+            )}
             Create
           </button>
         </div>

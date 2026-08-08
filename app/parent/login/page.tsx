@@ -7,7 +7,9 @@ import { createClient } from '@/lib/supabase/client';
 
 export default function ParentLoginPage() {
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>(
+    'idle',
+  );
   const [message, setMessage] = useState('');
 
   async function handleSubmit() {
@@ -15,7 +17,9 @@ export default function ParentLoginPage() {
     setStatus('sending');
     const { error } = await createClient().auth.signInWithOtp({
       email: email.trim().toLowerCase(),
-      options: { emailRedirectTo: `${window.location.origin}/auth/guardian-callback` },
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/guardian-callback`,
+      },
     });
     if (error) {
       setStatus('error');
@@ -31,9 +35,12 @@ export default function ParentLoginPage() {
         <div className="mb-1 flex h-8 w-8 items-center justify-center rounded-[9px] bg-[#254889] text-[15px] font-bold text-white">
           M
         </div>
-        <h1 className="mt-3 text-[18px] font-bold tracking-tight text-slate-900">Parent &amp; guardian sign-in</h1>
+        <h1 className="mt-3 text-[18px] font-bold tracking-tight text-slate-900">
+          Parent &amp; guardian sign-in
+        </h1>
         <p className="mt-1 text-[13px] text-slate-500">
-          We&apos;ll email you a one-time sign-in link. You must already be linked to a pupil by the school.
+          We&apos;ll email you a one-time sign-in link. You must already be
+          linked to a pupil by the school.
         </p>
 
         {status === 'sent' ? (
@@ -48,18 +55,22 @@ export default function ParentLoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="rounded-lg border border-slate-200 px-3 py-2 text-[13.5px] text-slate-800 outline-none focus:border-brand-400"
+              className="focus:border-brand-400 rounded-lg border border-slate-200 px-3 py-2 text-[13.5px] text-slate-800 outline-none"
             />
             <button
               type="button"
               onClick={handleSubmit}
               disabled={status === 'sending' || !email.trim()}
-              className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-brand-600 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="bg-brand-600 hover:bg-brand-700 flex h-9 items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {status === 'sending' && <Loader2 size={14} className="animate-spin" />}
+              {status === 'sending' && (
+                <Loader2 size={14} className="animate-spin" />
+              )}
               Send sign-in link
             </button>
-            {status === 'error' && <p className="text-[12.5px] text-red-600">{message}</p>}
+            {status === 'error' && (
+              <p className="text-[12.5px] text-red-600">{message}</p>
+            )}
           </div>
         )}
       </div>

@@ -4,14 +4,20 @@ import { toCsv } from '@/lib/csv-export';
 
 describe('toCsv', () => {
   it('quotes and escapes cells containing commas, quotes, or newlines', () => {
-    const csv = toCsv(['a', 'b'], [['has,comma', 'has"quote'], ['line\nbreak', 'plain']]);
+    const csv = toCsv(
+      ['a', 'b'],
+      [
+        ['has,comma', 'has"quote'],
+        ['line\nbreak', 'plain'],
+      ],
+    );
     expect(csv).toContain('"has,comma"');
     expect(csv).toContain('"has""quote"');
     expect(csv).toContain('"line\nbreak"');
   });
 
   it('neutralizes a formula-injection payload with a leading apostrophe', () => {
-    const csv = toCsv(['reason'], [['=cmd|\'/C calc\'!A1']]);
+    const csv = toCsv(['reason'], [["=cmd|'/C calc'!A1"]]);
     const [, dataLine] = csv.split('\r\n');
     expect(dataLine).toBe("'=cmd|'/C calc'!A1");
     expect(dataLine!.startsWith("'=")).toBe(true);

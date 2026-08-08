@@ -13,13 +13,17 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   if (!code || code.length > 2048) {
-    return NextResponse.redirect(new URL('/parent/login?error=invalid_callback', url.origin));
+    return NextResponse.redirect(
+      new URL('/parent/login?error=invalid_callback', url.origin),
+    );
   }
 
   const client = await createServerClient();
   const { error } = await client.auth.exchangeCodeForSession(code);
   if (error) {
-    return NextResponse.redirect(new URL('/parent/login?error=invalid_callback', url.origin));
+    return NextResponse.redirect(
+      new URL('/parent/login?error=invalid_callback', url.origin),
+    );
   }
   return NextResponse.redirect(new URL('/parent', url.origin), {
     headers: { 'Cache-Control': 'private, no-store' },

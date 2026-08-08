@@ -22,11 +22,13 @@ function QuizCard({ quiz }: { quiz: QuizSummary }) {
   return (
     <Link
       href={`/quizzes/${quiz.id}`}
-      className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-[18px] shadow-sm transition hover:border-brand-300"
+      className="hover:border-brand-300 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-[18px] shadow-sm transition"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[14px] font-semibold leading-snug tracking-tight text-slate-900">{quiz.title}</p>
+          <p className="text-[14px] leading-snug font-semibold tracking-tight text-slate-900">
+            {quiz.title}
+          </p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {quiz.tags.map((tag) => (
               <span
@@ -49,7 +51,11 @@ function QuizCard({ quiz }: { quiz: QuizSummary }) {
         <Clock size={13} strokeWidth={2} />
         {quiz.dueAt ? (
           <span
-            className={overdue && !quiz.hasAttempted ? 'font-semibold text-[#c2483a]' : ''}
+            className={
+              overdue && !quiz.hasAttempted
+                ? 'font-semibold text-[#c2483a]'
+                : ''
+            }
             suppressHydrationWarning
           >
             Due {formatRelativeTime(quiz.dueAt)}
@@ -80,7 +86,7 @@ export default function QuizzesView({ quizzes }: QuizzesViewProps) {
             </Link>
             <Link
               href="/quizzes/new"
-              className="flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 text-[12.5px] font-semibold text-white transition hover:bg-brand-700"
+              className="bg-brand-600 hover:bg-brand-700 flex h-9 items-center gap-1.5 rounded-lg px-3.5 text-[12.5px] font-semibold text-white transition"
             >
               <Plus size={14} strokeWidth={2.4} />
               New quiz
@@ -89,7 +95,7 @@ export default function QuizzesView({ quizzes }: QuizzesViewProps) {
         }
       />
 
-      <main id="main-content" className="mx-auto max-w-[900px] px-8 pb-24 pt-9">
+      <main id="main-content" className="mx-auto max-w-[900px] px-8 pt-9 pb-24">
         {quizzes.length === 0 ? (
           <EmptyState
             icon={<HelpCircle size={20} strokeWidth={2} />}

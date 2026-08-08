@@ -3,7 +3,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/lib/database.types';
-import { importMigrationManifest, type MigrationManifest, type MigrationReportEntry } from '@/lib/content/migration';
+import {
+  importMigrationManifest,
+  type MigrationManifest,
+  type MigrationReportEntry,
+} from '@/lib/content/migration';
 import { createServerClient } from '@/lib/supabase/server';
 
 async function authenticatedClient(): Promise<SupabaseClient<Database> | null> {

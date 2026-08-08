@@ -12,6 +12,9 @@ export default async function QuestionBankPage() {
   const { data } = await supabase.auth.getUser();
   if (!data.user) redirect('/');
 
-  const [items, writableTags] = await Promise.all([listBankItems(supabase), listWritableTags(supabase)]);
+  const [items, writableTags] = await Promise.all([
+    listBankItems(supabase),
+    listWritableTags(supabase),
+  ]);
   return <QuestionBankView items={items} writableTags={writableTags} />;
 }

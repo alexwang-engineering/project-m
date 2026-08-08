@@ -3,7 +3,10 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database, Json } from '@/lib/database.types';
-import { parseEditorDocument, type EditorDocumentV1 } from '@/lib/content/schema';
+import {
+  parseEditorDocument,
+  type EditorDocumentV1,
+} from '@/lib/content/schema';
 
 type Client = SupabaseClient<Database>;
 const UUID =

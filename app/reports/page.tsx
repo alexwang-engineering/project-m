@@ -20,5 +20,10 @@ export default async function ReportsPage() {
     getContentSummary(supabase),
   ]);
 
-  return <ReportsView rosterSummary={rosterSummary} contentSummary={contentSummary} />;
+  return (
+    <ReportsView
+      rosterSummary={rosterSummary}
+      contentSummary={contentSummary}
+    />
+  );
 }

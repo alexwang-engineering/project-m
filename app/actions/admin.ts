@@ -27,7 +27,9 @@ const signedOut: AdminActionResult = {
 };
 
 /** Grants a system role and refreshes the admin roster. Institution-admin check happens in the RPC itself. */
-export async function assignSystemRoleAction(input: unknown): Promise<AdminActionResult> {
+export async function assignSystemRoleAction(
+  input: unknown,
+): Promise<AdminActionResult> {
   const client = await authenticatedClient();
   if (!client) return signedOut;
   const result = await assignSystemRole(client, input);
@@ -36,7 +38,9 @@ export async function assignSystemRoleAction(input: unknown): Promise<AdminActio
 }
 
 /** Grants a tag membership and refreshes the admin roster. */
-export async function assignTagMembershipAction(input: unknown): Promise<AdminActionResult> {
+export async function assignTagMembershipAction(
+  input: unknown,
+): Promise<AdminActionResult> {
   const client = await authenticatedClient();
   if (!client) return signedOut;
   const result = await assignTagMembership(client, input);
@@ -45,7 +49,9 @@ export async function assignTagMembershipAction(input: unknown): Promise<AdminAc
 }
 
 /** Enables or disables a profile and refreshes the admin roster. */
-export async function setProfileStateAction(input: unknown): Promise<AdminActionResult> {
+export async function setProfileStateAction(
+  input: unknown,
+): Promise<AdminActionResult> {
   const client = await authenticatedClient();
   if (!client) return signedOut;
   const result = await setProfileState(client, input);
@@ -60,7 +66,9 @@ const signedOutTag: CreateTagResult = {
 };
 
 /** Creates a tag and refreshes the admin page (and anywhere else tag pickers are rendered). */
-export async function createTagAction(input: unknown): Promise<CreateTagResult> {
+export async function createTagAction(
+  input: unknown,
+): Promise<CreateTagResult> {
   const client = await authenticatedClient();
   if (!client) return signedOutTag;
   const result = await createTag(client, input);

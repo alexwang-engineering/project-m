@@ -96,7 +96,15 @@ export function newBlock(type: BlockDraft['type']): BlockDraft {
     case 'file':
       return { id, type, fileId: '', label: '', uploading: false };
     case 'image':
-      return { id, type, fileId: '', alt: '', captionHtml: '', previewUrl: '', uploading: false };
+      return {
+        id,
+        type,
+        fileId: '',
+        alt: '',
+        captionHtml: '',
+        previewUrl: '',
+        uploading: false,
+      };
   }
 }
 
@@ -106,7 +114,12 @@ export function serializeBlock(block: BlockDraft): Record<string, unknown> {
     case 'paragraph':
       return { id: block.id, type: block.type, html: block.html };
     case 'heading':
-      return { id: block.id, type: block.type, level: block.level, html: block.html };
+      return {
+        id: block.id,
+        type: block.type,
+        level: block.level,
+        html: block.html,
+      };
     case 'list':
       return {
         id: block.id,
@@ -119,7 +132,9 @@ export function serializeBlock(block: BlockDraft): Record<string, unknown> {
         id: block.id,
         type: block.type,
         html: block.html,
-        ...(block.attribution.trim() ? { attribution: block.attribution.trim() } : {}),
+        ...(block.attribution.trim()
+          ? { attribution: block.attribution.trim() }
+          : {}),
       };
     case 'code':
       return {
@@ -137,7 +152,12 @@ export function serializeBlock(block: BlockDraft): Record<string, unknown> {
         html: block.html,
       };
     case 'file':
-      return { id: block.id, type: block.type, fileId: block.fileId, label: block.label };
+      return {
+        id: block.id,
+        type: block.type,
+        fileId: block.fileId,
+        label: block.label,
+      };
     case 'image':
       return {
         id: block.id,
@@ -162,7 +182,9 @@ export function isBlockReady(block: BlockDraft): boolean {
     case 'code':
       return block.code.trim() !== '';
     case 'file':
-      return block.fileId !== '' && !block.uploading && block.label.trim() !== '';
+      return (
+        block.fileId !== '' && !block.uploading && block.label.trim() !== ''
+      );
     case 'image':
       return block.fileId !== '' && !block.uploading && block.alt.trim() !== '';
   }

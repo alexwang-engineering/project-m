@@ -62,7 +62,9 @@ const signedOutCreate: CreateAssignmentResult = {
 };
 
 /** Creates an assignment and refreshes the assignments list. */
-export async function createAssignmentAction(input: unknown): Promise<CreateAssignmentResult> {
+export async function createAssignmentAction(
+  input: unknown,
+): Promise<CreateAssignmentResult> {
   const client = await authenticatedClient();
   if (!client) return signedOutCreate;
   const result = await createAssignment(client, input);

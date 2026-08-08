@@ -12,6 +12,9 @@ export default async function NewQuizPage() {
   const { data } = await supabase.auth.getUser();
   if (!data.user) redirect('/');
 
-  const [writableTags, bankItems] = await Promise.all([listWritableTags(supabase), listBankItems(supabase)]);
+  const [writableTags, bankItems] = await Promise.all([
+    listWritableTags(supabase),
+    listBankItems(supabase),
+  ]);
   return <QuizEditor writableTags={writableTags} bankItems={bankItems} />;
 }

@@ -31,7 +31,9 @@ const signedOutAttempt: QuizActionResult = {
 };
 
 /** Creates a quiz + its questions and refreshes the quizzes list. */
-export async function createQuizAction(input: unknown): Promise<CreateQuizResult> {
+export async function createQuizAction(
+  input: unknown,
+): Promise<CreateQuizResult> {
   const client = await authenticatedClient();
   if (!client) return signedOutCreate;
   const result = await createQuiz(client, input);
@@ -40,11 +42,18 @@ export async function createQuizAction(input: unknown): Promise<CreateQuizResult
 }
 
 /** Submits a graded attempt and refreshes the quiz detail page. */
-export async function submitQuizAttemptAction(input: unknown): Promise<QuizActionResult> {
+export async function submitQuizAttemptAction(
+  input: unknown,
+): Promise<QuizActionResult> {
   const client = await authenticatedClient();
   if (!client) return signedOutAttempt;
   const result = await submitQuizAttempt(client, input);
-  if (result.ok && typeof input === 'object' && input !== null && 'quizId' in input) {
+  if (
+    result.ok &&
+    typeof input === 'object' &&
+    input !== null &&
+    'quizId' in input
+  ) {
     revalidatePath(`/quizzes/${(input as { quizId: string }).quizId}`);
   }
   return result;

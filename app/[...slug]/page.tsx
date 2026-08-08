@@ -31,9 +31,7 @@ async function loadBlockFiles(
   const entries = await Promise.all(
     fileIds.map(async (fileId) => {
       const result = await createFileDownload(client, fileId);
-      return result.ok
-        ? ([fileId, { ...result.download }] as const)
-        : null;
+      return result.ok ? ([fileId, { ...result.download }] as const) : null;
     }),
   );
   return Object.fromEntries(entries.filter((entry) => entry !== null));
@@ -57,12 +55,19 @@ export default async function CanonicalPage({ params }: RouteParams) {
     if (userData.user) {
       const writable = await listWritableTags(supabase);
       const writableIds = new Set(writable.map((tag) => tag.id));
-      if (tagIds.length > 0 && tagIds.every((tagId) => writableIds.has(tagId))) {
+      if (
+        tagIds.length > 0 &&
+        tagIds.every((tagId) => writableIds.has(tagId))
+      ) {
         editHref = `/pages/${id}/edit`;
       }
     }
     return (
-      <PageRenderer page={{ id, title, content }} files={files} editHref={editHref} />
+      <PageRenderer
+        page={{ id, title, content }}
+        files={files}
+        editHref={editHref}
+      />
     );
   }
   if (resolution.kind === 'redirect') redirect(resolution.destination);

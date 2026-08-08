@@ -31,7 +31,9 @@ const signedOutCancel: CancelAnnouncementResult = {
 };
 
 /** Posts an announcement and refreshes the announcements page. */
-export async function createAnnouncementAction(input: unknown): Promise<CreateAnnouncementResult> {
+export async function createAnnouncementAction(
+  input: unknown,
+): Promise<CreateAnnouncementResult> {
   const client = await authenticatedClient();
   if (!client) return signedOutCreate;
   const result = await createAnnouncement(client, input);
@@ -40,7 +42,9 @@ export async function createAnnouncementAction(input: unknown): Promise<CreateAn
 }
 
 /** Cancels an announcement and refreshes the announcements page. */
-export async function cancelAnnouncementAction(input: unknown): Promise<CancelAnnouncementResult> {
+export async function cancelAnnouncementAction(
+  input: unknown,
+): Promise<CancelAnnouncementResult> {
   const client = await authenticatedClient();
   if (!client) return signedOutCancel;
   const result = await cancelAnnouncement(client, input);

@@ -21,9 +21,14 @@ interface QuestionBankViewProps {
   readonly writableTags: readonly EditorTag[];
 }
 
-export function QuestionBankView({ items, writableTags }: QuestionBankViewProps) {
+export function QuestionBankView({
+  items,
+  writableTags,
+}: QuestionBankViewProps) {
   const router = useRouter();
-  const [archivedIds, setArchivedIds] = useState<ReadonlySet<string>>(new Set());
+  const [archivedIds, setArchivedIds] = useState<ReadonlySet<string>>(
+    new Set(),
+  );
   const [archivingId, setArchivingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,10 +49,17 @@ export function QuestionBankView({ items, writableTags }: QuestionBankViewProps)
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
       <SkipToContentLink />
-      <SubPageHeader backHref="/quizzes" backLabel="Quizzes" title="Question bank" />
+      <SubPageHeader
+        backHref="/quizzes"
+        backLabel="Quizzes"
+        title="Question bank"
+      />
 
-      <main id="main-content" className="mx-auto max-w-[760px] px-8 pb-24 pt-9">
-        <CreateBankItemForm writableTags={writableTags} onCreated={() => router.refresh()} />
+      <main id="main-content" className="mx-auto max-w-[760px] px-8 pt-9 pb-24">
+        <CreateBankItemForm
+          writableTags={writableTags}
+          onCreated={() => router.refresh()}
+        />
 
         {error && <p className="mb-4 text-[12.5px] text-red-600">{error}</p>}
 
@@ -60,15 +72,22 @@ export function QuestionBankView({ items, writableTags }: QuestionBankViewProps)
         ) : (
           <div className="flex flex-col gap-3">
             {visibleItems.map((item) => (
-              <div key={item.id} className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-[18px] shadow-sm">
+              <div
+                key={item.id}
+                className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-[18px] shadow-sm"
+              >
                 <div>
-                  <p className="text-[14px] font-semibold leading-snug tracking-tight text-slate-900">{item.prompt}</p>
+                  <p className="text-[14px] leading-snug font-semibold tracking-tight text-slate-900">
+                    {item.prompt}
+                  </p>
                   <ul className="mt-2 flex flex-col gap-1">
                     {item.choices.map((choice) => (
                       <li
                         key={choice.id}
                         className={`text-[12.5px] ${
-                          choice.id === item.correctChoiceId ? 'font-semibold text-emerald-700' : 'text-slate-500'
+                          choice.id === item.correctChoiceId
+                            ? 'font-semibold text-emerald-700'
+                            : 'text-slate-500'
                         }`}
                       >
                         {choice.id === item.correctChoiceId ? '✓ ' : ''}
@@ -94,7 +113,11 @@ export function QuestionBankView({ items, writableTags }: QuestionBankViewProps)
                   aria-label="Archive bank item"
                   className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {archivingId === item.id ? <Loader2 size={13} className="animate-spin" /> : <X size={14} strokeWidth={2.4} />}
+                  {archivingId === item.id ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : (
+                    <X size={14} strokeWidth={2.4} />
+                  )}
                 </button>
               </div>
             ))}

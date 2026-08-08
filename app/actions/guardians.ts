@@ -31,7 +31,9 @@ const signedOutRevoke: RevokeGuardianLinkResult = {
 };
 
 /** Links a guardian to a pupil and refreshes the admin page. */
-export async function linkGuardianAction(input: unknown): Promise<LinkGuardianResult> {
+export async function linkGuardianAction(
+  input: unknown,
+): Promise<LinkGuardianResult> {
   const client = await authenticatedClient();
   if (!client) return signedOutLink;
   const result = await linkGuardian(client, input);
@@ -40,7 +42,9 @@ export async function linkGuardianAction(input: unknown): Promise<LinkGuardianRe
 }
 
 /** Revokes a guardian link and refreshes the admin page. */
-export async function revokeGuardianLinkAction(input: unknown): Promise<RevokeGuardianLinkResult> {
+export async function revokeGuardianLinkAction(
+  input: unknown,
+): Promise<RevokeGuardianLinkResult> {
   const client = await authenticatedClient();
   if (!client) return signedOutRevoke;
   const result = await revokeGuardianLink(client, input);
