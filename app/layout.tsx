@@ -1,17 +1,20 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Manrope } from 'next/font/google';
+import { IBM_Plex_Serif, IBM_Plex_Mono } from 'next/font/google';
 
 import './globals.css';
 
-const manrope = Manrope({
+const plexSerif = IBM_Plex_Serif({
   subsets: ['latin'],
-  variable: '--font-manrope',
+  weight: ['400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-plex-serif',
   display: 'swap',
 });
 
-const inter = Inter({
+const plexMono = IBM_Plex_Mono({
   subsets: ['latin'],
-  variable: '--font-inter',
+  weight: ['400', '500', '600'],
+  variable: '--font-plex-mono',
   display: 'swap',
 });
 
@@ -25,14 +28,14 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'light',
-  themeColor: '#254889',
+  themeColor: '#9c4f43',
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en-GB" className={`${manrope.variable} ${inter.variable}`}>
+    <html lang="en-GB" className={`${plexSerif.variable} ${plexMono.variable}`}>
       <body>{children}</body>
     </html>
   );

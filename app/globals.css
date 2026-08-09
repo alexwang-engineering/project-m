@@ -1,16 +1,30 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-display: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
-  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-plex-serif), ui-serif, serif;
+  --font-body: var(--font-plex-serif), ui-serif, serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
-  /* MTBS Navy is a fixed brand color, not a generated scale — kept exact. */
-  --color-brand-50: #eef2fa;
-  --color-brand-100: #dfe7f7;
-  --color-brand-200: #b9c9ec;
-  --color-brand-500: #2f57a3;
-  --color-brand-600: #254889;
-  --color-brand-700: #1c3a70;
+  /* Index Rerum theme preview — carmine ink accent, replaces MTBS Navy. */
+  --color-brand-50: #f7ece8;
+  --color-brand-100: #f1ded9;
+  --color-brand-200: #e2bcb2;
+  --color-brand-500: #b56354;
+  --color-brand-600: #9c4f43;
+  --color-brand-700: #7c3c33;
+
+  /* Warm ledger-paper neutrals, replacing Tailwind's default cool slate scale. */
+  --color-slate-50: #f8f4ea;
+  --color-slate-100: #f0e9d8;
+  --color-slate-200: #e2d6ba;
+  --color-slate-300: #cdbb95;
+  --color-slate-400: #a8916d;
+  --color-slate-500: #85714f;
+  --color-slate-600: #6b5a3d;
+  --color-slate-700: #52432c;
+  --color-slate-800: #3c3021;
+  --color-slate-900: #2a2015;
+  --color-slate-950: #1a140c;
 
   --radius-card: 1rem;
 }

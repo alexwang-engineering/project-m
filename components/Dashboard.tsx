@@ -139,11 +139,11 @@ function TopNav({
   return (
     <header className="sticky top-0 z-40 flex h-[68px] items-center justify-between gap-6 border-b border-slate-200 bg-white/85 px-8 backdrop-blur">
       <div className="flex items-center gap-2.5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-[#254889] text-[15px] font-bold text-white">
+        <div className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-[#9c4f43] text-[15px] font-bold text-white">
           M
         </div>
         <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">
-          Project <span className="text-[#254889]">M</span>
+          Project <span className="text-[#9c4f43]">M</span>
         </span>
         {signedIn && (
           <nav className="ml-6 hidden items-center gap-1 sm:flex">
@@ -248,12 +248,12 @@ function TopNav({
             }}
             className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 transition hover:border-slate-300"
           >
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#dfe7f7] text-[11.5px] font-bold text-[#254889]">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#f1ded9] text-[11.5px] font-bold text-[#9c4f43]">
               {identity.initials}
             </span>
             <span className="hidden text-left leading-tight sm:block">
               <span className="block text-[12.5px] font-semibold text-slate-900">{identity.name}</span>
-              <span className="block text-[10.5px] font-semibold uppercase tracking-wide text-[#254889]">
+              <span className="block text-[10.5px] font-semibold uppercase tracking-wide text-[#9c4f43]">
                 {identity.role}
               </span>
             </span>
@@ -265,7 +265,7 @@ function TopNav({
               <div className="px-4 pb-1 pt-3 text-[12.5px] font-bold text-slate-900">{identity.name}</div>
               <div className="px-4 pb-3 text-[11.5px] text-slate-500">{currentUser.email}</div>
               <form action="/auth/logout" method="post" className="border-t border-slate-200">
-                <button className="w-full px-4 py-2.5 text-left text-[12.5px] font-medium text-[#d0483c] hover:bg-slate-50">
+                <button className="w-full px-4 py-2.5 text-left text-[12.5px] font-medium text-[#a8402f] hover:bg-slate-50">
                   Sign out
                 </button>
               </form>
@@ -275,7 +275,7 @@ function TopNav({
         ) : (
           <Link
             href="/auth/login"
-            className="rounded-lg bg-[#254889] px-4 py-2 text-[12.5px] font-semibold text-white transition hover:bg-[#1c3a70]"
+            className="rounded-lg bg-[#9c4f43] px-4 py-2 text-[12.5px] font-semibold text-white transition hover:bg-[#7c3c33]"
           >
             Sign in with Microsoft
           </Link>
@@ -316,7 +316,7 @@ function TagRail({
               onClick={() => onSelect(tag.id)}
               className={`flex h-[34px] flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[12.5px] font-semibold transition ${
                 active
-                  ? 'border-[#254889] bg-[#254889] text-white'
+                  ? 'border-[#9c4f43] bg-[#9c4f43] text-white'
                   : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-900'
               }`}
             >
@@ -341,7 +341,7 @@ function PageCardItem({ page }: { page: PageCard }) {
       className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-[18px] text-left shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-2.5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#eef2fa] text-[#254889]">
+        <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#f7ece8] text-[#9c4f43]">
           <FileText size={17} strokeWidth={2} />
         </div>
       </div>
@@ -392,7 +392,7 @@ function FloatingActionButton() {
             href="/pages/new"
             className="flex w-full items-center gap-3 px-[15px] py-3.5 text-left hover:bg-slate-50"
           >
-            <span className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-lg bg-[#eef2fa] text-[#254889]">
+            <span className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-lg bg-[#f7ece8] text-[#9c4f43]">
               <FilePlus size={16} strokeWidth={2} />
             </span>
             <span className="flex flex-col">
@@ -406,7 +406,7 @@ function FloatingActionButton() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Create"
-        className="flex h-14 w-14 items-center justify-center rounded-full bg-[#254889] text-white shadow-[0_10px_24px_rgba(37,72,137,0.38)] transition hover:bg-[#1c3a70] active:scale-95"
+        className="flex h-14 w-14 items-center justify-center rounded-full bg-[#9c4f43] text-white shadow-[0_10px_24px_rgba(37,72,137,0.38)] transition hover:bg-[#7c3c33] active:scale-95"
       >
         {open ? <X size={22} strokeWidth={2.4} /> : <Plus size={22} strokeWidth={2.4} />}
       </button>
@@ -448,7 +448,7 @@ export default function Dashboard({
   const visiblePages = cards.filter((p) => activeTag === 'all' || p.tags.includes(activeTag));
 
   return (
-    <div className="min-h-screen bg-[#f7f8fa]">
+    <div className="min-h-screen bg-[#f3ecd8]">
       <SkipToContentLink />
       <TopNav
         identity={identity}

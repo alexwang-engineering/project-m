@@ -64,11 +64,21 @@ function isDevOnlyLoginBridge(pathname: string): boolean {
   return pathname === '/dev-login' || pathname.startsWith('/dev-login/');
 }
 
+function isDemoLogin(pathname: string): boolean {
+  return pathname === '/demo' || pathname.startsWith('/demo/');
+}
+
 /** Refreshes Supabase auth cookies; authorization remains in RLS/server code. */
 export async function proxy(request: NextRequest) {
   if (
     process.env.NODE_ENV === 'production' &&
     isDevOnlyLoginBridge(request.nextUrl.pathname)
+  ) {
+    return new NextResponse(null, { status: 404 });
+  }
+  if (
+    isDemoLogin(request.nextUrl.pathname) &&
+    process.env.DEMO_MODE !== 'true'
   ) {
     return new NextResponse(null, { status: 404 });
   }

@@ -38,3 +38,4 @@ scripts/dev-login-*.sh
 *.log
 npm-debug.log*
 *.tsbuildinfo
+.vercel
