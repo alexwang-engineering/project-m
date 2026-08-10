@@ -1,7 +1,5 @@
 import { notFound } from 'next/navigation';
 
-import { signInAsDemo } from './actions';
-
 export const dynamic = 'force-dynamic';
 
 export default async function DemoLoginPage({
@@ -34,7 +32,7 @@ export default async function DemoLoginPage({
       )}
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         {(['student', 'teacher'] as const).map((role) => (
-          <form action={signInAsDemo} key={role}>
+          <form action="/demo/login" method="post" key={role}>
             <input type="hidden" name="role" value={role} />
             <button
               className="w-full rounded-xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#9c4f43] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9c4f43]"
