@@ -48,6 +48,7 @@ function isOverdue(dueAt: string | null): boolean {
 async function submitFile(
   assignmentId: string,
   file: File,
+  note: string,
 ): Promise<
   { ok: true } | { ok: false; message: string; step: SubmissionStep }
 > {
@@ -85,6 +86,7 @@ async function submitFile(
   const submitted = await submitAssignmentAction({
     assignmentId,
     fileId: ticket.file.id,
+    note: note.trim() || undefined,
   });
   if (!submitted.ok)
     return { ok: false, message: submitted.message, step: 'recording' };
@@ -96,11 +98,15 @@ function AssignmentCard({
   assignment,
   state,
   onSelectFile,
+  note,
+  onNoteChange,
   onSubmit,
 }: {
   assignment: AssignmentSummary;
   state: SubmissionState;
   onSelectFile: (file: File | null) => void;
+  note: string;
+  onNoteChange: (note: string) => void;
   onSubmit: () => void;
 }) {
   const overdue = isOverdue(assignment.dueAt);
@@ -158,6 +164,16 @@ function AssignmentCard({
 
       {canSubmit && (
         <div className="mt-1 flex flex-col gap-2 border-t border-slate-200 pt-3">
+          <textarea
+            aria-label={`Submission note for ${assignment.title}`}
+            value={note}
+            maxLength={2000}
+            rows={2}
+            disabled={working}
+            onChange={(event) => onNoteChange(event.target.value)}
+            placeholder="Add a note for your teacher (optional)"
+            className="focus:border-brand-400 resize-none rounded-xl border border-slate-200 px-3 py-2 text-[12.5px] text-slate-700 outline-none placeholder:text-slate-400 disabled:opacity-60"
+          />
           <label className="hover:border-brand-500 hover:text-brand-600 flex h-10 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 text-[12.5px] font-medium text-slate-600 transition">
             <FileUp size={15} strokeWidth={2} />
             {state.status === 'idle' ? 'Choose a file' : state.file.name}
@@ -210,6 +226,7 @@ export default function AssignmentsView({
   canCreate,
 }: AssignmentsViewProps) {
   const [states, setStates] = useState<Record<string, SubmissionState>>({});
+  const [notes, setNotes] = useState<Record<string, string>>({});
   const [completed, setCompleted] = useState<ReadonlySet<string>>(new Set());
 
   function stateFor(id: string): SubmissionState {
@@ -232,9 +249,14 @@ export default function AssignmentsView({
       ...prev,
       [assignmentId]: { status: 'working', file, step: 'hashing' },
     }));
-    const result = await submitFile(assignmentId, file);
+    const result = await submitFile(
+      assignmentId,
+      file,
+      notes[assignmentId] ?? '',
+    );
     if (result.ok) {
       setStates((prev) => ({ ...prev, [assignmentId]: { status: 'idle' } }));
+      setNotes((prev) => ({ ...prev, [assignmentId]: '' }));
       setCompleted((prev) => new Set(prev).add(assignmentId));
     } else {
       setStates((prev) => ({
@@ -289,6 +311,13 @@ export default function AssignmentsView({
                 assignment={assignment}
                 state={stateFor(assignment.id)}
                 onSelectFile={(file) => handleSelectFile(assignment.id, file)}
+                note={notes[assignment.id] ?? ''}
+                onNoteChange={(note) =>
+                  setNotes((previous) => ({
+                    ...previous,
+                    [assignment.id]: note,
+                  }))
+                }
                 onSubmit={() => handleSubmit(assignment.id)}
               />
             ))}
