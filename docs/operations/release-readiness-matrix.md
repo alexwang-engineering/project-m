@@ -15,7 +15,7 @@ Last engineering verification: 2026-08-11. This is the handbook's completion led
 | File security | Private Storage, bounded metadata and signatures, checksum verification, recoverable worker leases, audited ready/quarantine/failure outcomes; production no-op scanner prohibited |
 | Web security | Nonce CSP in production, security headers, origin/session protections, bounded search/migration/roster/uploads, safe errors, dependency and secret scanning |
 | Accessibility baseline | Skip links/focus targets, lint rules, automated WCAG 2.2 axe checks on public routes, keyboard-aware controls |
-| Delivery | CI, production build, browser smoke tests, readiness endpoint, release/incident/restore/UAT procedures; fresh execution of the new 2026-08-11 migration chain remains gated |
+| Delivery | CI, fresh-database migration tests, production build, browser smoke tests, readiness endpoint, and release/incident/restore/UAT procedures |
 
 Latest clean local gate:
 
@@ -25,7 +25,7 @@ Latest clean local gate:
 - `npm audit --omit=dev`: zero vulnerabilities.
 - Live `GET /api/health`: HTTP 200 with local Supabase.
 
-Fresh-database migration execution for the 2026-08-11 assignment migrations remains an integration gate; the local database was not reset because its demo state has no seed file.
+GitHub CI run 31532429154 applied the complete migration chain to a fresh Supabase database and passed all pgTAP assertions on 2026-08-11.
 
 ## External release blockers
 

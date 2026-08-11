@@ -238,7 +238,7 @@ Before either agent starts a package, record its branch, worktree, exact owned f
 
 ## 8. Remaining external gates
 
-- Run the complete migration chain against a disposable fresh Supabase project; the local demo database is intentionally not reset because its seed is disabled.
+- Fresh migration-chain verification completed in GitHub CI on 2026-08-11.
 - Obtain school policy approval before adding completion-only responses, comment-only responses, return-for-correction, bulk grade release, or CSV export.
 - Re-open inline PDF annotation only with representative devices and an accessibility test owner.
 - Deploy the share demo only after CI and the fresh-database gate pass.
