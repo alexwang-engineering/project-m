@@ -96,6 +96,7 @@ async function submitFile(
 
 function AssignmentCard({
   assignment,
+  viewerCanSubmit,
   state,
   onSelectFile,
   note,
@@ -103,6 +104,7 @@ function AssignmentCard({
   onSubmit,
 }: {
   assignment: AssignmentSummary;
+  viewerCanSubmit: boolean;
   state: SubmissionState;
   onSelectFile: (file: File | null) => void;
   note: string;
@@ -110,7 +112,9 @@ function AssignmentCard({
   onSubmit: () => void;
 }) {
   const overdue = isOverdue(assignment.dueAt);
-  const canSubmit = !assignment.hasSubmitted || assignment.allowResubmission;
+  const canSubmit =
+    viewerCanSubmit &&
+    (!assignment.hasSubmitted || assignment.allowResubmission);
   const working = state.status === 'working';
 
   return (
@@ -309,6 +313,7 @@ export default function AssignmentsView({
               <AssignmentCard
                 key={assignment.id}
                 assignment={assignment}
+                viewerCanSubmit={!canCreate}
                 state={stateFor(assignment.id)}
                 onSelectFile={(file) => handleSelectFile(assignment.id, file)}
                 note={notes[assignment.id] ?? ''}
