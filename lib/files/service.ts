@@ -3,6 +3,7 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/lib/database.types';
+import type { EditorDocumentV1 } from '@/lib/content/schema';
 
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -65,6 +66,23 @@ export interface FileStatus {
   readonly quarantineReason: string | null;
 }
 export type FileStatusResult = FileStatus | FileServiceFailure;
+
+/** Resolves only authorized file/image blocks to short-lived download metadata. */
+export async function createBlockFileDownloads(
+  client: Client,
+  content: EditorDocumentV1,
+): Promise<Readonly<Record<string, FileDownload['download']>>> {
+  const fileIds = content.blocks
+    .filter((block) => block.type === 'file' || block.type === 'image')
+    .map((block) => block.fileId);
+  const entries = await Promise.all(
+    fileIds.map(async (fileId) => {
+      const result = await createFileDownload(client, fileId);
+      return result.ok ? ([fileId, result.download] as const) : null;
+    }),
+  );
+  return Object.fromEntries(entries.filter((entry) => entry !== null));
+}
 
 function failure(error: unknown): FileServiceFailure {
   const code =

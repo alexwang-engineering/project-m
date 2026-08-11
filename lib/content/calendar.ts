@@ -36,11 +36,15 @@ export async function listUpcoming(
   client: Client,
   limit = 50,
 ): Promise<readonly CalendarItem[]> {
+  const {
+    data: { user },
+  } = await client.auth.getUser();
   const [assignments, quizzes, events] = await Promise.all([
     client
       .from('assignments')
-      .select('id, title, due_at')
-      .not('due_at', 'is', null)
+      .select(
+        'id, title, due_at, assignment_exceptions(student_id, extended_due_at)',
+      )
       .order('due_at', { ascending: true })
       .limit(limit),
     client
@@ -62,16 +66,25 @@ export async function listUpcoming(
   if (events.error) throw events.error;
 
   const items: CalendarItem[] = [
-    ...(assignments.data ?? []).map((a) => ({
-      id: a.id,
-      kind: 'assignment' as const,
-      title: a.title,
-      at: a.due_at as string,
-      endsAt: null,
-      isBroadcast: false,
-      tags: [],
-      createdBy: null,
-    })),
+    ...(assignments.data ?? []).flatMap((a) => {
+      const at =
+        a.assignment_exceptions.find((x) => x.student_id === user?.id)
+          ?.extended_due_at ?? a.due_at;
+      return at
+        ? [
+            {
+              id: a.id,
+              kind: 'assignment' as const,
+              title: a.title,
+              at,
+              endsAt: null,
+              isBroadcast: false,
+              tags: [],
+              createdBy: null,
+            },
+          ]
+        : [];
+    }),
     ...(quizzes.data ?? []).map((q) => ({
       id: q.id,
       kind: 'quiz' as const,

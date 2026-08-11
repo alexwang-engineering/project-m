@@ -173,6 +173,29 @@ function Block({
   }
 }
 
+/** Renders page blocks without the standalone canonical-page shell. */
+export function PageBlocks({
+  content,
+  files,
+}: {
+  readonly content: EditorDocumentV1;
+  readonly files: Readonly<Record<string, BlockFileInfo>>;
+}) {
+  return (
+    <div className="flex flex-col gap-5">
+      {content.blocks.length === 0 ? (
+        <p className="text-[14px] text-slate-400">
+          This page has no content yet.
+        </p>
+      ) : (
+        content.blocks.map((block) => (
+          <Block key={block.id} block={block} files={files} />
+        ))
+      )}
+    </div>
+  );
+}
+
 /** Renders a versioned block-editor document (lib/content/schema.ts). */
 export function PageRenderer({ page, files, editHref }: PageRendererProps) {
   return (
@@ -192,17 +215,7 @@ export function PageRenderer({ page, files, editHref }: PageRendererProps) {
             </Link>
           )}
         </div>
-        <div className="flex flex-col gap-5">
-          {page.content.blocks.length === 0 ? (
-            <p className="text-[14px] text-slate-400">
-              This page has no content yet.
-            </p>
-          ) : (
-            page.content.blocks.map((block) => (
-              <Block key={block.id} block={block} files={files} />
-            ))
-          )}
-        </div>
+        <PageBlocks content={page.content} files={files} />
       </article>
     </main>
   );

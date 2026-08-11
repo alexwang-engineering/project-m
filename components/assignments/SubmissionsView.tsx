@@ -1,7 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
-import { Download, FileText, Loader2 } from 'lucide-react';
+import { Archive, Download, FileText, Loader2, Lock, Send } from 'lucide-react';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
@@ -11,11 +12,16 @@ import { createFileDownloadAction } from '@/app/actions/files';
 import {
   gradeSubmissionAction,
   releaseSubmissionGradeAction,
+  setAssignmentClosedAction,
+  setAssignmentExceptionAction,
+  transitionAssignmentAction,
 } from '@/app/actions/assignments';
 import type { AssignmentDetail } from '@/lib/content/assignments';
+import { PageBlocks, type BlockFileInfo } from '@/components/page-renderer';
 
 interface SubmissionsViewProps {
   assignment: AssignmentDetail;
+  instructionFiles?: Readonly<Record<string, BlockFileInfo>>;
 }
 
 function GradeControl({
@@ -146,6 +152,7 @@ function SubmissionRow({
   grade,
   gradeFeedback,
   gradeReleasedAt,
+  timeline,
   canManage,
 }: AssignmentDetail['submissions'][number] & {
   assignmentId: string;
@@ -219,11 +226,88 @@ function SubmissionRow({
           </p>
         )
       )}
+      {canManage && timeline && timeline.length > 0 && (
+        <ol
+          aria-label="Submission activity"
+          className="mt-3 border-t border-slate-100 pt-2 text-[11.5px] text-slate-500"
+        >
+          {timeline.map((event) => (
+            <li key={`${event.occurredAt}-${event.action}`}>
+              <span suppressHydrationWarning>
+                {formatRelativeTime(event.occurredAt)}
+              </span>
+              {' — '}
+              {event.action.replaceAll('_', ' ').replaceAll('.', ' ')}
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   );
 }
 
-export default function SubmissionsView({ assignment }: SubmissionsViewProps) {
+export default function SubmissionsView({
+  assignment,
+  instructionFiles = {},
+}: SubmissionsViewProps) {
+  const [changingState, setChangingState] = useState(false);
+  const [stateError, setStateError] = useState<string | null>(null);
+
+  async function changeState(action: 'publish' | 'archive' | 'close') {
+    if (
+      action !== 'publish' &&
+      !window.confirm(
+        action === 'archive'
+          ? 'Archive this assignment? Students will no longer see it.'
+          : assignment.closedAt
+            ? 'Reopen submissions for this assignment?'
+            : 'Close submissions for this assignment?',
+      )
+    )
+      return;
+    setChangingState(true);
+    setStateError(null);
+    const result =
+      action === 'close'
+        ? await setAssignmentClosedAction(
+            assignment.id,
+            assignment.version,
+            assignment.closedAt === null,
+          )
+        : await transitionAssignmentAction(
+            assignment.id,
+            assignment.version,
+            action === 'publish' ? 'published' : 'archived',
+          );
+    setChangingState(false);
+    if (!result.ok) setStateError(result.message);
+    else window.location.reload();
+  }
+
+  async function changeException(studentId: string, withdraw: boolean) {
+    const reason = window.prompt('Reason (required for the audit trail)');
+    if (!reason) return;
+    const date = withdraw
+      ? null
+      : window.prompt('New due date and time (YYYY-MM-DD HH:mm)');
+    if (!withdraw && !date) return;
+    if (date && !Number.isFinite(Date.parse(date))) {
+      setStateError('Enter a valid extension date and time.');
+      return;
+    }
+    setChangingState(true);
+    const result = await setAssignmentExceptionAction(assignment.id, {
+      assignmentId: assignment.id,
+      studentId,
+      extendedDueAt: date ? new Date(date).toISOString() : null,
+      withdraw,
+      reason,
+    });
+    setChangingState(false);
+    if (!result.ok) setStateError(result.message);
+    else window.location.reload();
+  }
+
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
       <SkipToContentLink />
@@ -231,6 +315,49 @@ export default function SubmissionsView({ assignment }: SubmissionsViewProps) {
         backHref="/assignments"
         backLabel="Assignments"
         title={assignment.title}
+        actions={
+          assignment.canManage ? (
+            <div className="flex items-center gap-2">
+              {assignment.lifecycle === 'draft' && (
+                <Link
+                  href={`/assignments/${assignment.id}/preview`}
+                  className="rounded-lg border border-slate-200 px-3 py-2 text-[12px] font-semibold text-slate-600"
+                >
+                  Preview as student
+                </Link>
+              )}
+              {assignment.lifecycle === 'draft' && (
+                <button
+                  type="button"
+                  disabled={changingState}
+                  onClick={() => changeState('publish')}
+                  className="bg-brand-600 flex items-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-semibold text-white disabled:opacity-50"
+                >
+                  <Send size={13} /> Publish
+                </button>
+              )}
+              {assignment.lifecycle === 'published' && (
+                <button
+                  type="button"
+                  disabled={changingState}
+                  onClick={() => changeState('close')}
+                  className="rounded-lg border border-slate-200 px-3 py-2 text-[12px] font-semibold text-slate-600 disabled:opacity-50"
+                >
+                  <Lock size={13} className="mr-1 inline" />
+                  {assignment.closedAt ? 'Reopen' : 'Close submissions'}
+                </button>
+              )}
+              <button
+                type="button"
+                disabled={changingState}
+                onClick={() => changeState('archive')}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-[12px] font-semibold text-slate-600 disabled:opacity-50"
+              >
+                <Archive size={13} className="mr-1 inline" /> Archive
+              </button>
+            </div>
+          ) : undefined
+        }
       />
 
       <main
@@ -238,14 +365,60 @@ export default function SubmissionsView({ assignment }: SubmissionsViewProps) {
         tabIndex={-1}
         className="mx-auto max-w-[720px] px-8 pt-9 pb-24"
       >
+        <h1 className="sr-only">{assignment.title}</h1>
+        {stateError && (
+          <p role="alert" className="mb-4 text-[12px] text-red-600">
+            {stateError}
+          </p>
+        )}
+        <p className="mb-4 text-[12px] font-semibold text-slate-500">
+          {assignment.lifecycle === 'draft'
+            ? 'Draft — students cannot see this assignment'
+            : assignment.lifecycle === 'archived'
+              ? 'Archived'
+              : assignment.closedAt
+                ? 'Published — submissions closed'
+                : assignment.availableFrom &&
+                    new Date(assignment.availableFrom) > new Date()
+                  ? `Published — available ${formatRelativeTime(assignment.availableFrom)}`
+                  : 'Published — accepting submissions'}
+        </p>
+        {assignment.instructions && (
+          <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
+                  Instructions
+                </p>
+                <h2 className="mt-1 text-[18px] font-semibold text-slate-900">
+                  {assignment.instructions.title}
+                </h2>
+              </div>
+              <Link
+                href={assignment.instructions.canonicalUrl}
+                className="hover:border-brand-400 hover:text-brand-700 rounded-lg border border-slate-200 px-3 py-2 text-[12px] font-semibold text-slate-600 transition"
+              >
+                Open page
+              </Link>
+            </div>
+            <PageBlocks
+              content={assignment.instructions.content}
+              files={instructionFiles}
+            />
+          </section>
+        )}
         <div className="mb-6">
-          <h1 className="text-[20px] font-bold tracking-tight text-slate-900">
-            Submissions
-          </h1>
+          <h2 className="text-[20px] font-bold tracking-tight text-slate-900">
+            {assignment.canManage ? 'Submissions' : 'Your submission'}
+          </h2>
           <p className="mt-0.5 text-[13px] text-slate-500">
-            {assignment.submissions.length === 1
-              ? '1 submission'
-              : `${assignment.submissions.length} submissions`}
+            {assignment.canManage
+              ? assignment.submissions.length === 1
+                ? '1 submission'
+                : `${assignment.submissions.length} submissions`
+              : assignment.submissions.length === 0
+                ? 'No submission recorded'
+                : 'Submitted'}
             {assignment.dueAt && (
               <span suppressHydrationWarning>
                 {' '}
@@ -255,11 +428,76 @@ export default function SubmissionsView({ assignment }: SubmissionsViewProps) {
           </p>
         </div>
 
+        {assignment.canManage && assignment.roster && (
+          <section
+            aria-labelledby="class-status-heading"
+            className="mb-6 rounded-2xl border border-slate-200 bg-white p-4"
+          >
+            <h2
+              id="class-status-heading"
+              className="text-[15px] font-semibold text-slate-900"
+            >
+              Class status
+            </h2>
+            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+              {assignment.roster.map((student) => (
+                <li
+                  key={student.studentId}
+                  className="rounded-lg bg-slate-50 px-3 py-2 text-[12px]"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="truncate text-slate-700">
+                      {student.studentEmail}
+                    </span>
+                    <span className="font-semibold text-slate-500">
+                      {student.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 flex items-center gap-2 text-[11px]">
+                    {student.effectiveDueAt && (
+                      <span
+                        className="mr-auto text-slate-500"
+                        suppressHydrationWarning
+                      >
+                        Due {formatRelativeTime(student.effectiveDueAt)}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      disabled={changingState}
+                      onClick={() => changeException(student.studentId, false)}
+                      className="font-semibold text-[#254889] disabled:opacity-50"
+                    >
+                      Extend
+                    </button>
+                    <button
+                      type="button"
+                      disabled={changingState}
+                      onClick={() => changeException(student.studentId, true)}
+                      className="font-semibold text-[#9c4f43] disabled:opacity-50"
+                    >
+                      Withdraw
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {assignment.submissions.length === 0 ? (
           <EmptyState
             icon={<FileText size={20} strokeWidth={2} />}
-            title="No submissions to show"
-            description="Either nobody has submitted yet, or you don't manage this assignment - either way, nothing to see here."
+            title={
+              assignment.canManage
+                ? 'No submissions to show'
+                : 'You have not submitted yet'
+            }
+            description={
+              assignment.canManage
+                ? 'No students have submitted this assignment yet.'
+                : 'Return to the assignments list when you are ready to attach your work.'
+            }
           />
         ) : (
           <div className="flex flex-col gap-2.5">

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 
 import SubmissionsView from '@/components/assignments/SubmissionsView';
 import { createServerClient } from '@/lib/supabase/server';
+import { createBlockFileDownloads } from '@/lib/files/service';
 import {
   getAssignmentDetail,
   type AssignmentDetail,
@@ -29,6 +30,12 @@ export default async function AssignmentDetailPage({
   const { id } = await params;
   const detail = await loadAssignmentDetail(id);
   if (!detail) notFound();
+  const supabase = await createServerClient();
+  const instructionFiles = detail.instructions
+    ? await createBlockFileDownloads(supabase, detail.instructions.content)
+    : {};
 
-  return <SubmissionsView assignment={detail} />;
+  return (
+    <SubmissionsView assignment={detail} instructionFiles={instructionFiles} />
+  );
 }

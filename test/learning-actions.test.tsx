@@ -77,6 +77,11 @@ describe('role-sensitive learning actions', () => {
           title: 'Lab report',
           dueAt: null,
           canManage: false,
+          lifecycle: 'published',
+          version: 1,
+          availableFrom: null,
+          closedAt: null,
+          instructions: null,
           submissions: [submission],
         }}
       />,
@@ -89,6 +94,44 @@ describe('role-sensitive learning actions', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('embeds canonical instructions in the student task view', () => {
+    render(
+      <SubmissionsView
+        assignment={{
+          id: '00000000-0000-4000-8000-000000000012',
+          title: 'Lab report',
+          dueAt: null,
+          canManage: false,
+          lifecycle: 'published',
+          version: 1,
+          availableFrom: null,
+          closedAt: null,
+          instructions: {
+            id: '00000000-0000-4000-8000-000000000013',
+            title: 'Lab instructions',
+            canonicalUrl: '/science/lab-instructions',
+            content: {
+              schemaVersion: 1,
+              blocks: [
+                {
+                  id: '00000000-0000-4000-8000-000000000014',
+                  type: 'paragraph',
+                  html: 'Record your observations.',
+                },
+              ],
+            },
+          },
+          submissions: [],
+        }}
+      />,
+    );
+    expect(screen.getByText('Record your observations.')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Your submission' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/you don't manage/i)).not.toBeInTheDocument();
+  });
+
   it('keeps save and release as separate teacher actions', () => {
     const { container } = render(
       <SubmissionsView
@@ -97,6 +140,11 @@ describe('role-sensitive learning actions', () => {
           title: 'Lab report',
           dueAt: null,
           canManage: true,
+          lifecycle: 'published',
+          version: 1,
+          availableFrom: null,
+          closedAt: null,
+          instructions: null,
           submissions: [{ ...submission, gradeReleasedAt: null }],
         }}
       />,

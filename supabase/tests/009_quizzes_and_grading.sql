@@ -171,6 +171,7 @@ select lives_ok(
     array['20000000-0000-0000-0000-000000000002']::uuid[]) $$,
   'teacher can create the lab report assignment for grading fixtures'
 );
+do $$ begin perform public.transition_assignment((select id from public.assignments where title = 'Lab report'), 1, 'published'); end $$;
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000202', true);
 select lives_ok(

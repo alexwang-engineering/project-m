@@ -166,6 +166,15 @@ function AssignmentCard({
         )}
       </div>
 
+      {assignment.instructions && (
+        <Link
+          href={assignment.instructions.canonicalUrl}
+          className="hover:border-brand-400 hover:text-brand-700 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] font-semibold text-slate-700 transition"
+        >
+          Read instructions: {assignment.instructions.title}
+        </Link>
+      )}
+
       {canSubmit && (
         <div className="mt-1 flex flex-col gap-2 border-t border-slate-200 pt-3">
           <textarea

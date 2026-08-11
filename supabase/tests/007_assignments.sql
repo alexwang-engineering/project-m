@@ -37,6 +37,7 @@ select lives_ok(
     array['20000000-0000-0000-0000-000000000001']::uuid[]) $$,
   'teacher owning the tag can create an assignment'
 );
+do $$ begin perform public.transition_assignment((select id from public.assignments where title = 'Trig worksheet'), 1, 'published'); end $$;
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000102', true);
 select lives_ok(

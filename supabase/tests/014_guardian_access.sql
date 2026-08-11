@@ -45,6 +45,7 @@ select lives_ok(
     array['90000000-0000-0000-0000-000000000001']::uuid[]) $$,
   'fixture: teacher creates an assignment on the shared tag'
 );
+do $$ begin perform public.transition_assignment((select id from public.assignments where title='Guardian test assignment'),1,'published'); end $$;
 select lives_ok(
   $$ select public.create_announcement('Guardian test announcement', 'Body text.', false,
     array['90000000-0000-0000-0000-000000000001']::uuid[]) $$,

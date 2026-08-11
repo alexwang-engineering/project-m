@@ -1,28 +1,31 @@
 # Project M Release Readiness Matrix
 
-Last engineering verification: 2026-08-08. This is the handbook's completion ledger; historical package state remains in `docs/coordination/ACTIVE_WORK.md`.
+Last engineering verification: 2026-08-11. This is the handbook's completion ledger; historical package state remains in `docs/coordination/ACTIVE_WORK.md`.
 
 ## Locally complete and verified
 
 | Area | Evidence |
 |---|---|
 | Identity boundary | Fail-closed institutional admission, role-aware login flow, protected routes, guardian admission separated from Entra; auth pgTAP tests |
-| Authorization | RLS-backed anonymous/student/teacher/admin/guardian isolation, all-tags-required teacher writes, disabled-user handling; 339 total pgTAP assertions |
+| Authorization | RLS-backed anonymous/student/teacher/admin/guardian isolation, all-tags-required teacher writes, disabled-user handling; 373 total pgTAP assertions |
 | Content | Canonical pages, block validation/sanitization, drafts/publishing, optimistic concurrency, revisions/restore, MPX/PDF transfer and bounded imports |
-| Assessment | Assignment submission/receipts/review, quizzes/question bank/deterministic grading, separate save/release grade workflow, released-only student/guardian projections |
+| Assessment | Canonical instructions, draft/publish/archive, scheduled visibility, closeable intake, bounded roster/timeline, audited pupil extensions/withdrawals, quizzes/question bank, and separate grade save/release |
+| PDF feedback | Immutable original download plus accessible textual feedback retained; inline annotation intentionally deferred pending representative-device and accessibility evidence |
 | School workflows | Tags/admin audit, roster dry-run/apply, calendar, announcements, search, operational reports, staged migration manifests |
 | File security | Private Storage, bounded metadata and signatures, checksum verification, recoverable worker leases, audited ready/quarantine/failure outcomes; production no-op scanner prohibited |
 | Web security | Nonce CSP in production, security headers, origin/session protections, bounded search/migration/roster/uploads, safe errors, dependency and secret scanning |
 | Accessibility baseline | Skip links/focus targets, lint rules, automated WCAG 2.2 axe checks on public routes, keyboard-aware controls |
-| Delivery | CI, fresh-database migration tests, production build, browser smoke tests, readiness endpoint, release/incident/restore/UAT procedures |
+| Delivery | CI, production build, browser smoke tests, readiness endpoint, release/incident/restore/UAT procedures; fresh execution of the new 2026-08-11 migration chain remains gated |
 
 Latest clean local gate:
 
-- `npm run check`: 72 tests, lint/typecheck/format/build passed.
-- `npx supabase test db`: 25 files, 339 assertions passed.
+- `npm run check`: 73 tests, lint/typecheck/format/build passed.
+- `npx supabase test db`: 29 files, 373 assertions passed against the current local database.
 - `npm run test:e2e`: 4 Playwright tests passed.
 - `npm audit --omit=dev`: zero vulnerabilities.
 - Live `GET /api/health`: HTTP 200 with local Supabase.
+
+Fresh-database migration execution for the 2026-08-11 assignment migrations remains an integration gate; the local database was not reset because its demo state has no seed file.
 
 ## External release blockers
 

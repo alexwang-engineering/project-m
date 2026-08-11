@@ -86,6 +86,58 @@ export type Database = {
           },
         ];
       };
+      assignment_exceptions: {
+        Row: {
+          assignment_id: string;
+          student_id: string;
+          extended_due_at: string | null;
+          withdrawn_at: string | null;
+          reason: string;
+          changed_by: string;
+          changed_at: string;
+        };
+        Insert: {
+          assignment_id: string;
+          student_id: string;
+          extended_due_at?: string | null;
+          withdrawn_at?: string | null;
+          reason: string;
+          changed_by: string;
+          changed_at?: string;
+        };
+        Update: {
+          assignment_id?: string;
+          student_id?: string;
+          extended_due_at?: string | null;
+          withdrawn_at?: string | null;
+          reason?: string;
+          changed_by?: string;
+          changed_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'assignment_exceptions_assignment_id_fkey';
+            columns: ['assignment_id'];
+            isOneToOne: false;
+            referencedRelation: 'assignments';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'assignment_exceptions_student_id_fkey';
+            columns: ['student_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'assignment_exceptions_changed_by_fkey';
+            columns: ['changed_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       assignment_submissions: {
         Row: {
           assignment_id: string;
@@ -196,30 +248,45 @@ export type Database = {
           archived_at: string | null;
           created_at: string;
           created_by: string;
+          closed_at: string | null;
           due_at: string | null;
           id: string;
           instructions_page_id: string | null;
+          lifecycle: Database['public']['Enums']['content_state'];
+          available_from: string | null;
+          published_at: string | null;
           title: string;
+          version: number;
         };
         Insert: {
           allow_resubmission?: boolean;
           archived_at?: string | null;
           created_at?: string;
           created_by: string;
+          closed_at?: string | null;
           due_at?: string | null;
           id?: string;
           instructions_page_id?: string | null;
+          lifecycle?: Database['public']['Enums']['content_state'];
+          available_from?: string | null;
+          published_at?: string | null;
           title: string;
+          version?: number;
         };
         Update: {
           allow_resubmission?: boolean;
           archived_at?: string | null;
           created_at?: string;
           created_by?: string;
+          closed_at?: string | null;
           due_at?: string | null;
           id?: string;
           instructions_page_id?: string | null;
+          lifecycle?: Database['public']['Enums']['content_state'];
+          available_from?: string | null;
+          published_at?: string | null;
           title?: string;
+          version?: number;
         };
         Relationships: [
           {
@@ -1322,6 +1389,42 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      assignment_review_roster: {
+        Args: { target_assignment_id: string };
+        Returns: {
+          student_id: string;
+          student_email: string;
+          submission_id: string | null;
+          submitted_at: string | null;
+          submission_note: string | null;
+          file_id: string | null;
+          status: string;
+          grade: number | null;
+          feedback: string | null;
+          released_at: string | null;
+          effective_due_at: string | null;
+          withdrawn_at: string | null;
+        }[];
+      };
+      assignment_submission_timeline: {
+        Args: { target_submission_id: string };
+        Returns: {
+          occurred_at: string;
+          action: string;
+          actor_email: string | null;
+        }[];
+      };
+      set_assignment_exception: {
+        Args: {
+          target_assignment_id: string;
+          target_student_id: string;
+          new_extended_due_at: string;
+          withdraw_student: boolean;
+          exception_reason: string;
+          correlation_id?: string;
+        };
+        Returns: Database['public']['Tables']['assignment_exceptions']['Row'];
+      };
       consume_search_quota: { Args: never; Returns: boolean };
       assert_can_assign_tags: {
         Args: { actor: string; tag_ids: string[] };
@@ -1825,6 +1928,7 @@ export type Database = {
       };
       create_assignment: {
         Args: {
+          assignment_available_from?: string;
           assignment_due_at: string;
           assignment_title: string;
           audience_tag_ids: string[];
@@ -1835,12 +1939,17 @@ export type Database = {
         Returns: {
           allow_resubmission: boolean;
           archived_at: string | null;
+          available_from: string | null;
+          closed_at: string | null;
           created_at: string;
           created_by: string;
           due_at: string | null;
           id: string;
           instructions_page_id: string | null;
+          lifecycle: Database['public']['Enums']['content_state'];
+          published_at: string | null;
           title: string;
+          version: number;
         };
         SetofOptions: {
           from: '*';
@@ -1848,6 +1957,24 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      set_assignment_closed: {
+        Args: {
+          correlation_id?: string;
+          expected_version: number;
+          is_closed: boolean;
+          target_assignment_id: string;
+        };
+        Returns: Database['public']['Tables']['assignments']['Row'];
+      };
+      transition_assignment: {
+        Args: {
+          correlation_id?: string;
+          expected_version: number;
+          next_lifecycle: Database['public']['Enums']['content_state'];
+          target_assignment_id: string;
+        };
+        Returns: Database['public']['Tables']['assignments']['Row'];
       };
       create_page: {
         Args: {

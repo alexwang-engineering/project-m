@@ -8,32 +8,14 @@
 import { notFound, redirect } from 'next/navigation';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServerClient } from '@/lib/supabase/server';
-import { PageRenderer, type BlockFileInfo } from '@/components/page-renderer';
-import { createFileDownload } from '@/lib/files/service';
+import { PageRenderer } from '@/components/page-renderer';
+import { createBlockFileDownloads } from '@/lib/files/service';
 import { canonicalPathFromSegments } from '@/lib/content/canonical';
 import { resolvePage } from '@/lib/content/repository';
 import type { Database } from '@/lib/database.types';
 
 interface RouteParams {
   params: Promise<{ slug: string[] }>;
-}
-
-async function loadBlockFiles(
-  client: SupabaseClient<Database>,
-  content: { blocks: readonly { type: string; fileId?: string }[] },
-): Promise<Record<string, BlockFileInfo>> {
-  const fileIds = content.blocks
-    .filter((block) => block.type === 'file' || block.type === 'image')
-    .map((block) => block.fileId)
-    .filter((id): id is string => typeof id === 'string');
-
-  const entries = await Promise.all(
-    fileIds.map(async (fileId) => {
-      const result = await createFileDownload(client, fileId);
-      return result.ok ? ([fileId, { ...result.download }] as const) : null;
-    }),
-  );
-  return Object.fromEntries(entries.filter((entry) => entry !== null));
 }
 
 export default async function CanonicalPage({ params }: RouteParams) {
@@ -47,7 +29,7 @@ export default async function CanonicalPage({ params }: RouteParams) {
   if (resolution.kind === 'page') {
     const { id, title, content } = resolution.page;
     const [files, { data: userData }] = await Promise.all([
-      loadBlockFiles(supabase, content),
+      createBlockFileDownloads(supabase, content),
       supabase.auth.getUser(),
     ]);
     let editHref: string | undefined;

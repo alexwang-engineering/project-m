@@ -33,6 +33,7 @@ select lives_ok(
     array['30000000-0000-0000-0000-000000000001']::uuid[]) $$,
   'owning teacher can create the assignment under test'
 );
+do $$ begin perform public.transition_assignment((select id from public.assignments where title = 'Ecology write-up'), 1, 'published'); end $$;
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000203', true);
 select lives_ok(
