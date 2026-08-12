@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Bold, Italic, Link as LinkIcon } from 'lucide-react';
 
 import { sanitizeEditorHtml } from '@/lib/html-sanitizer';
@@ -33,6 +33,9 @@ export function RichTextField({
   toolbar = true,
 }: RichTextFieldProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const selection = useRef<Range | null>(null);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkOpen, setLinkOpen] = useState(false);
 
   useEffect(() => {
     if (ref.current) ref.current.innerHTML = html;
@@ -62,12 +65,18 @@ export function RichTextField({
   }
 
   function insertLink() {
-    const input = window.prompt('Link URL');
-    if (!input) return;
+    if (!linkUrl) return;
     try {
-      const url = new URL(input, window.location.origin);
+      const url = new URL(linkUrl, window.location.origin);
       if (!['http:', 'https:', 'mailto:'].includes(url.protocol)) return;
-      exec('createLink', input);
+      const activeSelection = document.getSelection();
+      if (selection.current && activeSelection) {
+        activeSelection.removeAllRanges();
+        activeSelection.addRange(selection.current);
+      }
+      exec('createLink', linkUrl);
+      setLinkUrl('');
+      setLinkOpen(false);
     } catch {
       return;
     }
@@ -105,13 +114,44 @@ export function RichTextField({
           </button>
           <button
             type="button"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={insertLink}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              const current = document.getSelection();
+              selection.current = current?.rangeCount
+                ? current.getRangeAt(0)
+                : null;
+            }}
+            onClick={() => setLinkOpen((open) => !open)}
             className="flex h-7 w-7 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900"
             aria-label="Insert link"
           >
             <LinkIcon size={14} strokeWidth={2.4} />
           </button>
+          {linkOpen && (
+            <form
+              className="ml-1 flex flex-1 gap-1"
+              onSubmit={(event) => {
+                event.preventDefault();
+                insertLink();
+              }}
+            >
+              <input
+                aria-label="Link URL"
+                type="url"
+                value={linkUrl}
+                onChange={(event) => setLinkUrl(event.target.value)}
+                placeholder="https://…"
+                className="min-w-0 flex-1 rounded border border-slate-200 px-2 text-xs outline-none"
+                autoFocus
+              />
+              <button
+                type="submit"
+                className="text-brand-700 px-2 text-xs font-semibold"
+              >
+                Add
+              </button>
+            </form>
+          )}
         </div>
       )}
       <div

@@ -251,6 +251,11 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
               type="button"
               onClick={handleSave}
               disabled={!canSave}
+              title={
+                !canSave
+                  ? 'Enter a page title and select a tag first'
+                  : undefined
+              }
               className="bg-brand-600 hover:bg-brand-700 flex h-9 items-center gap-1.5 rounded-lg px-4 text-[12.5px] font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving && <Loader2 size={13} className="animate-spin" />}
@@ -339,6 +344,12 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
               );
             })}
           </div>
+          {pageId === null && !canSave && (
+            <p className="text-[12px] text-slate-500">
+              Enter a page title and select at least one tag to create the
+              draft.
+            </p>
+          )}
         </div>
 
         <div className="mb-4 flex flex-wrap items-center gap-2">
