@@ -49,6 +49,7 @@ export interface FileDownload {
   readonly ok: true;
   readonly download: {
     readonly url: string;
+    readonly downloadUrl: string;
     readonly filename: string;
     readonly mediaType: string;
     readonly sizeBytes: number;
@@ -279,14 +280,24 @@ export async function createFileDownload(
 
   const signed = await client.storage
     .from(target.bucket_id)
+    .createSignedUrl(target.object_name, DOWNLOAD_TTL_SECONDS);
+  const download = await client.storage
+    .from(target.bucket_id)
     .createSignedUrl(target.object_name, DOWNLOAD_TTL_SECONDS, {
       download: target.original_name,
     });
-  if (signed.error || !signed.data?.signedUrl) return failure(signed.error);
+  if (
+    signed.error ||
+    !signed.data?.signedUrl ||
+    download.error ||
+    !download.data?.signedUrl
+  )
+    return failure(signed.error ?? download.error);
   return {
     ok: true,
     download: {
       url: signed.data.signedUrl,
+      downloadUrl: download.data.signedUrl,
       filename: target.original_name,
       mediaType: target.media_type,
       sizeBytes: target.size_bytes,

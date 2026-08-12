@@ -11,6 +11,7 @@ interface RenderablePage {
 
 export interface BlockFileInfo {
   readonly url: string;
+  readonly downloadUrl: string;
   readonly filename: string;
   readonly mediaType: string;
   readonly sizeBytes: number;
@@ -124,9 +125,9 @@ function Block({
           </div>
         );
       }
-      return (
+      const download = (
         <a
-          href={file.url}
+          href={file.downloadUrl}
           download={file.filename}
           className="hover:border-brand-400 hover:text-brand-700 flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-[13.5px] font-medium text-slate-800 shadow-sm transition"
         >
@@ -142,6 +143,22 @@ function Block({
           <Download size={15} strokeWidth={2} className="text-slate-400" />
         </a>
       );
+      if (file.mediaType === 'application/pdf') {
+        return (
+          <details className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <summary className="hover:text-brand-700 cursor-pointer px-4 py-3 text-[13.5px] font-semibold text-slate-800">
+              Review PDF: {block.label}
+            </summary>
+            <iframe
+              src={file.url}
+              title={`PDF preview: ${block.label}`}
+              className="h-[70vh] min-h-96 w-full border-y border-slate-200"
+            />
+            <div className="p-3">{download}</div>
+          </details>
+        );
+      }
+      return download;
     }
     case 'image': {
       const file = files[block.fileId];

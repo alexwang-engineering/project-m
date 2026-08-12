@@ -19,6 +19,7 @@ function buildCspHeader(nonce: string, supabaseOrigin: string | null): string {
   const imgSrc = ["'self'", 'blob:', 'data:', supabaseOrigin]
     .filter(Boolean)
     .join(' ');
+  const frameSrc = ["'self'", supabaseOrigin].filter(Boolean).join(' ');
   const directives = [
     `default-src 'self'`,
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${IS_DEV ? " 'unsafe-eval'" : ''}`,
@@ -26,6 +27,7 @@ function buildCspHeader(nonce: string, supabaseOrigin: string | null): string {
     `img-src ${imgSrc}`,
     `font-src 'self'`,
     `connect-src ${connectSrc}`,
+    `frame-src ${frameSrc}`,
     `object-src 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,

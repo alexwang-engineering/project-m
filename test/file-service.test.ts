@@ -103,6 +103,7 @@ describe('private file service', () => {
       ok: true,
       download: { filename: 'Lesson.pdf', expiresInSeconds: 60 },
     });
+    expect(createSignedUrl).toHaveBeenCalledWith('owner/file.pdf', 60);
     expect(createSignedUrl).toHaveBeenCalledWith('owner/file.pdf', 60, {
       download: 'Lesson.pdf',
     });
