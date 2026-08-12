@@ -49,6 +49,7 @@ Anything that does not improve one of those outcomes is out of scope for this st
 | Start date/scheduled availability | Missing | Decide policy with lifecycle; do not expose unpublished work |
 | Draft assignment lifecycle | Missing | Build after instructions, using the shared content lifecycle |
 | Parent/markbook visibility toggles | Guardian access already uses released-only projections | Keep the safer release policy; do not copy per-task visibility checkboxes |
+| Inline PDF review/replacement | Implemented 2026-08-12 | Retain authorized inline preview, separate download, immutable original and teacher replacement workflow |
 | Inline PDF annotation | Missing | Later package; requires an explicit annotation data model and mobile/accessibility proof |
 | Individual-student exceptions | Missing | Later package; requires policy for extensions, withdrawals, and audit |
 | Timetable/lesson panel | Calendar exists, live timetable integration does not | Integrate externally after MIS contract exists |
@@ -73,6 +74,43 @@ Each picture is evidence for an outcome, not permission to clone every control.
 | 9 — annotation transition frame | The PDF view shows overlapping content while switching or rendering | Treat navigation/rendering as a data-integrity risk: cancel stale renders, isolate annotations by submission/page, and test rapid previous/next actions | The overlap is not a desired feature and must not be copied as visual behavior |
 | 10 — student task | Student reads set-by/due information and instructions, then sends a file, marks done, or comments | One canonical task view with teacher, deadline, instructions, attachments, submission state, and the approved response modes | Do not implement completion-only or comment-only state until F0 confirms their semantics |
 | 11 — duplicate dashboard evidence | A second frame confirms the same navigation and modular dashboard priorities | Use it as corroboration for picture 8, not as a separate feature source | Duplicate evidence does not justify duplicate widgets or scope |
+
+### 3.2 Firefly Learning playlist evidence
+
+Reviewed 2026-08-12: the [19-video Firefly Learning playlist](https://www.youtube.com/playlist?list=PLTDRhsdxjbbxiNgEzcLhAmrGk8kXcMYgh) linked by the product owner (approximately 39 minutes). Sixteen videos had usable English spoken transcripts, video 14 had a music-only caption track, and videos 4 and 5 had no accessible transcript. Claims from the final three videos are excerpts from longer talks, so they establish design principles rather than complete research findings. Promotional claims are reference evidence, not independently validated outcomes.
+
+| # | Video | Verified lesson for Project M |
+|---|---|---|
+| 1 | What is Firefly? | Keep assignments, resources, feedback, progress and parent involvement in one authorized learning loop. |
+| 2 | Product Tour | Support rich instructions, multi-device submission, in-site file review, annotation/feedback, private marking and deliberate release. |
+| 3 | Firefly Expo Highlights | Treat pupil value, teacher agency and school culture as outcomes; analytics must support rather than replace human judgment. |
+| 4 | What's it like to work at Firefly? | No product requirement accepted: no accessible transcript and the title concerns company culture. |
+| 5 | How does Firefly empower students? | No detailed requirement accepted without a transcript; the title only corroborates student agency as a discovery topic. |
+| 6 | Firefly Learning Roadshow 2018 | Reusable subject-specific practice and staff enablement matter, but the automatic transcript is too weak for detailed requirements. |
+| 7 | Born for schools | Provide a school-specific, adaptable gateway supporting homework, timetable/messages, varied media and approved external services. |
+| 8 | Liberate your teachers | Prefer reusable pages, embedded tools, cross-department sharing and less reminder/marking administration. |
+| 9 | Make it your own | Reflect school structure, identity, policies, programmes and extracurricular areas without weakening authorization. |
+| 10 | Curated views for everyone | Give each role a relevant homepage and protect pupil information; do not expose a generic shared dashboard. |
+| 11 | 360-degree observability | Authorized profiles should combine progress, targets, homework, attendance and behaviour only when approved source contracts exist. |
+| 12 | Encouraging two-way dialogues | Preserve feedback history, clarification and retry workflows; safeguarding approval remains mandatory before pupil messaging. |
+| 13 | Quick tour | A guardian view should prioritize announcements, events, linked-pupil reports, attendance, behaviour, outstanding work, released feedback and timetable. |
+| 14 | Helping parents support learning | No detailed requirement accepted: the available track contains no substantive narration. |
+| 15 | Firefly and Microsoft | Integration is valuable when it consolidates real classroom context and tools; do not add integrations solely for feature parity. |
+| 16 | Parent engagement research | Design support around realistic family routines and short, useful prompts rather than assuming time, space or confidence. |
+| 17 | Bridging the parent engagement gap | Remove language and access barriers; use plain, translatable formats and avoid labelling families as “hard to reach.” |
+| 18 | Engage the whole school community | Identify recipient barriers and coordinate teacher, pupil, parent and leadership communication around student outcomes. |
+| 19 | Saving teacher time and engaging parents | Measure whether communications are viewed and acted on; prefer concise, accessible formats and consistent structure over publication volume. |
+
+Playlist-backed priorities, subject to the existing policy and release gates:
+
+1. retain role-curated dashboards and canonical, tag-authorized content;
+2. extend secure PDF preview/replacement to non-destructive, accessible annotation only after F5's device/accessibility gate;
+3. preserve private draft feedback and require an explicit audited release;
+4. add an authorized chronological feedback/submission history before adding real-time messaging;
+5. design guardian views around linked-pupil actions and released information, not a general school feed;
+6. add communication delivery/view analytics only after privacy, retention and stakeholder success measures are approved;
+7. prioritize Microsoft integration by demonstrated teacher-time savings; and
+8. provide reusable teacher resources without bypassing tag ownership or publication lifecycle.
 
 ## 4. Delivery order
 
