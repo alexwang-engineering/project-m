@@ -32,8 +32,14 @@ const OPTIONS: sanitizeHtml.IOptions = {
   ],
   allowedAttributes: {
     a: ['href', 'title'],
+    span: ['style'],
     th: ['colspan', 'rowspan', 'scope'],
     td: ['colspan', 'rowspan'],
+  },
+  allowedStyles: {
+    span: {
+      'font-size': [/^(8|9|10|11|12|14|16|18|24|36|48)pt$/],
+    },
   },
   allowedSchemes: ['http', 'https', 'mailto'],
   allowProtocolRelative: false,

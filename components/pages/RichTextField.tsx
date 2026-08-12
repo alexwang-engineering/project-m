@@ -5,6 +5,20 @@ import { Bold, Italic, Link as LinkIcon } from 'lucide-react';
 
 import { sanitizeEditorHtml } from '@/lib/html-sanitizer';
 
+const FONT_SIZES = [
+  '8',
+  '9',
+  '10',
+  '11',
+  '12',
+  '14',
+  '16',
+  '18',
+  '24',
+  '36',
+  '48',
+];
+
 interface RichTextFieldProps {
   /** Stable identity for the field - the DOM is only re-synced from `html` when this changes. */
   fieldKey: string;
@@ -82,6 +96,23 @@ export function RichTextField({
     }
   }
 
+  function applyFontSize(points: string) {
+    const activeSelection = document.getSelection();
+    if (selection.current && activeSelection) {
+      activeSelection.removeAllRanges();
+      activeSelection.addRange(selection.current);
+    }
+    ref.current?.focus();
+    document.execCommand('fontSize', false, '7');
+    ref.current?.querySelectorAll('font[size="7"]').forEach((font) => {
+      const span = document.createElement('span');
+      span.style.fontSize = `${points}pt`;
+      span.innerHTML = font.innerHTML;
+      font.replaceWith(span);
+    });
+    onChange(ref.current?.innerHTML ?? '');
+  }
+
   function paste(event: React.ClipboardEvent<HTMLDivElement>) {
     event.preventDefault();
     const clipboard = event.clipboardData;
@@ -94,6 +125,24 @@ export function RichTextField({
     <div className="focus-within:border-brand-400 rounded-lg border border-slate-200 bg-white">
       {toolbar && (
         <div className="flex items-center gap-1 border-b border-slate-200 px-2 py-1">
+          <select
+            aria-label="Font size"
+            defaultValue="11"
+            onMouseDown={() => {
+              const current = document.getSelection();
+              selection.current = current?.rangeCount
+                ? current.getRangeAt(0)
+                : null;
+            }}
+            onChange={(event) => applyFontSize(event.target.value)}
+            className="h-7 rounded border border-slate-200 bg-white px-1 text-xs text-slate-600 outline-none"
+          >
+            {FONT_SIZES.map((size) => (
+              <option key={size} value={size}>
+                {size} pt
+              </option>
+            ))}
+          </select>
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
