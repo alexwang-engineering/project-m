@@ -19,7 +19,7 @@ Last engineering verification: 2026-08-12. This is the handbook's completion led
 
 Latest clean local gate:
 
-- `npm run check`: 76 tests, lint/typecheck/format/build passed on 2026-08-12.
+- `npm run check`: 77 tests, lint/typecheck/format/build passed on 2026-08-12.
 - `npx supabase test db`: 29 files, 373 assertions passed against the current local database.
 - `npm run test:e2e`: 4 Playwright tests passed.
 - `npm audit --omit=dev`: zero vulnerabilities.
