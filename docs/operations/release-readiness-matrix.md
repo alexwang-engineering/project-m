@@ -1,6 +1,6 @@
 # Project M Release Readiness Matrix
 
-Last engineering verification: 2026-08-11. This is the handbook's completion ledger; historical package state remains in `docs/coordination/ACTIVE_WORK.md`.
+Last engineering verification: 2026-08-12. This is the handbook's completion ledger; historical package state remains in `docs/coordination/ACTIVE_WORK.md`.
 
 ## Locally complete and verified
 
@@ -8,9 +8,9 @@ Last engineering verification: 2026-08-11. This is the handbook's completion led
 |---|---|
 | Identity boundary | Fail-closed institutional admission, role-aware login flow, protected routes, guardian admission separated from Entra; auth pgTAP tests |
 | Authorization | RLS-backed anonymous/student/teacher/admin/guardian isolation, all-tags-required teacher writes, disabled-user handling; 373 total pgTAP assertions |
-| Content | Canonical pages, block validation/sanitization, drafts/publishing, optimistic concurrency, revisions/restore, MPX/PDF transfer and bounded imports |
+| Content | Canonical pages, block validation/sanitization, Word-style safe font sizing, drafts/publishing, optimistic concurrency, revisions/restore, MPX/PDF transfer and bounded imports |
 | Assessment | Canonical instructions, draft/publish/archive, scheduled visibility, closeable intake, bounded roster/timeline, audited pupil extensions/withdrawals, quizzes/question bank, and separate grade save/release |
-| PDF feedback | Immutable original download plus accessible textual feedback retained; inline annotation intentionally deferred pending representative-device and accessibility evidence |
+| PDF and file workflow | Authorized inline PDF review, separate original download, teacher replacement, private scanned storage and accessible textual feedback; annotation intentionally deferred pending representative-device and accessibility evidence |
 | School workflows | Tags/admin audit, roster dry-run/apply, calendar, announcements, search, operational reports, staged migration manifests |
 | File security | Private Storage, bounded metadata and signatures, checksum verification, recoverable worker leases, audited ready/quarantine/failure outcomes; production no-op scanner prohibited |
 | Web security | Nonce CSP in production, security headers, origin/session protections, bounded search/migration/roster/uploads, safe errors, dependency and secret scanning |
@@ -19,7 +19,7 @@ Last engineering verification: 2026-08-11. This is the handbook's completion led
 
 Latest clean local gate:
 
-- `npm run check`: 73 tests, lint/typecheck/format/build passed.
+- `npm run check`: 76 tests, lint/typecheck/format/build passed on 2026-08-12.
 - `npx supabase test db`: 29 files, 373 assertions passed against the current local database.
 - `npm run test:e2e`: 4 Playwright tests passed.
 - `npm audit --omit=dev`: zero vulnerabilities.
@@ -43,4 +43,4 @@ These cannot be completed truthfully from this repository. Each requires the nam
 | Production operations | Isolated environments, secret manager, monitoring/alerts, verified backups and isolated PITR restore rehearsal, named incident/release owners |
 | Human quality gates | Authenticated WCAG 2.2 AA walkthrough, representative-device performance results, role-based staging UAT/pilot and recorded sign-off |
 
-Project M therefore has a **locally verified release-1 MVP, but is neither feature-complete against every PM-02 launch journey nor authorized for production use**. Remaining repository work and external enablement must be tracked separately; neither category is complete until its evidence is recorded.
+Project M therefore has a **locally verified release-1 MVP and a complete engineering handbook for the approved local scope, but is neither feature-complete against every PM-02 launch journey nor authorized for production use**. The table above is the authoritative list of external or policy-gated work; an item is complete only when its named evidence is recorded.

@@ -36,22 +36,22 @@ Anything that does not improve one of those outcomes is out of scope for this st
 | Task title, deadline, resubmission | Implemented | Retain |
 | Student comment with submission | Implemented 2026-08-11 | Retain and test |
 | Student file submission | Code and local verification complete | Disabled for production until the malware scanner and worker are deployed |
-| Completion-only/comment-only response | Missing | Decide whether no-file tasks are required before adding another submission mode |
+| Completion-only/comment-only response | Excluded pending school policy | File submission plus an optional student note is the approved local workflow |
 | Teacher submission review | Implemented | Improve presentation only after workflow tests |
-| Return/reopen work for correction | Partial: resubmission exists, explicit teacher return does not | Decide the audited return/reopen semantics before adding it |
-| Submission activity timeline | Receipts and audit events exist | Project an authorized chronological trail in the review workspace |
+| Return/reopen work for correction | Excluded pending school policy | Retain immutable resubmission; add a formal return transition only after its deadline and notification semantics are approved |
+| Submission activity timeline | Implemented 2026-08-11 | Retain the authorized chronological review projection |
 | Save mark and release feedback | Implemented as separate audited actions | Retain; safer than Firefly's combined menu |
 | Gradebook/markbook | Implemented | Add filters/export only when stakeholder need is confirmed |
 | Announcements | Implemented one-way | Bidirectional messaging remains blocked by safeguarding approval |
 | Calendar/deadlines | Implemented | Integrate assignment deadlines into journey testing |
 | Rich task instructions | Implemented locally 2026-08-11 | Published canonical page picker, audience coverage enforcement, embedded student view, and canonical link |
-| Preview before setting work | Instruction-page preview implemented; complete assignment preview awaits drafts | Build the exact authorized student projection in F2 after Save draft |
-| Start date/scheduled availability | Missing | Decide policy with lifecycle; do not expose unpublished work |
-| Draft assignment lifecycle | Missing | Build after instructions, using the shared content lifecycle |
+| Preview before setting work | Implemented 2026-08-11 | Retain the server-authorized student projection for saved drafts |
+| Start date/scheduled availability | Implemented 2026-08-11 | Keep availability separate from publication and submission closure |
+| Draft assignment lifecycle | Implemented 2026-08-11 | Retain audited draft, publish, close and archive transitions |
 | Parent/markbook visibility toggles | Guardian access already uses released-only projections | Keep the safer release policy; do not copy per-task visibility checkboxes |
 | Inline PDF review/replacement | Implemented 2026-08-12 | Retain authorized inline preview, separate download, immutable original and teacher replacement workflow |
-| Inline PDF annotation | Missing | Later package; requires an explicit annotation data model and mobile/accessibility proof |
-| Individual-student exceptions | Missing | Later package; requires policy for extensions, withdrawals, and audit |
+| Inline PDF annotation | Deferred — external evidence required | Reopen only with the F5 annotation model, representative-device testing and accessibility ownership |
+| Individual-student exceptions | Implemented 2026-08-11 | Retain reasoned, audited extensions and withdrawals without deleting history |
 | Timetable/lesson panel | Calendar exists, live timetable integration does not | Integrate externally after MIS contract exists |
 | Target grades/manual completed tasks | No approved source or policy | Defer to the assessment/MIS stream; never invent attainment data |
 | Pupil personal tasks/pages/blog | Outside the assigned-work outcome | Defer unless school discovery establishes a separate need |
@@ -118,18 +118,22 @@ Playlist-backed priorities, subject to the existing policy and release gates:
 
 Goal: resolve each remaining contract gap before its dependent backend or UI package starts.
 
-- Confirm the shared content lifecycle `draft → published → archived` and keep the submission window (`not_open`, `open`, `closed`) separate; grading/release remains submission-level.
-- Confirm whether assignments need a scheduled start time and whether a no-file completion/comment response is required.
-- Confirm whether teachers may formally return a submission for correction and what that does to its immutable receipt and deadline.
-- Confirm whether an instructions page is required or optional.
-- Confirm late-work, extension, withdrawal, and resubmission policies with school stakeholders.
-- Extend the existing PM-04 role matrix with assignment-state and exception cases.
-- Complete the representative desktop, tablet, and mobile evidence already required by PM-02/UAT.
+Status: locally closed for approved workflows on 2026-08-11. Scheduled availability, draft/publish/archive, resubmission, extensions and withdrawals are implemented. Completion-only responses and formal return-for-correction remain deliberately excluded until school policy defines their semantics; representative-device and human UAT remain external gates.
 
-Known baseline mismatches to resolve here:
+Decision record:
 
-- Current assignment creation publishes immediately, while the admin guide and migration ADR describe draft-first behavior.
-- The Moodle migration ADR describes assignment lifecycle states that the live `assignments` table does not yet have.
+- The shared lifecycle is `draft → published → archived`; the submission window (`not_open`, `open`, `closed`) and grading/release are separate.
+- Scheduled availability is included; no-file completion/comment-only responses are excluded pending school policy.
+- Formal return-for-correction is excluded pending approved deadline, notification and receipt semantics.
+- Canonical instructions pages are optional and must be published and readable by the full audience before assignment publication.
+- Immutable resubmission, reasoned extensions and withdrawals are implemented; broader late-work policy remains a school decision.
+- Assignment-state and exception authorization is enforced and covered by the database test suite.
+- Representative desktop, tablet and mobile evidence remains part of the named human quality gate, not a local engineering claim.
+
+Resolved baseline mismatches:
+
+- Assignment creation is draft-first, with separate audited publication and submission-window state.
+- The live assignment model now implements the lifecycle described by the migration ADR.
 
 Gate: each decision is recorded in an ADR before its dependent package starts; unanswered later-phase policy must not block earlier independent work.
 
