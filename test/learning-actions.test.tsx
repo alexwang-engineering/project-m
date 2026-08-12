@@ -1,12 +1,18 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import AssignmentsView from '@/components/assignments/AssignmentsView';
 import QuizzesView from '@/components/quizzes/QuizzesView';
 import { CalendarView } from '@/components/calendar/CalendarView';
 import { AnnouncementsView } from '@/components/announcements/AnnouncementsView';
 import SubmissionsView from '@/components/assignments/SubmissionsView';
+
+const { createFileDownloadAction } = vi.hoisted(() => ({
+  createFileDownloadAction: vi.fn(),
+}));
+
+vi.mock('@/app/actions/files', () => ({ createFileDownloadAction }));
 
 const submission = {
   id: '00000000-0000-4000-8000-000000000010',
@@ -153,6 +159,48 @@ describe('role-sensitive learning actions', () => {
     const view = within(container);
     expect(view.getByRole('button', { name: 'Save' })).toBeInTheDocument();
     expect(view.getByRole('button', { name: 'Release' })).toBeEnabled();
+  });
+
+  it('lets teachers review submitted PDFs inline', async () => {
+    createFileDownloadAction.mockResolvedValueOnce({
+      ok: true,
+      download: {
+        url: 'https://files.example/preview.pdf',
+        downloadUrl: 'https://files.example/download.pdf',
+        filename: 'lab-report.pdf',
+        mediaType: 'application/pdf',
+        sizeBytes: 1024,
+        expiresInSeconds: 60,
+      },
+    });
+    const user = userEvent.setup();
+    render(
+      <SubmissionsView
+        assignment={{
+          id: '00000000-0000-4000-8000-000000000012',
+          title: 'Lab report',
+          dueAt: null,
+          canManage: true,
+          lifecycle: 'published',
+          version: 1,
+          availableFrom: null,
+          closedAt: null,
+          instructions: null,
+          submissions: [submission],
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Review PDF' }));
+
+    expect(
+      await screen.findByTitle(
+        'PDF submission from student@merchanttaylors.com',
+      ),
+    ).toHaveAttribute('src', 'https://files.example/preview.pdf');
+    expect(
+      screen.getByRole('button', { name: 'Close review' }),
+    ).toHaveAttribute('aria-expanded', 'true');
   });
 
   it('opens an inline form for pupil-specific extensions', async () => {

@@ -49,7 +49,7 @@ Anything that does not improve one of those outcomes is out of scope for this st
 | Start date/scheduled availability | Implemented 2026-08-11 | Keep availability separate from publication and submission closure |
 | Draft assignment lifecycle | Implemented 2026-08-11 | Retain audited draft, publish, close and archive transitions |
 | Parent/markbook visibility toggles | Guardian access already uses released-only projections | Keep the safer release policy; do not copy per-task visibility checkboxes |
-| Inline PDF review/replacement | Implemented 2026-08-12 | Retain authorized inline preview, separate download, immutable original and teacher replacement workflow |
+| Inline PDF review/replacement | Implemented 2026-08-12 | Page and submitted PDFs use authorized inline preview plus a separate original download; page replacement preserves the prior file record |
 | Inline PDF annotation | Deferred — external evidence required | Reopen only with the F5 annotation model, representative-device testing and accessibility ownership |
 | Individual-student exceptions | Implemented 2026-08-11 | Retain reasoned, audited extensions and withdrawals without deleting history |
 | Timetable/lesson panel | Calendar exists, live timetable integration does not | Integrate externally after MIS contract exists |

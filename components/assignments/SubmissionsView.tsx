@@ -2,7 +2,16 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Archive, Download, FileText, Loader2, Lock, Send } from 'lucide-react';
+import {
+  Archive,
+  Download,
+  Eye,
+  FileText,
+  Loader2,
+  Lock,
+  Send,
+  X,
+} from 'lucide-react';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
@@ -159,18 +168,38 @@ function SubmissionRow({
   canManage: boolean;
 }) {
   const [downloading, setDownloading] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleDownload() {
+  async function getFile() {
     setDownloading(true);
     setError(null);
     const result = await createFileDownloadAction(fileId);
     setDownloading(false);
     if (!result.ok) {
       setError(result.message);
+      return null;
+    }
+    return result.download;
+  }
+
+  async function handleDownload() {
+    const file = await getFile();
+    if (file) window.open(file.downloadUrl, '_blank', 'noopener,noreferrer');
+  }
+
+  async function handlePreview() {
+    if (preview) {
+      setPreview(null);
       return;
     }
-    window.open(result.download.url, '_blank', 'noopener,noreferrer');
+    const file = await getFile();
+    if (!file) return;
+    if (file.mediaType !== 'application/pdf') {
+      setError('Only PDF submissions can be reviewed inline.');
+      return;
+    }
+    setPreview(file.url);
   }
 
   return (
@@ -196,20 +225,41 @@ function SubmissionRow({
             )}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={handleDownload}
-          disabled={downloading}
-          className="hover:border-brand-500 hover:text-brand-600 flex h-9 flex-shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 transition disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {downloading ? (
-            <Loader2 size={14} strokeWidth={2.4} className="animate-spin" />
-          ) : (
-            <Download size={14} strokeWidth={2.4} />
+        <div className="flex flex-shrink-0 items-center gap-2">
+          {canManage && (
+            <button
+              type="button"
+              onClick={handlePreview}
+              disabled={downloading}
+              aria-expanded={preview !== null}
+              className="hover:border-brand-500 hover:text-brand-600 flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 transition disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {preview ? <X size={14} /> : <Eye size={14} />}
+              {preview ? 'Close review' : 'Review PDF'}
+            </button>
           )}
-          Download
-        </button>
+          <button
+            type="button"
+            onClick={handleDownload}
+            disabled={downloading}
+            className="hover:border-brand-500 hover:text-brand-600 flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 transition disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {downloading ? (
+              <Loader2 size={14} strokeWidth={2.4} className="animate-spin" />
+            ) : (
+              <Download size={14} strokeWidth={2.4} />
+            )}
+            Download
+          </button>
+        </div>
       </div>
+      {preview && (
+        <iframe
+          src={preview}
+          title={`PDF submission from ${studentEmail ?? 'student'}`}
+          className="mt-4 h-[70vh] min-h-[520px] w-full rounded-xl border border-slate-200 bg-slate-50"
+        />
+      )}
       {canManage ? (
         <GradeControl
           assignmentId={assignmentId}

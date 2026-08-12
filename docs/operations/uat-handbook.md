@@ -19,7 +19,7 @@ Use synthetic data only. Give each tester a separate institutional or guardian a
 1. Sign in and confirm Teacher role and owned tags.
 2. Create, edit, publish, export/import, and restore a page for an owned tag.
 3. Attach a PDF to a saved page, replace it, publish the page, then confirm an authorized reader can review it inline and download the original; verify an unauthorized user cannot load either signed URL.
-4. Create an assignment and quiz, review a submission, save a draft mark, and release it separately.
+4. Create an assignment and quiz, review a submitted PDF inline, download its original, save a draft mark, and release it separately.
 5. Confirm a teacher cannot read or mutate another tag by UI, copied URL, or modified request.
 6. Verify malformed/oversized PDFs and MPX files fail safely and accessibly.
 7. Keyboard-test navigation, dialogs/editor controls, save errors, and focus recovery.
