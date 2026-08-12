@@ -101,16 +101,18 @@ Reviewed 2026-08-12: the [19-video Firefly Learning playlist](https://www.youtub
 | 18 | Engage the whole school community | Identify recipient barriers and coordinate teacher, pupil, parent and leadership communication around student outcomes. |
 | 19 | Saving teacher time and engaging parents | Measure whether communications are viewed and acted on; prefer concise, accessible formats and consistent structure over publication volume. |
 
-Playlist-backed priorities, subject to the existing policy and release gates:
+Playlist-backed priorities and verified implementation status:
 
-1. retain role-curated dashboards and canonical, tag-authorized content;
-2. extend secure PDF preview/replacement to non-destructive, accessible annotation only after F5's device/accessibility gate;
-3. preserve private draft feedback and require an explicit audited release;
-4. add an authorized chronological feedback/submission history before adding real-time messaging;
-5. design guardian views around linked-pupil actions and released information, not a general school feed;
-6. add communication delivery/view analytics only after privacy, retention and stakeholder success measures are approved;
-7. prioritize Microsoft integration by demonstrated teacher-time savings; and
-8. provide reusable teacher resources without bypassing tag ownership or publication lifecycle.
+| Priority | Status | Repository evidence or gate |
+|---|---|---|
+| Canonical, tag-authorized content and role-aware dashboards | Implemented | RLS-filtered page feed, real role identity, role-gated actions and tag-scoped announcements; the compact shell is shared rather than a separate dashboard per role. |
+| Non-destructive, accessible PDF annotation | Deferred — external evidence required | Authorized inline preview, original download and teacher replacement are implemented; F5 requires representative-device and accessibility ownership before annotation. |
+| Private draft feedback with explicit release | Implemented | Draft grades/feedback and audited release use separate database actions and student/guardian projections expose only released results. |
+| Authorized submission/feedback history | Implemented | `assignment_submission_timeline` is permission-checked and rendered in the teacher review workspace. Real-time pupil messaging remains blocked by safeguarding policy. |
+| Guardian views centred on linked-pupil actions and released data | Partially implemented | Linked-pupil deadlines/events, announcements and released grades/feedback exist. Attendance, behaviour, reports and live timetable data require approved MIS/source contracts and are not implemented. |
+| Communication delivery/view analytics | External policy gate | No read/view tracking exists. Privacy, retention, success measures and a named owner are required before implementation. |
+| Microsoft classroom/productivity integration | External system gate | Entra sign-in boundary exists; OneDrive, OneNote, Teams and Microsoft Graph classroom integrations do not. A real tenant/tool contract and demonstrated teacher-time benefit are required. |
+| Reusable teacher resources across staff/departments | Partially implemented | Canonical pages can serve multiple authorized audiences, but there is no explicit cross-teacher copy/template/share workflow. Its ownership and lifecycle semantics require product approval. |
 
 ## 4. Delivery order
 
