@@ -252,6 +252,12 @@ export default function SubmissionsView({
 }: SubmissionsViewProps) {
   const [changingState, setChangingState] = useState(false);
   const [stateError, setStateError] = useState<string | null>(null);
+  const [exception, setException] = useState<{
+    studentId: string;
+    withdraw: boolean;
+    date: string;
+    reason: string;
+  } | null>(null);
 
   async function changeState(action: 'publish' | 'archive' | 'close') {
     if (
@@ -284,24 +290,18 @@ export default function SubmissionsView({
     else window.location.reload();
   }
 
-  async function changeException(studentId: string, withdraw: boolean) {
-    const reason = window.prompt('Reason (required for the audit trail)');
-    if (!reason) return;
-    const date = withdraw
-      ? null
-      : window.prompt('New due date and time (YYYY-MM-DD HH:mm)');
-    if (!withdraw && !date) return;
-    if (date && !Number.isFinite(Date.parse(date))) {
-      setStateError('Enter a valid extension date and time.');
-      return;
-    }
+  async function saveException() {
+    if (!exception) return;
     setChangingState(true);
+    setStateError(null);
     const result = await setAssignmentExceptionAction(assignment.id, {
       assignmentId: assignment.id,
-      studentId,
-      extendedDueAt: date ? new Date(date).toISOString() : null,
-      withdraw,
-      reason,
+      studentId: exception.studentId,
+      extendedDueAt: exception.date
+        ? new Date(exception.date).toISOString()
+        : null,
+      withdraw: exception.withdraw,
+      reason: exception.reason,
     });
     setChangingState(false);
     if (!result.ok) setStateError(result.message);
@@ -465,7 +465,14 @@ export default function SubmissionsView({
                     <button
                       type="button"
                       disabled={changingState}
-                      onClick={() => changeException(student.studentId, false)}
+                      onClick={() =>
+                        setException({
+                          studentId: student.studentId,
+                          withdraw: false,
+                          date: '',
+                          reason: '',
+                        })
+                      }
                       className="font-semibold text-[#254889] disabled:opacity-50"
                     >
                       Extend
@@ -473,12 +480,72 @@ export default function SubmissionsView({
                     <button
                       type="button"
                       disabled={changingState}
-                      onClick={() => changeException(student.studentId, true)}
+                      onClick={() =>
+                        setException({
+                          studentId: student.studentId,
+                          withdraw: true,
+                          date: '',
+                          reason: '',
+                        })
+                      }
                       className="font-semibold text-[#9c4f43] disabled:opacity-50"
                     >
                       Withdraw
                     </button>
                   </div>
+                  {exception?.studentId === student.studentId && (
+                    <div className="mt-3 grid gap-2 border-t border-slate-200 pt-3">
+                      {!exception.withdraw && (
+                        <input
+                          type="datetime-local"
+                          aria-label="Extended due date"
+                          value={exception.date}
+                          onChange={(event) =>
+                            setException({
+                              ...exception,
+                              date: event.target.value,
+                            })
+                          }
+                          className="rounded-lg border border-slate-200 px-3 py-2"
+                        />
+                      )}
+                      <input
+                        aria-label="Exception reason"
+                        placeholder="Reason (required)"
+                        value={exception.reason}
+                        onChange={(event) =>
+                          setException({
+                            ...exception,
+                            reason: event.target.value,
+                          })
+                        }
+                        className="rounded-lg border border-slate-200 px-3 py-2"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setException(null)}
+                          className="rounded-lg px-3 py-2 font-semibold text-slate-500"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={
+                            changingState ||
+                            !exception.reason.trim() ||
+                            (!exception.withdraw && !exception.date)
+                          }
+                          onClick={saveException}
+                          className="rounded-lg bg-[#254889] px-3 py-2 font-semibold text-white disabled:opacity-50"
+                        >
+                          {exception.withdraw
+                            ? 'Confirm withdrawal'
+                            : 'Save extension'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>

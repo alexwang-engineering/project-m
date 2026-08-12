@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
 import AssignmentsView from '@/components/assignments/AssignmentsView';
@@ -152,5 +153,41 @@ describe('role-sensitive learning actions', () => {
     const view = within(container);
     expect(view.getByRole('button', { name: 'Save' })).toBeInTheDocument();
     expect(view.getByRole('button', { name: 'Release' })).toBeEnabled();
+  });
+
+  it('opens an inline form for pupil-specific extensions', async () => {
+    const user = userEvent.setup();
+    render(
+      <SubmissionsView
+        assignment={{
+          id: '00000000-0000-4000-8000-000000000012',
+          title: 'Lab report',
+          dueAt: null,
+          canManage: true,
+          lifecycle: 'published',
+          version: 1,
+          availableFrom: null,
+          closedAt: null,
+          instructions: null,
+          submissions: [],
+          roster: [
+            {
+              studentId: '00000000-0000-4000-8000-000000000015',
+              studentEmail: 'student@merchanttaylors.com',
+              submissionId: null,
+              status: 'not_submitted',
+              effectiveDueAt: null,
+              withdrawnAt: null,
+            },
+          ],
+        }}
+      />,
+    );
+    await user.click(screen.getByRole('button', { name: 'Extend' }));
+    expect(screen.getByLabelText('Extended due date')).toBeInTheDocument();
+    expect(screen.getByLabelText('Exception reason')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Save extension' }),
+    ).toBeDisabled();
   });
 });
