@@ -62,6 +62,28 @@ export async function listAttachableInstructionPages(
   }));
 }
 
+export interface AssignableStudent {
+  readonly id: string;
+  readonly email: string;
+  readonly tagIds: readonly string[];
+}
+
+/** Lists only active pupils in tags the caller currently manages. */
+export async function listAssignableStudents(
+  client: Client,
+  tagIds: readonly string[],
+): Promise<readonly AssignableStudent[]> {
+  const { data, error } = await client.rpc('list_assignable_students', {
+    requested_tag_ids: [...tagIds],
+  });
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.student_id,
+    email: row.student_email,
+    tagIds: row.tag_ids,
+  }));
+}
+
 /**
  * Lists assignments the current principal is authorized to see. Supabase
  * RLS is authoritative, so out-of-audience assignments never enter the
@@ -528,25 +550,6 @@ export type CreateAssignmentResult =
       readonly message: string;
     };
 
-// postgres-meta cannot express nullable RPC parameters, although PostgreSQL
-// timestamptz/uuid parameters accept NULL - same generator mismatch already
-// localized in lib/content/mutations.ts for create_page's nullable parent.
-type NullableDueDateArgs = Omit<
-  Database['public']['Functions']['create_assignment']['Args'],
-  'assignment_due_at' | 'instructions_page' | 'assignment_available_from'
-> & {
-  assignment_due_at: string | null;
-  instructions_page: string | null;
-  assignment_available_from: string | null;
-};
-
-async function createAssignmentRpc(client: Client, args: NullableDueDateArgs) {
-  return client.rpc(
-    'create_assignment',
-    args as Database['public']['Functions']['create_assignment']['Args'],
-  );
-}
-
 /** Validates and creates an assignment via the audited RPC. Teacher/manager on every audience tag, enforced server-side. */
 export async function createAssignment(
   client: Client,
@@ -640,8 +643,25 @@ export async function createAssignment(
       message: 'Instructions page ID must be a UUID or null.',
     };
   }
+  const selectedStudentIds = value.selectedStudentIds ?? null;
+  if (
+    selectedStudentIds !== null &&
+    (!Array.isArray(selectedStudentIds) ||
+      selectedStudentIds.length < 1 ||
+      selectedStudentIds.length > 500 ||
+      selectedStudentIds.some(
+        (id) => typeof id !== 'string' || !UUID.test(id),
+      ) ||
+      new Set(selectedStudentIds).size !== selectedStudentIds.length)
+  ) {
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Selected pupils are invalid.',
+    };
+  }
 
-  const { data, error } = await createAssignmentRpc(client, {
+  const { data, error } = await client.rpc('create_assignment_with_audience', {
     assignment_title: title,
     instructions_page: instructionsPageId,
     assignment_due_at: dueAt,
@@ -649,6 +669,7 @@ export async function createAssignment(
     resubmission_allowed: value.allowResubmission,
     audience_tag_ids: tagIds,
     correlation_id: crypto.randomUUID(),
+    selected_student_ids: selectedStudentIds as string[] | null,
   });
   if (error || !data) {
     const code =

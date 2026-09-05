@@ -7,7 +7,10 @@ import { Loader2 } from 'lucide-react';
 import { createAssignmentAction } from '@/app/actions/assignments';
 import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
 import { SubPageHeader } from '@/components/ui/SubPageHeader';
-import type { AttachableInstructionPage } from '@/lib/content/assignments';
+import type {
+  AssignableStudent,
+  AttachableInstructionPage,
+} from '@/lib/content/assignments';
 
 interface EditorTag {
   readonly id: string;
@@ -18,6 +21,7 @@ interface EditorTag {
 interface AssignmentEditorProps {
   writableTags: readonly EditorTag[];
   instructionPages: readonly AttachableInstructionPage[];
+  assignableStudents: readonly AssignableStudent[];
 }
 
 function coversTags(
@@ -32,6 +36,7 @@ function coversTags(
 export function AssignmentEditor({
   writableTags,
   instructionPages,
+  assignableStudents,
 }: AssignmentEditorProps) {
   const router = useRouter();
   const [title, setTitle] = useState('');
@@ -40,10 +45,23 @@ export function AssignmentEditor({
   const [allowResubmission, setAllowResubmission] = useState(false);
   const [tagIds, setTagIds] = useState<Set<string>>(new Set());
   const [instructionsPageId, setInstructionsPageId] = useState('');
+  const [selectedOnly, setSelectedOnly] = useState(false);
+  const [studentIds, setStudentIds] = useState<Set<string>>(new Set());
+  const [studentSearch, setStudentSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canSave = title.trim() !== '' && tagIds.size > 0 && !saving;
+  const canSave =
+    title.trim() !== '' &&
+    tagIds.size > 0 &&
+    (!selectedOnly || studentIds.size > 0) &&
+    !saving;
+  const matchingStudents = assignableStudents.filter((student) =>
+    student.tagIds.some((id) => tagIds.has(id)),
+  );
+  const visibleStudents = matchingStudents.filter((student) =>
+    student.email.toLowerCase().includes(studentSearch.trim().toLowerCase()),
+  );
   const selectedInstructionPage = instructionPages.find(
     (page) => page.id === instructionsPageId,
   );
@@ -60,6 +78,7 @@ export function AssignmentEditor({
       allowResubmission,
       tagIds: Array.from(tagIds),
       instructionsPageId: instructionsPageId || null,
+      selectedStudentIds: selectedOnly ? Array.from(studentIds) : null,
     });
     if (!result.ok) {
       setError(result.message);
@@ -208,6 +227,16 @@ export function AssignmentEditor({
                       if (selectedPage && !coversTags(selectedPage, next)) {
                         setInstructionsPageId('');
                       }
+                      setStudentIds(
+                        (selected) =>
+                          new Set(
+                            Array.from(selected).filter((studentId) =>
+                              assignableStudents
+                                .find((student) => student.id === studentId)
+                                ?.tagIds.some((id) => next.has(id)),
+                            ),
+                          ),
+                      );
                       return next;
                     })
                   }
@@ -222,6 +251,69 @@ export function AssignmentEditor({
               );
             })}
           </div>
+          <fieldset className="border-t border-slate-100 pt-3">
+            <legend className="text-[12.5px] font-medium text-slate-600">
+              Audience
+            </legend>
+            <label className="mt-2 flex items-center gap-2 text-[12.5px] text-slate-600">
+              <input
+                type="checkbox"
+                checked={selectedOnly}
+                onChange={(e) => setSelectedOnly(e.target.checked)}
+              />
+              Select individual pupils from these tags
+            </label>
+            {selectedOnly && (
+              <div className="mt-2 rounded-lg border border-slate-200 p-2">
+                <input
+                  type="search"
+                  aria-label="Search pupils"
+                  value={studentSearch}
+                  onChange={(event) => setStudentSearch(event.target.value)}
+                  placeholder="Search pupils by email"
+                  className="focus:border-brand-500 mb-1.5 w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-[12px] outline-none"
+                />
+                <div className="max-h-32 overflow-auto">
+                  {matchingStudents.length === 0 && (
+                    <p className="px-2 py-2 text-[12px] text-slate-400">
+                      Select a tag containing active pupils.
+                    </p>
+                  )}
+                  {matchingStudents.length > 0 &&
+                    visibleStudents.length === 0 && (
+                      <p className="px-2 py-2 text-[12px] text-slate-400">
+                        No pupils match that search.
+                      </p>
+                    )}
+                  {visibleStudents.map((student) => (
+                    <label
+                      key={student.id}
+                      className="flex items-center gap-2 px-2 py-1 text-[12px] text-slate-700"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={studentIds.has(student.id)}
+                        onChange={() =>
+                          setStudentIds((previous) => {
+                            const next = new Set(previous);
+                            if (next.has(student.id)) next.delete(student.id);
+                            else next.add(student.id);
+                            return next;
+                          })
+                        }
+                      />
+                      {student.email}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+            <p className="mt-2 text-[11.5px] text-slate-400">
+              {selectedOnly
+                ? `${studentIds.size} selected pupil${studentIds.size === 1 ? '' : 's'}`
+                : `All active pupils in ${tagIds.size} selected tag${tagIds.size === 1 ? '' : 's'}`}
+            </p>
+          </fieldset>
         </div>
       </main>
     </div>

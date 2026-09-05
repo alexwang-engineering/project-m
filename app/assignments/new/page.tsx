@@ -3,7 +3,10 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { createServerClient } from '@/lib/supabase/server';
 import { listWritableTags } from '@/lib/content/pages-editor';
-import { listAttachableInstructionPages } from '@/lib/content/assignments';
+import {
+  listAssignableStudents,
+  listAttachableInstructionPages,
+} from '@/lib/content/assignments';
 import { AssignmentEditor } from '@/components/assignments/AssignmentEditor';
 import type { Database } from '@/lib/database.types';
 
@@ -12,15 +15,20 @@ export default async function NewAssignmentPage() {
   const { data } = await supabase.auth.getUser();
   if (!data.user) redirect('/');
 
-  const [writableTags, instructionPages] = await Promise.all([
-    listWritableTags(supabase),
-    listAttachableInstructionPages(supabase),
-  ]);
+  const writableTags = await listWritableTags(supabase);
   if (writableTags.length === 0) redirect('/assignments');
+  const [instructionPages, assignableStudents] = await Promise.all([
+    listAttachableInstructionPages(supabase),
+    listAssignableStudents(
+      supabase,
+      writableTags.map((tag) => tag.id),
+    ),
+  ]);
   return (
     <AssignmentEditor
       writableTags={writableTags}
       instructionPages={instructionPages}
+      assignableStudents={assignableStudents}
     />
   );
 }

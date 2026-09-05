@@ -138,6 +138,49 @@ export type Database = {
           },
         ];
       };
+      assignment_students: {
+        Row: {
+          added_by: string;
+          assignment_id: string;
+          created_at: string;
+          student_id: string;
+        };
+        Insert: {
+          added_by: string;
+          assignment_id: string;
+          created_at?: string;
+          student_id: string;
+        };
+        Update: {
+          added_by?: string;
+          assignment_id?: string;
+          created_at?: string;
+          student_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'assignment_students_assignment_id_fkey';
+            columns: ['assignment_id'];
+            isOneToOne: false;
+            referencedRelation: 'assignments';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'assignment_students_student_id_fkey';
+            columns: ['student_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'assignment_students_added_by_fkey';
+            columns: ['added_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       assignment_submissions: {
         Row: {
           assignment_id: string;
@@ -244,6 +287,7 @@ export type Database = {
       };
       assignments: {
         Row: {
+          audience_mode: string;
           allow_resubmission: boolean;
           archived_at: string | null;
           created_at: string;
@@ -259,6 +303,7 @@ export type Database = {
           version: number;
         };
         Insert: {
+          audience_mode?: string;
           allow_resubmission?: boolean;
           archived_at?: string | null;
           created_at?: string;
@@ -274,6 +319,7 @@ export type Database = {
           version?: number;
         };
         Update: {
+          audience_mode?: string;
           allow_resubmission?: boolean;
           archived_at?: string | null;
           created_at?: string;
@@ -1994,6 +2040,27 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      create_assignment_with_audience: {
+        Args: {
+          assignment_available_from: string | null;
+          assignment_due_at: string | null;
+          assignment_title: string;
+          audience_tag_ids: string[];
+          correlation_id?: string;
+          instructions_page: string | null;
+          resubmission_allowed: boolean;
+          selected_student_ids: string[] | null;
+        };
+        Returns: Database['public']['Tables']['assignments']['Row'];
+      };
+      list_assignable_students: {
+        Args: { requested_tag_ids: string[] };
+        Returns: {
+          student_email: string;
+          student_id: string;
+          tag_ids: string[];
+        }[];
       };
       set_assignment_closed: {
         Args: {
