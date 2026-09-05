@@ -2,10 +2,18 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { ChevronDown, Download, Loader2, Plus, Upload } from 'lucide-react';
+import {
+  Copy,
+  ChevronDown,
+  Download,
+  Loader2,
+  Plus,
+  Upload,
+} from 'lucide-react';
 
 import {
   createPageAction,
+  duplicatePageAction,
   updatePageAction,
   setPageLifecycleAction,
 } from '@/app/actions/pages';
@@ -214,6 +222,31 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
     setSaving(false);
   }
 
+  async function handleDuplicate() {
+    if (pageId === null) return;
+    const duplicateTitle = window
+      .prompt('Title for the copy', `Copy of ${title}`)
+      ?.trim();
+    if (!duplicateTitle) return;
+    const duplicateSlug = window
+      .prompt('URL slug for the copy', `${slug}-copy`)
+      ?.trim();
+    if (!duplicateSlug) return;
+    setSaving(true);
+    setError(null);
+    const result = await duplicatePageAction({
+      pageId,
+      title: duplicateTitle,
+      slug: duplicateSlug,
+    });
+    if (!result.ok) {
+      setError({ code: result.code, message: result.message });
+      setSaving(false);
+      return;
+    }
+    router.push(`/pages/${result.page.id}/edit`);
+  }
+
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
       <SkipToContentLink />
@@ -353,6 +386,17 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
         </div>
 
         <div className="mb-4 flex flex-wrap items-center gap-2">
+          {pageId !== null && (
+            <button
+              type="button"
+              onClick={handleDuplicate}
+              disabled={saving}
+              className="hover:border-brand-400 hover:text-brand-700 flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-[12px] font-semibold text-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Copy size={12} strokeWidth={2.4} />
+              Duplicate
+            </button>
+          )}
           {pageId !== null && (
             <button
               type="button"

@@ -6,6 +6,7 @@ import { revalidatePath, updateTag } from 'next/cache';
 import type { Database } from '@/lib/database.types';
 import {
   createPage,
+  duplicatePage,
   setPageLifecycle,
   updatePage,
   type PageMutationResult,
@@ -40,6 +41,17 @@ export async function createPageAction(
   const client = await authenticatedClient();
   if (!client) return unauthenticated();
   const result = await createPage(client, input);
+  refreshPage(result);
+  return result;
+}
+
+/** Server Action for creating an authorized draft copy of a page. */
+export async function duplicatePageAction(
+  input: unknown,
+): Promise<PageMutationResult> {
+  const client = await authenticatedClient();
+  if (!client) return unauthenticated();
+  const result = await duplicatePage(client, input);
   refreshPage(result);
   return result;
 }

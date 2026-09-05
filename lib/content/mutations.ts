@@ -178,6 +178,40 @@ export async function createPage(
   };
 }
 
+/** Creates a draft copy of a page through database-enforced page and tag authorization. */
+export async function duplicatePage(
+  client: Client,
+  input: unknown,
+): Promise<PageMutationResult> {
+  const value = object(input);
+  if (!value || typeof value.pageId !== 'string' || !UUID.test(value.pageId)) {
+    return invalid('Page ID is invalid.');
+  }
+  const title = typeof value.title === 'string' ? value.title.trim() : '';
+  if (!title || title.length > 240) {
+    return invalid('Title must be between 1 and 240 characters.');
+  }
+  if (typeof value.slug !== 'string' || !SLUG.test(value.slug)) {
+    return invalid('Slug has an invalid format.');
+  }
+
+  const { data, error } = await client.rpc('duplicate_page', {
+    target_page_id: value.pageId,
+    duplicate_title: title,
+    duplicate_slug: value.slug,
+    correlation_id: crypto.randomUUID(),
+  });
+  if (error || !data) return databaseFailure(error);
+  return {
+    ok: true,
+    page: {
+      id: data.id,
+      canonicalUrl: data.canonical_url,
+      version: data.version,
+    },
+  };
+}
+
 /** Validates, sanitizes, and updates a page using optimistic concurrency. */
 export async function updatePage(
   client: Client,

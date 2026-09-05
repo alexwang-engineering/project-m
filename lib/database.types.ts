@@ -2010,6 +2010,21 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      duplicate_page: {
+        Args: {
+          correlation_id?: string;
+          duplicate_slug: string;
+          duplicate_title: string;
+          target_page_id: string;
+        };
+        Returns: Database['public']['Tables']['pages']['Row'];
+        SetofOptions: {
+          from: '*';
+          to: 'pages';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       current_principal_is_active: { Args: never; Returns: boolean };
       current_principal_is_admin: { Args: never; Returns: boolean };
       get_file_download_target: {

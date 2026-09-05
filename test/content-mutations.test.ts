@@ -6,6 +6,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import type { Database } from '@/lib/database.types';
 import {
   createPage,
+  duplicatePage,
   setPageLifecycle,
   updatePage,
 } from '@/lib/content/mutations';
@@ -64,6 +65,25 @@ describe('content mutations', () => {
       code: 'invalid_input',
     });
     expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('delegates page duplication authorization to the database RPC', async () => {
+    const { client, rpc } = clientReturning({
+      id: 'copy',
+      canonical_url: '/mechanisms-copy',
+      version: 1,
+    });
+    await expect(
+      duplicatePage(client, {
+        pageId: '20000000-0000-4000-8000-000000000001',
+        title: 'Mechanisms copy',
+        slug: 'mechanisms-copy',
+      }),
+    ).resolves.toMatchObject({ ok: true, page: { version: 1 } });
+    expect(rpc).toHaveBeenCalledWith(
+      'duplicate_page',
+      expect.objectContaining({ duplicate_slug: 'mechanisms-copy' }),
+    );
   });
 
   it('maps optimistic conflicts to a safe result', async () => {
