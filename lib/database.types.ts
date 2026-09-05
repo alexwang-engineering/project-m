@@ -1678,6 +1678,24 @@ export type Database = {
           graded_at: string | null;
         }[];
       };
+      recently_deleted: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          item_kind: string;
+          item_id: string;
+          title: string;
+          deleted_at: string;
+          restore_until: string;
+        }[];
+      };
+      restore_deleted_item: {
+        Args: {
+          item_kind: string;
+          item_id: string;
+          correlation_id?: string;
+        };
+        Returns: undefined;
+      };
       link_guardian: {
         Args: {
           correlation_id?: string;

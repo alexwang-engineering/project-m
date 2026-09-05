@@ -45,7 +45,21 @@ export function ResourcesView({
   return (
     <div className="min-h-screen bg-slate-50">
       <SkipToContentLink />
-      <SubPageHeader backHref="/" backLabel="Dashboard" title="Resources" />
+      <SubPageHeader
+        backHref="/"
+        backLabel="Dashboard"
+        title="Resources"
+        actions={
+          isStaff ? (
+            <Link
+              href="/recently-deleted"
+              className="hover:border-brand-500 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
+            >
+              Recently deleted
+            </Link>
+          ) : undefined
+        }
+      />
       <main
         id="main-content"
         tabIndex={-1}

@@ -8,6 +8,7 @@ import {
   Download,
   Loader2,
   Plus,
+  Trash2,
   Upload,
 } from 'lucide-react';
 
@@ -319,6 +320,30 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
     setSaving(false);
   }
 
+  async function handleArchive() {
+    if (
+      pageId === null ||
+      version === null ||
+      !window.confirm('Move this page to Recently deleted?')
+    )
+      return;
+    setSaving(true);
+    setError(null);
+    const result = await setPageLifecycleAction({
+      pageId,
+      expectedVersion: version,
+      nextState: 'archived',
+      makePublic: false,
+    });
+    if (!result.ok) {
+      setError({ code: result.code, message: result.message });
+      setSaving(false);
+      return;
+    }
+    clearPageRecoveries(pageId);
+    router.push('/recently-deleted');
+  }
+
   async function handleDuplicate() {
     if (pageId === null) return;
     const duplicateTitle = window
@@ -409,6 +434,17 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
                 className="hover:border-brand-400 hover:text-brand-700 flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-4 text-[12.5px] font-semibold text-slate-700 transition disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {lifecycle === 'published' ? 'Unpublish' : 'Publish'}
+              </button>
+            )}
+            {pageId !== null && (
+              <button
+                type="button"
+                onClick={handleArchive}
+                disabled={saving}
+                className="flex h-9 items-center gap-1.5 rounded-lg border border-red-200 px-3 text-[12.5px] font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+              >
+                <Trash2 size={13} />
+                Archive
               </button>
             )}
           </>
