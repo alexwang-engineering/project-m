@@ -62,6 +62,8 @@ export interface QuizQuestion {
   readonly id: string;
   readonly prompt: string;
   readonly choices: readonly QuizChoice[];
+  readonly kind: 'multiple_choice' | 'multiple_answer';
+  readonly weight: number;
 }
 
 export interface QuizAttemptSummary {
@@ -123,7 +125,7 @@ export async function getQuizDetail(
 
   const { data: questions, error: questionsError } = await client
     .from('quiz_questions')
-    .select('id, prompt, choices')
+    .select('id, prompt, choices, question_kind, weight')
     .eq('quiz_id', quizId)
     .order('position', { ascending: true });
   if (questionsError) throw questionsError;
@@ -159,6 +161,11 @@ export async function getQuizDetail(
       id: q.id,
       prompt: q.prompt,
       choices: isChoiceArray(q.choices) ? q.choices : [],
+      kind:
+        q.question_kind === 'multiple_answer'
+          ? 'multiple_answer'
+          : 'multiple_choice',
+      weight: q.weight,
     })),
     myAttempt: myAttemptRow ? toSummary(myAttemptRow) : null,
     attempts: (attempts ?? []).map(toSummary),
@@ -286,6 +293,17 @@ export async function createQuiz(
           message: 'bankItemId must be a UUID.',
         };
       }
+      if (
+        !Number.isInteger(q.weight) ||
+        (q.weight as number) < 1 ||
+        (q.weight as number) > 100
+      ) {
+        return {
+          ok: false,
+          code: 'invalid_input',
+          message: 'Question weight must be between 1 and 100.',
+        };
+      }
       continue;
     }
     if (typeof q.prompt !== 'string' || !q.prompt.trim()) {
@@ -306,11 +324,33 @@ export async function createQuiz(
         message: 'Every question needs between 2 and 8 choices.',
       };
     }
-    if (typeof q.correctChoiceId !== 'string' || !q.correctChoiceId) {
+    if (!['multiple_choice', 'multiple_answer'].includes(q.kind as string)) {
       return {
         ok: false,
         code: 'invalid_input',
-        message: 'Every question needs a correct choice.',
+        message: 'Every question needs a valid type.',
+      };
+    }
+    if (
+      !Number.isInteger(q.weight) ||
+      (q.weight as number) < 1 ||
+      (q.weight as number) > 100
+    ) {
+      return {
+        ok: false,
+        code: 'invalid_input',
+        message: 'Question weight must be between 1 and 100.',
+      };
+    }
+    const hasAnswerKey =
+      q.kind === 'multiple_choice'
+        ? typeof q.correctChoiceId === 'string' && q.correctChoiceId !== ''
+        : Array.isArray(q.correctChoiceIds) && q.correctChoiceIds.length > 0;
+    if (!hasAnswerKey) {
+      return {
+        ok: false,
+        code: 'invalid_input',
+        message: 'Every question needs at least one correct choice.',
       };
     }
   }

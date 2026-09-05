@@ -594,24 +594,30 @@ export type Database = {
           id: string;
           position: number;
           prompt: string;
+          question_kind: string;
           quiz_id: string;
           sourced_from_bank_item_id: string | null;
+          weight: number;
         };
         Insert: {
           choices: Json;
           id?: string;
           position: number;
           prompt: string;
+          question_kind?: string;
           quiz_id: string;
           sourced_from_bank_item_id?: string | null;
+          weight?: number;
         };
         Update: {
           choices?: Json;
           id?: string;
           position?: number;
           prompt?: string;
+          question_kind?: string;
           quiz_id?: string;
           sourced_from_bank_item_id?: string | null;
+          weight?: number;
         };
         Relationships: [
           {
@@ -706,15 +712,18 @@ export type Database = {
       };
       quiz_answer_keys: {
         Row: {
-          correct_choice_id: string;
+          correct_choice_id: string | null;
+          correct_choice_ids: string[];
           question_id: string;
         };
         Insert: {
-          correct_choice_id: string;
+          correct_choice_id?: string | null;
+          correct_choice_ids: string[];
           question_id: string;
         };
         Update: {
-          correct_choice_id?: string;
+          correct_choice_id?: string | null;
+          correct_choice_ids?: string[];
           question_id?: string;
         };
         Relationships: [

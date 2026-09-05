@@ -52,12 +52,18 @@ function AttemptsList({ attempts }: { attempts: QuizDetail['attempts'] }) {
 }
 
 function TakeQuizForm({ quiz }: { quiz: QuizDetail }) {
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
-  const canSubmit = quiz.questions.every((q) => answers[q.id]) && !submitting;
+  const canSubmit =
+    quiz.questions.every((q) => {
+      const answer = answers[q.id];
+      return typeof answer === 'string'
+        ? answer !== ''
+        : (answer?.length ?? 0) > 0;
+    }) && !submitting;
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -83,37 +89,58 @@ function TakeQuizForm({ quiz }: { quiz: QuizDetail }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {quiz.questions.map((question, index) => (
-        <div
-          key={question.id}
-          className="rounded-xl border border-slate-200 bg-white p-4"
-        >
-          <p className="mb-3 text-[14px] font-medium text-slate-900">
-            {index + 1}. {question.prompt}
-          </p>
-          <div className="flex flex-col gap-2">
-            {question.choices.map((choice) => (
-              <label
-                key={choice.id}
-                className="hover:border-brand-300 flex items-center gap-2.5 rounded-lg border border-slate-200 px-3 py-2 text-[13.5px] text-slate-700"
-              >
-                <input
-                  type="radio"
-                  name={`question-${question.id}`}
-                  checked={answers[question.id] === choice.id}
-                  onChange={() =>
-                    setAnswers((prev) => ({
-                      ...prev,
-                      [question.id]: choice.id,
-                    }))
-                  }
-                />
-                {choice.label}
-              </label>
-            ))}
-          </div>
-        </div>
-      ))}
+      {quiz.questions.map((question, index) => {
+        const answer = answers[question.id];
+        return (
+          <fieldset
+            key={question.id}
+            className="rounded-xl border border-slate-200 bg-white p-4"
+          >
+            <legend className="mb-3 px-1 text-[14px] font-medium text-slate-900">
+              {index + 1}. {question.prompt}
+              {question.weight > 1 && ` (${question.weight} points)`}
+            </legend>
+            <div className="flex flex-col gap-2">
+              {question.choices.map((choice) => (
+                <label
+                  key={choice.id}
+                  className="hover:border-brand-300 flex items-center gap-2.5 rounded-lg border border-slate-200 px-3 py-2 text-[13.5px] text-slate-700"
+                >
+                  <input
+                    type={
+                      question.kind === 'multiple_answer' ? 'checkbox' : 'radio'
+                    }
+                    name={`question-${question.id}`}
+                    checked={
+                      question.kind === 'multiple_answer'
+                        ? Array.isArray(answer) && answer.includes(choice.id)
+                        : answer === choice.id
+                    }
+                    onChange={() =>
+                      setAnswers((prev) => {
+                        if (question.kind === 'multiple_choice') {
+                          return { ...prev, [question.id]: choice.id };
+                        }
+                        const previousAnswer = prev[question.id];
+                        const selected: string[] = Array.isArray(previousAnswer)
+                          ? previousAnswer
+                          : [];
+                        return {
+                          ...prev,
+                          [question.id]: selected.includes(choice.id)
+                            ? selected.filter((id) => id !== choice.id)
+                            : [...selected, choice.id],
+                        };
+                      })
+                    }
+                  />
+                  {choice.label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        );
+      })}
 
       {error && <p className="text-[12.5px] text-red-600">{error}</p>}
       <button

@@ -176,9 +176,9 @@ begin
     insert into public.quiz_questions (id, quiz_id, position, prompt, choices) values
       (('51000000-0000-4000-8001-' || right(item.tag_id::text, 12))::uuid, ('41000000-0000-4000-8000-' || right(item.tag_id::text, 12))::uuid, 1, item.q1, item.q1_choices),
       (('51000000-0000-4000-8002-' || right(item.tag_id::text, 12))::uuid, ('41000000-0000-4000-8000-' || right(item.tag_id::text, 12))::uuid, 2, item.q2, item.q2_choices);
-    insert into public.quiz_answer_keys (question_id, correct_choice_id) values
-      (('51000000-0000-4000-8001-' || right(item.tag_id::text, 12))::uuid, item.q1_answer),
-      (('51000000-0000-4000-8002-' || right(item.tag_id::text, 12))::uuid, item.q2_answer);
+    insert into public.quiz_answer_keys (question_id, correct_choice_id, correct_choice_ids) values
+      (('51000000-0000-4000-8001-' || right(item.tag_id::text, 12))::uuid, item.q1_answer, array[item.q1_answer]),
+      (('51000000-0000-4000-8002-' || right(item.tag_id::text, 12))::uuid, item.q2_answer, array[item.q2_answer]);
   end loop;
 end
 $$;

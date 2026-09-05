@@ -35,7 +35,9 @@ interface QuestionDraft {
   key: string;
   prompt: string;
   choices: ChoiceDraft[];
-  correctChoiceId: string;
+  kind: 'multiple_choice' | 'multiple_answer';
+  correctChoiceIds: string[];
+  weight: number;
   /** Set when this question was added via "add from bank" (ADR-014) - its content is read-only here and resolved server-side from the bank item's current row, not from what's displayed. */
   bankItemId: string | null;
 }
@@ -50,7 +52,9 @@ function newQuestionDraft(key: string): QuestionDraft {
       { id: 'a', label: '' },
       { id: 'b', label: '' },
     ],
-    correctChoiceId: 'a',
+    kind: 'multiple_choice',
+    correctChoiceIds: ['a'],
+    weight: 1,
     bankItemId: null,
   };
 }
@@ -60,7 +64,9 @@ function bankQuestionDraft(key: string, item: BankItemOption): QuestionDraft {
     key,
     prompt: item.prompt,
     choices: item.choices.map((c) => ({ id: c.id, label: c.label })),
-    correctChoiceId: item.correctChoiceId,
+    kind: 'multiple_choice',
+    correctChoiceIds: [item.correctChoiceId],
+    weight: 1,
     bankItemId: item.id,
   };
 }
@@ -102,7 +108,12 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
     questions.length > 0 &&
     questions.every(
       (q) =>
-        q.prompt.trim() !== '' && q.choices.every((c) => c.label.trim() !== ''),
+        q.prompt.trim() !== '' &&
+        q.choices.every((c) => c.label.trim() !== '') &&
+        q.correctChoiceIds.length > 0 &&
+        Number.isInteger(q.weight) &&
+        q.weight >= 1 &&
+        q.weight <= 100,
     ) &&
     !saving;
 
@@ -122,14 +133,18 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
       tagIds: Array.from(tagIds),
       questions: questions.map((q) =>
         q.bankItemId
-          ? { bankItemId: q.bankItemId }
+          ? { bankItemId: q.bankItemId, weight: q.weight }
           : {
               prompt: q.prompt.trim(),
               choices: q.choices.map((c) => ({
                 id: c.id,
                 label: c.label.trim(),
               })),
-              correctChoiceId: q.correctChoiceId,
+              kind: q.kind,
+              weight: q.weight,
+              ...(q.kind === 'multiple_choice'
+                ? { correctChoiceId: q.correctChoiceIds[0] }
+                : { correctChoiceIds: q.correctChoiceIds }),
             },
       ),
     });
@@ -273,17 +288,66 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
                   </button>
                 </div>
                 <div className="flex flex-col gap-2">
+                  <div className="flex flex-wrap items-center gap-3 rounded-lg bg-slate-50 px-3 py-2">
+                    <label className="flex items-center gap-2 text-[12px] font-medium text-slate-600">
+                      Answer type
+                      <select
+                        value={question.kind}
+                        disabled={fromBank}
+                        onChange={(event) =>
+                          updateQuestion(question.key, (q) => ({
+                            ...q,
+                            kind: event.target.value as QuestionDraft['kind'],
+                            correctChoiceIds: [q.correctChoiceIds[0] ?? 'a'],
+                          }))
+                        }
+                        className="rounded-md border border-slate-200 bg-white px-2 py-1"
+                      >
+                        <option value="multiple_choice">One answer</option>
+                        <option value="multiple_answer">
+                          Multiple answers
+                        </option>
+                      </select>
+                    </label>
+                    <label className="flex items-center gap-2 text-[12px] font-medium text-slate-600">
+                      Points
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={question.weight}
+                        onChange={(event) =>
+                          updateQuestion(question.key, (q) => ({
+                            ...q,
+                            weight: Number(event.target.value),
+                          }))
+                        }
+                        className="w-16 rounded-md border border-slate-200 bg-white px-2 py-1"
+                      />
+                    </label>
+                  </div>
                   {question.choices.map((choice, cIndex) => (
                     <div key={choice.id} className="flex items-center gap-2">
                       <input
-                        type="radio"
+                        type={
+                          question.kind === 'multiple_answer'
+                            ? 'checkbox'
+                            : 'radio'
+                        }
                         name={`correct-${question.key}`}
-                        checked={question.correctChoiceId === choice.id}
+                        checked={question.correctChoiceIds.includes(choice.id)}
                         disabled={fromBank}
                         onChange={() =>
                           updateQuestion(question.key, (q) => ({
                             ...q,
-                            correctChoiceId: choice.id,
+                            correctChoiceIds:
+                              q.kind === 'multiple_choice'
+                                ? [choice.id]
+                                : q.correctChoiceIds.includes(choice.id)
+                                  ? q.correctChoiceIds.filter(
+                                      (id) => id !== choice.id,
+                                    )
+                                  : [...q.correctChoiceIds, choice.id],
                           }))
                         }
                         aria-label={`Mark choice ${cIndex + 1} as correct`}
@@ -314,10 +378,9 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
                               choices: q.choices.filter(
                                 (c) => c.id !== choice.id,
                               ),
-                              correctChoiceId:
-                                q.correctChoiceId === choice.id
-                                  ? (q.choices[0]?.id ?? 'a')
-                                  : q.correctChoiceId,
+                              correctChoiceIds: q.correctChoiceIds.filter(
+                                (id) => id !== choice.id,
+                              ),
                             }))
                           }
                           disabled={question.choices.length <= 2}
