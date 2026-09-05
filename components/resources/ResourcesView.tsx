@@ -102,7 +102,12 @@ export function ResourcesView({
             description="Try another search or tag."
           />
         ) : isStaff ? (
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+          <div
+            role="region"
+            aria-label="Scrollable resource management table"
+            tabIndex={0}
+            className="overflow-x-auto rounded-xl border border-slate-200 bg-white"
+          >
             <table className="w-full min-w-[720px] text-left text-sm">
               <caption className="sr-only">Resources available to you</caption>
               <thead className="border-b border-slate-200 bg-slate-100 text-xs tracking-wide text-slate-700 uppercase">

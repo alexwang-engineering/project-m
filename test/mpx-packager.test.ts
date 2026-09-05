@@ -6,7 +6,13 @@ import { webcrypto } from 'node:crypto';
 import JSZip from 'jszip';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { MpxFormatError, packageMpx, unpackMpx } from '@/lib/mpx-packager';
+import {
+  MpxFormatError,
+  packageMpx,
+  unpackMpx,
+  type JsonValue,
+} from '@/lib/mpx-packager';
+import { importMpxFile } from '@/components/pages/mpx-transfer';
 
 beforeAll(() => {
   Object.defineProperty(globalThis, 'File', {
@@ -128,5 +134,32 @@ describe('MPX v1', () => {
     await expect(
       unpackMpx(new NodeFile([bytes], 'future.mpx') as File),
     ).rejects.toBeInstanceOf(MpxFormatError);
+  });
+
+  it('fails closed when imported rich blocks are malformed', async () => {
+    const malformedBlocks: JsonValue[] = [
+      {
+        id: 't1',
+        type: 'table',
+        caption: 'Broken',
+        headers: ['One', 'Two'],
+        rows: [['Only one cell']],
+      },
+      {
+        id: 'v1',
+        type: 'youtube',
+        videoId: 'https://youtu.be/dQw4w9WgXcQ/extra',
+        title: 'Broken URL',
+      },
+    ];
+    for (const block of malformedBlocks) {
+      const blob = await packageMpx(
+        { title: 'Invalid import', content: { blocks: [block] } },
+        [],
+      );
+      await expect(
+        importMpxFile(await archiveFile(blob)),
+      ).resolves.toMatchObject({ ok: false });
+    }
   });
 });

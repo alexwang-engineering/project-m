@@ -21,5 +21,11 @@ describe('normalizeYouTubeVideoId', () => {
         'https://youtube.com/watch?v=dQw4w9WgXcQ&list=PL123',
       ),
     ).toBeNull();
+    expect(
+      normalizeYouTubeVideoId('https://youtu.be/dQw4w9WgXcQ/extra'),
+    ).toBeNull();
+    expect(
+      normalizeYouTubeVideoId('https://youtube.com/embed/dQw4w9WgXcQ/extra'),
+    ).toBeNull();
   });
 });

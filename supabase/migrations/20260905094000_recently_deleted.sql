@@ -62,7 +62,7 @@ begin
  else update public.assignments set lifecycle='draft',archived_at=null,published_at=null,closed_at=null,version=version+1 where id=item_id;
  end if;
  insert into public.audit_events(actor_id,action,target_type,target_id,correlation_id,source,before_data,after_data)
- values(actor,item_kind||'.restored',item_kind,item_id,correlation_id,'app',jsonb_build_object('archived_at',deleted_at),jsonb_build_object('state','draft'));
+ values(actor,item_kind||'.restored',item_kind,item_id,correlation_id,'app',jsonb_build_object('archived_at',deleted_at),jsonb_build_object('state',case when item_kind='quiz' then 'active' else 'draft' end));
 end;
 $$;
 revoke all on function public.restore_deleted_item(text,uuid,uuid) from public;

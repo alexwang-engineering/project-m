@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(12);
+select plan(13);
 insert into auth.users(id,email,aud,role) values
  ('34000000-0000-4000-8000-000000000001','deleted-owner@merchanttaylors.com','authenticated','authenticated'),
  ('34000000-0000-4000-8000-000000000002','deleted-other@merchanttaylors.com','authenticated','authenticated'),
@@ -43,5 +43,6 @@ select lives_ok($$select public.restore_deleted_item('quiz','34000000-0000-4000-
 select lives_ok($$select public.restore_deleted_item('assignment','34000000-0000-4000-8000-000000000024')$$,'owner restores assignment');
 reset role;
 select is((select count(*) from public.audit_events where action like '%.restored' and target_id in('34000000-0000-4000-8000-000000000021','34000000-0000-4000-8000-000000000023','34000000-0000-4000-8000-000000000024'))::bigint,3::bigint,'every restore is audited');
+select is((select after_data->>'state' from public.audit_events where action='quiz.restored' and target_id='34000000-0000-4000-8000-000000000023'),'active','quiz audit records its real restored state');
 select is((select count(*) from public.page_revisions where page_id='34000000-0000-4000-8000-000000000021' and lifecycle='draft')::bigint,1::bigint,'page restore records immutable revision');
 select * from finish(); rollback;

@@ -18,6 +18,7 @@ import {
   type BlockDraft,
 } from '@/components/pages/block-draft';
 import { sanitizeEditorHtml } from '@/lib/html-sanitizer';
+import { normalizeYouTubeVideoId } from '@/lib/youtube';
 
 interface MpxPageContent {
   readonly title: string;
@@ -152,7 +153,19 @@ export async function importMpxFile(file: File): Promise<MpxImportOutcome> {
 
   for (const raw of rawBlocks) {
     const block = parseImportedBlock(raw);
-    if (!block) continue;
+    if (!block) {
+      const type =
+        raw !== null && typeof raw === 'object' && !Array.isArray(raw)
+          ? (raw as Record<string, unknown>).type
+          : null;
+      if (type === 'table' || type === 'youtube') {
+        return {
+          ok: false,
+          message: `This MPX file contains an invalid ${type} block.`,
+        };
+      }
+      continue;
+    }
     if (block.type === 'file') {
       const match = [...filesByName.entries()].find(([name]) =>
         name.startsWith(`${block.id}--`),
@@ -249,28 +262,47 @@ function parseImportedBlock(raw: unknown): BlockDraft | null {
         uploading: false,
       };
     case 'table':
-      if (!Array.isArray(value.headers) || !Array.isArray(value.rows))
+      if (
+        typeof value.caption !== 'string' ||
+        !value.caption.trim() ||
+        !Array.isArray(value.headers) ||
+        value.headers.length < 1 ||
+        value.headers.length > 12 ||
+        !value.headers.every((cell) => typeof cell === 'string') ||
+        !Array.isArray(value.rows) ||
+        value.rows.length < 1 ||
+        value.rows.length > 100 ||
+        !value.rows.every(
+          (row) =>
+            Array.isArray(row) &&
+            row.length === (value.headers as unknown[]).length &&
+            row.every((cell) => typeof cell === 'string'),
+        )
+      )
         return null;
+      const headers = value.headers as string[];
+      const rows = value.rows as string[][];
       return {
         id,
         type: 'table',
-        caption: typeof value.caption === 'string' ? value.caption : '',
-        headers: value.headers
-          .filter((cell): cell is string => typeof cell === 'string')
-          .map(sanitizeEditorHtml),
-        rows: value.rows.flatMap((row) =>
-          Array.isArray(row) && row.every((cell) => typeof cell === 'string')
-            ? [row.map((cell) => sanitizeEditorHtml(cell as string))]
-            : [],
-        ),
+        caption: value.caption,
+        headers: headers.map(sanitizeEditorHtml),
+        rows: rows.map((row) => row.map(sanitizeEditorHtml)),
       };
-    case 'youtube':
+    case 'youtube': {
+      const videoId =
+        typeof value.videoId === 'string'
+          ? normalizeYouTubeVideoId(value.videoId)
+          : null;
+      if (!videoId || typeof value.title !== 'string' || !value.title.trim())
+        return null;
       return {
         id,
         type: 'youtube',
-        videoId: typeof value.videoId === 'string' ? value.videoId : '',
-        title: typeof value.title === 'string' ? value.title : '',
+        videoId,
+        title: value.title,
       };
+    }
     default:
       // Unrecognized, or an image block - images aren't part of the MPX
       // format at all, so there's nothing to import; skip rather than

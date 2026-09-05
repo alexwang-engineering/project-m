@@ -1,15 +1,16 @@
 # Project M Release Readiness Matrix
 
-Last engineering verification: 2026-08-12. This is the handbook's completion ledger; historical package state remains in `docs/coordination/ACTIVE_WORK.md`.
+Last engineering verification: 2026-09-06. This is the handbook's completion ledger; historical package state remains in `docs/coordination/ACTIVE_WORK.md`.
 
 ## Locally complete and verified
 
 | Area | Evidence |
 |---|---|
 | Identity boundary | Fail-closed institutional admission, role-aware login flow, protected routes, guardian admission separated from Entra; auth pgTAP tests |
-| Authorization | RLS-backed anonymous/student/teacher/admin/guardian isolation, all-tags-required teacher writes, disabled-user handling; 373 total pgTAP assertions |
-| Content | Canonical pages, block validation/sanitization, Word-style safe font sizing, drafts/publishing, optimistic concurrency, revisions/restore, MPX/PDF transfer and bounded imports |
-| Assessment | Canonical instructions, draft/publish/archive, scheduled visibility, closeable intake, bounded roster/timeline, audited pupil extensions/withdrawals, quizzes/question bank, and separate grade save/release |
+| Authorization | RLS-backed anonymous/student/teacher/admin/guardian isolation, all-tags-required teacher writes, disabled-user handling; covered by the 443-assertion database gate |
+| Content | Canonical pages, block validation/sanitization, Word-style safe font sizing, drafts/publishing, optimistic concurrency, revisions/restore, secure duplication, local draft recovery, Recently Deleted, strict MPX/PDF transfer, accessible tables and consent-gated YouTube embeds |
+| Assessment | Canonical instructions, draft/publish/archive, scheduled visibility, authorized class/pupil targeting, bounded roster/timeline, audited pupil extensions/withdrawals, multiple-answer weighted quizzes, controlled retakes, question bank, and separate grade save/release |
+| Resource discovery | RLS-filtered `/resources` projection shared by student cards and the teacher management table, with search, tag filtering, canonical links and mobile/keyboard handling |
 | PDF and file workflow | Authorized inline PDF review, separate original download, teacher replacement, private scanned storage and accessible textual feedback; annotation intentionally deferred pending representative-device and accessibility evidence |
 | School workflows | Tags/admin audit, roster dry-run/apply, calendar, announcements, search, operational reports, staged migration manifests |
 | File security | Private Storage, bounded metadata and signatures, checksum verification, recoverable worker leases, audited ready/quarantine/failure outcomes; production no-op scanner prohibited |
@@ -19,11 +20,12 @@ Last engineering verification: 2026-08-12. This is the handbook's completion led
 
 Latest clean local gate:
 
-- `npm run check`: 77 tests, lint/typecheck/format/build passed on 2026-08-12.
-- `npx supabase test db`: 29 files, 373 assertions passed against the current local database.
+- `npm run check`: 86 tests, lint/typecheck/format/build passed on 2026-09-06.
+- Fresh `supabase db reset --local` followed by `supabase test db`: 36 files, 443 assertions passed.
 - `npm run test:e2e`: 4 Playwright tests passed.
 - `npm audit --omit=dev`: zero vulnerabilities.
 - Live `GET /api/health`: HTTP 200 with local Supabase.
+- Package-specific teacher/student browser journeys passed for P1–P9, including mobile and axe checks.
 
 GitHub CI run 31532429154 applied the complete migration chain to a fresh Supabase database and passed all pgTAP assertions on 2026-08-11.
 

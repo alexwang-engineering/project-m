@@ -18,7 +18,9 @@ export function RecentlyDeletedView({
   const [error, setError] = useState<string | null>(null);
 
   async function restore(item: DeletedItem) {
-    if (!window.confirm(`Restore “${item.title}” as a draft?`)) return;
+    const destination =
+      item.kind === 'quiz' ? 'to active resources' : 'as a private draft';
+    if (!window.confirm(`Restore “${item.title}” ${destination}?`)) return;
     setBusy(item.id);
     setError(null);
     const result = await restoreDeletedItemAction({
@@ -43,8 +45,8 @@ export function RecentlyDeletedView({
         className="mx-auto max-w-3xl px-5 py-8 sm:px-8"
       >
         <p className="mb-6 text-sm text-slate-600">
-          Items can be restored for 30 days. Restored items return as private
-          drafts.
+          Items can be restored for 30 days. Pages and assignments return as
+          private drafts; quizzes return to active resources.
         </p>
         {error && (
           <p

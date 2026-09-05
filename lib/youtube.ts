@@ -16,16 +16,19 @@ export function normalizeYouTubeVideoId(input: string): string | null {
       return null;
     const host = url.hostname.toLowerCase();
     let id: string | null = null;
-    if (host === 'youtu.be')
-      id = url.pathname.split('/').filter(Boolean)[0] ?? null;
+    const path = url.pathname.split('/').filter(Boolean);
+    if (host === 'youtu.be') id = path.length === 1 ? (path[0] ?? null) : null;
     else if (
       host === 'youtube.com' ||
       host === 'www.youtube.com' ||
       host === 'm.youtube.com'
     ) {
       if (url.pathname === '/watch') id = url.searchParams.get('v');
-      else if (/^\/(embed|shorts)\//.test(url.pathname))
-        id = url.pathname.split('/')[2] ?? null;
+      else if (
+        path.length === 2 &&
+        (path[0] === 'embed' || path[0] === 'shorts')
+      )
+        id = path[1] ?? null;
     }
     return id && VIDEO_ID.test(id) ? id : null;
   } catch {

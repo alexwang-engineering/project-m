@@ -1,6 +1,6 @@
 # Project M Downloaded Design Integration Plan
 
-Status: proposed local implementation sequence  
+Status: implemented and locally verified (P1–P9) on 2026-09-06
 Source: `/Users/wjl/Downloads/Project M/`  
 Rule: the downloaded HTML and guides are design references, not executable source or authority over existing ADRs.
 
@@ -81,9 +81,8 @@ Goal: allow a teacher to choose one, two, three or unlimited attempts while reta
 - Show students their attempt count before submission.
 - Keep every attempt immutable; gradebook policy must explicitly choose latest or highest score before implementation.
 
-Blocked decision:
-
-- Product owner must choose `latest attempt` or `highest attempt` for gradebook aggregation.
+Resolved decision: gradebook aggregation uses the highest attempt while every
+attempt remains immutable.
 
 Acceptance:
 
@@ -101,10 +100,9 @@ Goal: let teachers assign work to authorized classes and selected pupils without
 - Provide search/filter over authorized classes and pupils.
 - Display an exact audience summary before publication.
 
-Blocked decisions:
-
-- Define whether an individually added pupil keeps access after leaving the source class.
-- Define notification and guardian visibility rules.
+Resolved decisions: individually selected pupils must remain current members of
+an authorized source tag; student, calendar and guardian visibility all use the
+same effective-audience rule.
 
 Acceptance:
 
@@ -258,3 +256,13 @@ A package is complete only when its code, migration, tests, live local journey a
 | M5 — Richer content | P8, P9 | Accessible tables and safe video embeds |
 
 Do not begin a later milestone merely because visual mockups exist. Start it when the prior milestone is verified and the next package's blocked decisions are resolved.
+
+## 8. Completion evidence
+
+All five milestones and P1–P9 are implemented locally. The final clean loop on
+2026-09-06 passed the application gate (86 unit/integration tests plus lint,
+format, typecheck and production build), a fresh migration reset, 443 pgTAP
+assertions across 36 files, four Playwright/axe browser checks, and a production
+dependency audit with zero known vulnerabilities. Package-specific teacher and
+student browser journeys were also exercised during implementation. Production
+and policy gates remain listed in the release-readiness matrix.
