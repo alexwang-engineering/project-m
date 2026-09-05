@@ -49,7 +49,9 @@ async function loadStudentRows(
       .limit(200),
     client
       .from('quiz_attempts')
-      .select('id, score, max_score, submitted_at, quizzes(id, title)')
+      .select(
+        'id, score, max_score, submitted_at, attempt_number, quizzes(id, title, gradebook_policy)',
+      )
       .eq('student_id', userId)
       .order('submitted_at', { ascending: false })
       .limit(200),
@@ -74,18 +76,38 @@ async function loadStudentRows(
       recordedAt: s.assignment_grades.graded_at,
     }));
 
-  const quizRows: StudentGradeRow[] = (attempts ?? [])
+  const effectiveAttempts = (attempts ?? [])
     .filter(
       (a): a is typeof a & { quizzes: NonNullable<typeof a.quizzes> } =>
         a.quizzes !== null,
     )
-    .map((a) => ({
-      kind: 'quiz' as const,
-      id: a.quizzes.id,
-      title: a.quizzes.title,
-      scoreLabel: `${a.score}/${a.max_score}`,
-      recordedAt: a.submitted_at,
-    }));
+    .reduce<NonNullable<typeof attempts>>((selected, attempt) => {
+      const current = selected.find(
+        (item) => item.quizzes?.id === attempt.quizzes.id,
+      );
+      if (!current) return [...selected, attempt];
+      const replace =
+        attempt.quizzes.gradebook_policy === 'latest'
+          ? attempt.attempt_number > current.attempt_number
+          : attempt.score / attempt.max_score >
+              current.score / current.max_score ||
+            (attempt.score / attempt.max_score ===
+              current.score / current.max_score &&
+              attempt.attempt_number > current.attempt_number);
+      return replace
+        ? selected.map((item) =>
+            item.quizzes?.id === attempt.quizzes.id ? attempt : item,
+          )
+        : selected;
+    }, []);
+
+  const quizRows: StudentGradeRow[] = effectiveAttempts.map((a) => ({
+    kind: 'quiz' as const,
+    id: a.quizzes.id,
+    title: a.quizzes.title,
+    scoreLabel: `${a.score}/${a.max_score}`,
+    recordedAt: a.submitted_at,
+  }));
 
   return [...assignmentRows, ...quizRows].sort((a, b) =>
     b.recordedAt.localeCompare(a.recordedAt),

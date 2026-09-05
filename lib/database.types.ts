@@ -520,25 +520,31 @@ export type Database = {
       quizzes: {
         Row: {
           archived_at: string | null;
+          attempt_limit: number | null;
           author_id: string;
           created_at: string;
           due_at: string | null;
+          gradebook_policy: string;
           id: string;
           title: string;
         };
         Insert: {
           archived_at?: string | null;
+          attempt_limit?: number | null;
           author_id: string;
           created_at?: string;
           due_at?: string | null;
+          gradebook_policy?: string;
           id?: string;
           title: string;
         };
         Update: {
           archived_at?: string | null;
+          attempt_limit?: number | null;
           author_id?: string;
           created_at?: string;
           due_at?: string | null;
+          gradebook_policy?: string;
           id?: string;
           title?: string;
         };
@@ -739,6 +745,7 @@ export type Database = {
       quiz_attempts: {
         Row: {
           answers: Json;
+          attempt_number: number;
           id: string;
           max_score: number;
           quiz_id: string;
@@ -748,6 +755,7 @@ export type Database = {
         };
         Insert: {
           answers: Json;
+          attempt_number?: number;
           id?: string;
           max_score: number;
           quiz_id: string;
@@ -757,6 +765,7 @@ export type Database = {
         };
         Update: {
           answers?: Json;
+          attempt_number?: number;
           id?: string;
           max_score?: number;
           quiz_id?: string;
@@ -1856,6 +1865,24 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      create_quiz_with_policy: {
+        Args: {
+          audience_tag_ids: string[];
+          correlation_id?: string;
+          quiz_attempt_limit: number | null;
+          quiz_due_at: string | null;
+          quiz_gradebook_policy: string;
+          quiz_questions: Json;
+          quiz_title: string;
+        };
+        Returns: Database['public']['Tables']['quizzes']['Row'];
+        SetofOptions: {
+          from: '*';
+          to: 'quizzes';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       submit_quiz_attempt: {
         Args: {
           correlation_id?: string;
@@ -1864,6 +1891,7 @@ export type Database = {
         };
         Returns: {
           answers: Json;
+          attempt_number: number;
           id: string;
           max_score: number;
           quiz_id: string;

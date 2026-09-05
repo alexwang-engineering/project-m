@@ -78,6 +78,10 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
   const router = useRouter();
   const [title, setTitle] = useState('');
   const [dueAt, setDueAt] = useState('');
+  const [attemptLimit, setAttemptLimit] = useState('1');
+  const [gradebookPolicy, setGradebookPolicy] = useState<'highest' | 'latest'>(
+    'highest',
+  );
   const [tagIds, setTagIds] = useState<Set<string>>(new Set());
   const [bankPickerOpen, setBankPickerOpen] = useState(false);
   // useId() is stable between the server render and the client hydration
@@ -131,6 +135,8 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
       title: title.trim(),
       dueAt: dueAt ? new Date(dueAt).toISOString() : null,
       tagIds: Array.from(tagIds),
+      attemptLimit: attemptLimit === 'unlimited' ? null : Number(attemptLimit),
+      gradebookPolicy,
       questions: questions.map((q) =>
         q.bankItemId
           ? { bankItemId: q.bankItemId, weight: q.weight }
@@ -210,6 +216,34 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
               onChange={(e) => setDueAt(e.target.value)}
               className="rounded-lg border border-slate-200 px-2 py-1 text-[12.5px] text-slate-700"
             />
+          </div>
+          <div className="flex flex-wrap items-center gap-4">
+            <label className="flex items-center gap-2 text-[12.5px] font-medium text-slate-500">
+              Attempts
+              <select
+                value={attemptLimit}
+                onChange={(e) => setAttemptLimit(e.target.value)}
+                className="rounded-lg border border-slate-200 px-2 py-1 text-slate-700"
+              >
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="unlimited">Unlimited</option>
+              </select>
+            </label>
+            <label className="flex items-center gap-2 text-[12.5px] font-medium text-slate-500">
+              Gradebook result
+              <select
+                value={gradebookPolicy}
+                onChange={(e) =>
+                  setGradebookPolicy(e.target.value as 'highest' | 'latest')
+                }
+                className="rounded-lg border border-slate-200 px-2 py-1 text-slate-700"
+              >
+                <option value="highest">Highest attempt</option>
+                <option value="latest">Latest attempt</option>
+              </select>
+            </label>
           </div>
           <div className="flex flex-wrap gap-1.5 border-t border-slate-100 pt-3">
             {writableTags.length === 0 && (

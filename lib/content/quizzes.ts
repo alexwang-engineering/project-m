@@ -72,6 +72,7 @@ export interface QuizAttemptSummary {
   readonly score: number;
   readonly maxScore: number;
   readonly submittedAt: string;
+  readonly attemptNumber: number;
 }
 
 export interface QuizDetail {
@@ -83,6 +84,9 @@ export interface QuizDetail {
   readonly myAttempt: QuizAttemptSummary | null;
   /** All attempts against this quiz, populated only when canManage is true (RLS already enforces this). */
   readonly attempts: readonly QuizAttemptSummary[];
+  readonly attemptLimit: number | null;
+  readonly gradebookPolicy: 'highest' | 'latest';
+  readonly attemptCount: number;
 }
 
 function isChoiceArray(value: unknown): value is QuizChoice[] {
@@ -114,7 +118,7 @@ export async function getQuizDetail(
   ] = await Promise.all([
     client
       .from('quizzes')
-      .select('id, title, due_at')
+      .select('id, title, due_at, attempt_limit, gradebook_policy')
       .eq('id', quizId)
       .maybeSingle(),
     client.rpc('can_manage_quiz', { target_quiz: quizId }),
@@ -132,7 +136,9 @@ export async function getQuizDetail(
 
   const { data: attempts, error: attemptsError } = await client
     .from('quiz_attempts')
-    .select('id, student_id, score, max_score, submitted_at, profiles(email)')
+    .select(
+      'id, student_id, score, max_score, submitted_at, attempt_number, profiles(email)',
+    )
     .eq('quiz_id', quizId)
     .order('submitted_at', { ascending: false });
   if (attemptsError) throw attemptsError;
@@ -146,11 +152,18 @@ export async function getQuizDetail(
       score: attempt.score,
       maxScore: attempt.max_score,
       submittedAt: attempt.submitted_at,
+      attemptNumber: attempt.attempt_number,
     };
   }
-  const myAttemptRow = user
-    ? (attempts ?? []).find((a) => a.student_id === user.id)
-    : undefined;
+  const myAttemptRows = user
+    ? (attempts ?? []).filter((a) => a.student_id === user.id)
+    : [];
+  const myAttemptRow = [...myAttemptRows].sort((a, b) =>
+    quiz.gradebook_policy === 'highest'
+      ? b.score / b.max_score - a.score / a.max_score ||
+        b.attempt_number - a.attempt_number
+      : b.attempt_number - a.attempt_number,
+  )[0];
 
   return {
     id: quiz.id,
@@ -169,6 +182,9 @@ export async function getQuizDetail(
     })),
     myAttempt: myAttemptRow ? toSummary(myAttemptRow) : null,
     attempts: (attempts ?? []).map(toSummary),
+    attemptLimit: quiz.attempt_limit,
+    gradebookPolicy: quiz.gradebook_policy === 'latest' ? 'latest' : 'highest',
+    attemptCount: myAttemptRows.length,
   };
 }
 
@@ -240,6 +256,21 @@ export async function createQuiz(
       ok: false,
       code: 'invalid_input',
       message: 'Due date must be a string or null.',
+    };
+  }
+  const attemptLimit = value.attemptLimit === null ? null : value.attemptLimit;
+  if (attemptLimit !== null && ![1, 2, 3].includes(attemptLimit as number)) {
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Attempt limit is invalid.',
+    };
+  }
+  if (!['highest', 'latest'].includes(value.gradebookPolicy as string)) {
+    return {
+      ok: false,
+      code: 'invalid_input',
+      message: 'Gradebook policy is invalid.',
     };
   }
   if (
@@ -355,7 +386,7 @@ export async function createQuiz(
     }
   }
 
-  const { data, error } = await client.rpc('create_quiz', {
+  const { data, error } = await client.rpc('create_quiz_with_policy', {
     quiz_title: title,
     quiz_due_at: dueAt,
     audience_tag_ids: tagIds,
@@ -363,6 +394,8 @@ export async function createQuiz(
       JSON.stringify(value.questions),
     ) as Database['public']['Functions']['create_quiz']['Args']['quiz_questions'],
     correlation_id: crypto.randomUUID(),
+    quiz_attempt_limit: attemptLimit as number | null,
+    quiz_gradebook_policy: value.gradebookPolicy as 'highest' | 'latest',
   });
   if (error || !data) {
     const code = failureCode(error);

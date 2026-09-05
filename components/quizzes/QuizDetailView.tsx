@@ -142,6 +142,12 @@ function TakeQuizForm({ quiz }: { quiz: QuizDetail }) {
         );
       })}
 
+      <p className="text-[12.5px] text-slate-500">
+        Attempt {quiz.attemptCount + 1}
+        {quiz.attemptLimit === null ? '' : ` of ${quiz.attemptLimit}`} ·
+        Gradebook uses your {quiz.gradebookPolicy} result.
+      </p>
+
       {error && <p className="text-[12.5px] text-red-600">{error}</p>}
       <button
         type="button"
@@ -157,6 +163,8 @@ function TakeQuizForm({ quiz }: { quiz: QuizDetail }) {
 }
 
 export default function QuizDetailView({ quiz }: QuizDetailViewProps) {
+  const canAttempt =
+    quiz.attemptLimit === null || quiz.attemptCount < quiz.attemptLimit;
   return (
     <div className="min-h-screen bg-[#f7f8fa]">
       <SkipToContentLink />
@@ -175,7 +183,7 @@ export default function QuizDetailView({ quiz }: QuizDetailViewProps) {
           <h1 className="text-[20px] font-bold tracking-tight text-slate-900">
             {quiz.canManage
               ? 'Attempts'
-              : quiz.myAttempt
+              : quiz.myAttempt && !canAttempt
                 ? 'Your result'
                 : 'Take the quiz'}
           </h1>
@@ -191,7 +199,7 @@ export default function QuizDetailView({ quiz }: QuizDetailViewProps) {
 
         {quiz.canManage ? (
           <AttemptsList attempts={quiz.attempts} />
-        ) : quiz.myAttempt ? (
+        ) : quiz.myAttempt && !canAttempt ? (
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center">
             <span className="bg-brand-50 text-brand-700 rounded-full px-4 py-2 text-[20px] font-bold">
               {quiz.myAttempt.score}/{quiz.myAttempt.maxScore}

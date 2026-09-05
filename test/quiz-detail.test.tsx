@@ -22,6 +22,9 @@ describe('quiz answer controls', () => {
           canManage: false,
           myAttempt: null,
           attempts: [],
+          attemptLimit: 2,
+          gradebookPolicy: 'highest',
+          attemptCount: 0,
           questions: [
             {
               id: 'one',
