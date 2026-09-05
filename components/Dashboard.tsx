@@ -16,6 +16,7 @@ import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
 import { formatRelativeTime } from '@/lib/relative-time';
 import { useClickOutside } from '@/lib/use-click-outside';
 import { SearchBox } from '@/components/search/SearchBox';
+import { clearAllPageRecoveries } from '@/components/pages/page-recovery';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -270,7 +271,7 @@ function TopNav({
             <div className="absolute right-0 top-[calc(100%+10px)] w-[220px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
               <div className="px-4 pb-1 pt-3 text-[12.5px] font-bold text-slate-900">{identity.name}</div>
               <div className="px-4 pb-3 text-[11.5px] text-slate-500">{currentUser.email}</div>
-              <form action="/auth/logout" method="post" className="border-t border-slate-200">
+              <form action="/auth/logout" method="post" onSubmit={clearAllPageRecoveries} className="border-t border-slate-200">
                 <button className="w-full px-4 py-2.5 text-left text-[12.5px] font-medium text-[#a8402f] hover:bg-slate-50">
                   Sign out
                 </button>

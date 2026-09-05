@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Copy,
   ChevronDown,
@@ -32,6 +32,14 @@ import {
 } from '@/components/pages/mpx-transfer';
 import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
 import { SubPageHeader } from '@/components/ui/SubPageHeader';
+import {
+  clearPageRecoveries,
+  parsePageRecovery,
+  recoveryKey,
+  recoveryPrefix,
+  serializePageRecovery,
+  type PageRecovery,
+} from '@/components/pages/page-recovery';
 
 export interface EditorTag {
   readonly id: string;
@@ -86,6 +94,70 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
   >(new Map());
   const [mpxBusy, setMpxBusy] = useState(false);
   const [mpxError, setMpxError] = useState<string | null>(null);
+  const [recovery, setRecovery] = useState<PageRecovery | null>(null);
+  const [recoveryReady, setRecoveryReady] = useState(false);
+  const cleanSignature = useRef(
+    JSON.stringify({
+      title: initial.title,
+      slug: initial.slug,
+      tagIds: [...initial.tagIds].sort(),
+      blocks: initial.blocks,
+    }),
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    let newest: PageRecovery | null = null;
+    try {
+      const prefix = recoveryPrefix(initial.id);
+      for (let index = 0; index < localStorage.length; index += 1) {
+        const key = localStorage.key(index);
+        if (!key?.startsWith(prefix)) continue;
+        const candidate = parsePageRecovery(localStorage.getItem(key) ?? '');
+        if (candidate && (!newest || candidate.savedAt > newest.savedAt))
+          newest = candidate;
+      }
+    } catch {
+      // Private browsing can disable storage; editing and explicit saves still work.
+    }
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setRecovery(newest);
+      setRecoveryReady(newest === null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [initial.id]);
+
+  useEffect(() => {
+    if (!recoveryReady) return;
+    const signature = JSON.stringify({
+      title,
+      slug,
+      tagIds: Array.from(tagIds).sort(),
+      blocks,
+    });
+    if (signature === cleanSignature.current) return;
+    const timer = window.setTimeout(() => {
+      const serialized = serializePageRecovery({
+        pageId,
+        baseVersion: version,
+        title,
+        slug,
+        tagIds: Array.from(tagIds),
+        blocks,
+      });
+      if (serialized) {
+        try {
+          localStorage.setItem(recoveryKey(pageId, version), serialized);
+        } catch {
+          // Quota/privacy failures must not break editing or explicit server saves.
+        }
+      }
+    }, 500);
+    return () => window.clearTimeout(timer);
+  }, [blocks, pageId, recoveryReady, slug, tagIds, title, version]);
 
   const canSave =
     title.trim() !== '' && slug.trim() !== '' && tagIds.size > 0 && !saving;
@@ -184,6 +256,7 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
       }
       setPageId(result.page.id);
       setVersion(result.page.version);
+      clearPageRecoveries(null);
       router.replace(`/pages/${result.page.id}/edit`);
     } else {
       const result = await updatePageAction({
@@ -197,8 +270,32 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
         return;
       }
       setVersion(result.page.version);
+      clearPageRecoveries(pageId);
     }
+    cleanSignature.current = JSON.stringify({
+      title,
+      slug,
+      tagIds: Array.from(tagIds).sort(),
+      blocks,
+    });
     setSaving(false);
+  }
+
+  function restoreRecovery() {
+    if (!recovery) return;
+    setTitle(recovery.title);
+    setSlug(recovery.slug);
+    setSlugTouched(true);
+    setTagIds(new Set(recovery.tagIds));
+    setBlocks([...recovery.blocks]);
+    setRecovery(null);
+    setRecoveryReady(true);
+  }
+
+  function discardRecovery() {
+    clearPageRecoveries(initial.id);
+    setRecovery(null);
+    setRecoveryReady(true);
   }
 
   async function handlePublishToggle() {
@@ -323,6 +420,36 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
         tabIndex={-1}
         className="mx-auto max-w-[760px] px-8 pt-9 pb-32"
       >
+        {recovery && (
+          <section
+            className="mb-5 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"
+            aria-label="Unsaved draft recovery"
+          >
+            <p className="font-semibold">Unsaved browser draft found</p>
+            <p className="mt-1 text-[12.5px]">
+              Saved {new Date(recovery.savedAt).toLocaleString()} from version{' '}
+              {recovery.baseVersion ?? 'new'}.
+              {recovery.baseVersion !== version &&
+                ` The server is now version ${version ?? 'new'}, so review before saving.`}
+            </p>
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={restoreRecovery}
+                className="rounded-lg bg-amber-900 px-3 py-1.5 text-xs font-semibold text-white"
+              >
+                Restore draft
+              </button>
+              <button
+                type="button"
+                onClick={discardRecovery}
+                className="rounded-lg border border-amber-400 px-3 py-1.5 text-xs font-semibold"
+              >
+                Discard
+              </button>
+            </div>
+          </section>
+        )}
         <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <input
             aria-label="Page title"
