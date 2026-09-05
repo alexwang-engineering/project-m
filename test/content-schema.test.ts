@@ -43,6 +43,28 @@ describe('parseEditorDocument', () => {
     });
   });
 
+  it('sanitizes a bounded rectangular table', () => {
+    const result = parseEditorDocument({
+      schemaVersion: 1,
+      blocks: [
+        {
+          id: 't1',
+          type: 'table',
+          caption: 'Results',
+          headers: ['<strong>Name</strong>', 'Score'],
+          rows: [['<img src=x onerror=alert(1)>Alex', '<strong>10</strong>']],
+        },
+      ],
+    });
+    expect(result.blocks[0]).toEqual({
+      id: 't1',
+      type: 'table',
+      caption: 'Results',
+      headers: ['<strong>Name</strong>', 'Score'],
+      rows: [['Alex', '<strong>10</strong>']],
+    });
+  });
+
   it.each([
     ['unknown schema version', { schemaVersion: 2, blocks: [] }],
     [
@@ -74,6 +96,21 @@ describe('parseEditorDocument', () => {
       {
         schemaVersion: 1,
         blocks: [{ id: 'x', type: 'file', fileId: '../../secret', label: 'x' }],
+      },
+    ],
+    [
+      'ragged table',
+      {
+        schemaVersion: 1,
+        blocks: [
+          {
+            id: 't1',
+            type: 'table',
+            caption: 'Results',
+            headers: ['Name', 'Score'],
+            rows: [['Alex']],
+          },
+        ],
       },
     ],
   ])('rejects %s', (_name, input) => {

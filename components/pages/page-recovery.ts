@@ -67,6 +67,23 @@ function validBlock(block: unknown): block is BlockDraft {
         typeof value.alt === 'string' &&
         typeof value.captionHtml === 'string'
       );
+    case 'table':
+      return (
+        typeof value.caption === 'string' &&
+        Array.isArray(value.headers) &&
+        value.headers.length >= 1 &&
+        value.headers.length <= 12 &&
+        value.headers.every((cell) => typeof cell === 'string') &&
+        Array.isArray(value.rows) &&
+        value.rows.length >= 1 &&
+        value.rows.length <= 100 &&
+        value.rows.every(
+          (row) =>
+            Array.isArray(row) &&
+            row.length === (value.headers as unknown[]).length &&
+            row.every((cell) => typeof cell === 'string'),
+        )
+      );
     default:
       return false;
   }

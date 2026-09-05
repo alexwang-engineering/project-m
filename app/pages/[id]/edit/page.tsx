@@ -79,6 +79,14 @@ async function toDraftBlocks(
             uploading: false,
           };
         }
+        case 'table':
+          return {
+            id: block.id,
+            type: 'table',
+            caption: block.caption,
+            headers: [...block.headers],
+            rows: block.rows.map((row) => [...row]),
+          };
       }
     }),
   );

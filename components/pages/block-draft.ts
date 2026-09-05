@@ -52,6 +52,13 @@ export interface ImageDraft {
   previewUrl: string;
   uploading: boolean;
 }
+export interface TableDraft {
+  id: string;
+  type: 'table';
+  caption: string;
+  headers: string[];
+  rows: string[][];
+}
 
 export type BlockDraft =
   | ParagraphDraft
@@ -61,7 +68,8 @@ export type BlockDraft =
   | CodeDraft
   | CalloutDraft
   | FileDraft
-  | ImageDraft;
+  | ImageDraft
+  | TableDraft;
 
 export const BLOCK_LABEL: Record<BlockDraft['type'], string> = {
   paragraph: 'Paragraph',
@@ -72,6 +80,7 @@ export const BLOCK_LABEL: Record<BlockDraft['type'], string> = {
   callout: 'Callout',
   file: 'File (PDF/MPX)',
   image: 'Image',
+  table: 'Table',
 };
 
 function newId(): string {
@@ -105,6 +114,8 @@ export function newBlock(type: BlockDraft['type']): BlockDraft {
         previewUrl: '',
         uploading: false,
       };
+    case 'table':
+      return { id, type, caption: '', headers: ['', ''], rows: [['', '']] };
   }
 }
 
@@ -166,6 +177,14 @@ export function serializeBlock(block: BlockDraft): Record<string, unknown> {
         alt: block.alt,
         ...(block.captionHtml.trim() ? { captionHtml: block.captionHtml } : {}),
       };
+    case 'table':
+      return {
+        id: block.id,
+        type: block.type,
+        caption: block.caption.trim(),
+        headers: block.headers,
+        rows: block.rows,
+      };
   }
 }
 
@@ -187,5 +206,10 @@ export function isBlockReady(block: BlockDraft): boolean {
       );
     case 'image':
       return block.fileId !== '' && !block.uploading && block.alt.trim() !== '';
+    case 'table':
+      return (
+        block.caption.trim() !== '' &&
+        block.headers.every((header) => header.trim() !== '')
+      );
   }
 }

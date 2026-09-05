@@ -36,13 +36,26 @@ describe('MPX v1', () => {
     const blob = await packageMpx(
       {
         schemaVersion: 1,
-        blocks: [{ id: 'p1', type: 'paragraph', html: '<p>Lesson</p>' }],
+        blocks: [
+          { id: 'p1', type: 'paragraph', html: '<p>Lesson</p>' },
+          {
+            id: 't1',
+            type: 'table',
+            caption: 'Results',
+            headers: ['Name', 'Score'],
+            rows: [['Alex', '10']],
+          },
+        ],
       },
       [pdf('worksheet.pdf'), pdf('worksheet.pdf', 'second')],
     );
     const result = await unpackMpx(await archiveFile(blob));
 
     expect(result.page).toMatchObject({ schemaVersion: 1 });
+    expect((result.page as { blocks: unknown[] }).blocks[1]).toMatchObject({
+      type: 'table',
+      caption: 'Results',
+    });
     expect(result.attachments.map(({ name }) => name)).toEqual([
       'worksheet.pdf',
       'worksheet (2).pdf',

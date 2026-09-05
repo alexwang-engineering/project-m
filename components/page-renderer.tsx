@@ -187,6 +187,46 @@ function Block({
         </figure>
       );
     }
+    case 'table':
+      return (
+        <div
+          className="overflow-x-auto rounded-xl border border-slate-200"
+          role="region"
+          aria-label={`Scrollable table: ${block.caption}`}
+          tabIndex={0}
+        >
+          <table className="w-full min-w-[480px] border-collapse text-left text-sm">
+            <caption className="bg-slate-100 px-4 py-3 text-left font-semibold text-slate-900">
+              {block.caption}
+            </caption>
+            <thead>
+              <tr className="border-t border-slate-200 bg-slate-50">
+                {block.headers.map((header, column) => (
+                  <th
+                    key={column}
+                    scope="col"
+                    className="border-r border-slate-200 px-3 py-2 font-semibold text-slate-800 last:border-r-0"
+                    dangerouslySetInnerHTML={{ __html: header }}
+                  />
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {block.rows.map((row, rowIndex) => (
+                <tr key={rowIndex} className="border-t border-slate-200">
+                  {row.map((cell, column) => (
+                    <td
+                      key={column}
+                      className="border-r border-slate-200 px-3 py-2 text-slate-700 last:border-r-0"
+                      dangerouslySetInnerHTML={{ __html: cell }}
+                    />
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
   }
 }
 

@@ -248,6 +248,22 @@ function parseImportedBlock(raw: unknown): BlockDraft | null {
         label: typeof value.label === 'string' ? value.label : '',
         uploading: false,
       };
+    case 'table':
+      if (!Array.isArray(value.headers) || !Array.isArray(value.rows))
+        return null;
+      return {
+        id,
+        type: 'table',
+        caption: typeof value.caption === 'string' ? value.caption : '',
+        headers: value.headers
+          .filter((cell): cell is string => typeof cell === 'string')
+          .map(sanitizeEditorHtml),
+        rows: value.rows.flatMap((row) =>
+          Array.isArray(row) && row.every((cell) => typeof cell === 'string')
+            ? [row.map((cell) => sanitizeEditorHtml(cell as string))]
+            : [],
+        ),
+      };
     default:
       // Unrecognized, or an image block - images aren't part of the MPX
       // format at all, so there's nothing to import; skip rather than

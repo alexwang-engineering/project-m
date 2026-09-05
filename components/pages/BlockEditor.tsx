@@ -359,6 +359,141 @@ export function BlockEditor({
         </div>,
       );
 
+    case 'table': {
+      const updateCell = (row: number, column: number, html: string) => {
+        const rows = block.rows.map((cells) => [...cells]);
+        if (rows[row]) rows[row][column] = html;
+        onChange({ ...block, rows });
+      };
+      return shell(
+        <div className="space-y-3">
+          <input
+            aria-label="Table caption"
+            value={block.caption}
+            onChange={(event) =>
+              onChange({ ...block, caption: event.target.value })
+            }
+            placeholder="Required table caption"
+            maxLength={500}
+            className={fieldClass}
+          />
+          <div
+            className="overflow-x-auto"
+            role="region"
+            aria-label="Scrollable table editor"
+            tabIndex={0}
+          >
+            <table className="w-full min-w-[480px] border-collapse text-sm">
+              <caption className="sr-only">
+                {block.caption || 'Table editor'}
+              </caption>
+              <thead>
+                <tr>
+                  {block.headers.map((header, column) => (
+                    <th
+                      key={column}
+                      scope="col"
+                      className="border border-slate-200 bg-white p-1 align-top"
+                    >
+                      <RichTextField
+                        fieldKey={`${block.id}-h${column}`}
+                        html={header}
+                        onChange={(html) =>
+                          onChange({
+                            ...block,
+                            headers: block.headers.map((value, index) =>
+                              index === column ? html : value,
+                            ),
+                          })
+                        }
+                        placeholder={`Header ${column + 1}`}
+                        toolbar={false}
+                      />
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {block.rows.map((row, rowIndex) => (
+                  <tr key={rowIndex}>
+                    {row.map((cell, column) => (
+                      <td
+                        key={column}
+                        className="border border-slate-200 bg-white p-1 align-top"
+                      >
+                        <RichTextField
+                          fieldKey={`${block.id}-r${rowIndex}c${column}`}
+                          html={cell}
+                          onChange={(html) =>
+                            updateCell(rowIndex, column, html)
+                          }
+                          placeholder={`Row ${rowIndex + 1}, column ${column + 1}`}
+                          toolbar={false}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={block.rows.length >= 100}
+              onClick={() =>
+                onChange({
+                  ...block,
+                  rows: [...block.rows, Array(block.headers.length).fill('')],
+                })
+              }
+              className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 disabled:opacity-50"
+            >
+              Add row
+            </button>
+            <button
+              type="button"
+              disabled={block.rows.length <= 1}
+              onClick={() =>
+                onChange({ ...block, rows: block.rows.slice(0, -1) })
+              }
+              className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 disabled:opacity-50"
+            >
+              Remove row
+            </button>
+            <button
+              type="button"
+              disabled={block.headers.length >= 12}
+              onClick={() =>
+                onChange({
+                  ...block,
+                  headers: [...block.headers, ''],
+                  rows: block.rows.map((row) => [...row, '']),
+                })
+              }
+              className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 disabled:opacity-50"
+            >
+              Add column
+            </button>
+            <button
+              type="button"
+              disabled={block.headers.length <= 1}
+              onClick={() =>
+                onChange({
+                  ...block,
+                  headers: block.headers.slice(0, -1),
+                  rows: block.rows.map((row) => row.slice(0, -1)),
+                })
+              }
+              className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 disabled:opacity-50"
+            >
+              Remove column
+            </button>
+          </div>
+        </div>,
+      );
+    }
+
     case 'file':
       return shell(
         pageId === null ? (

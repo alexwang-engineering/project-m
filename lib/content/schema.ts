@@ -63,6 +63,13 @@ export interface ImageBlock extends BaseBlock {
   readonly captionHtml?: string;
 }
 
+export interface TableBlock extends BaseBlock {
+  readonly type: 'table';
+  readonly caption: string;
+  readonly headers: readonly string[];
+  readonly rows: readonly (readonly string[])[];
+}
+
 export type EditorBlock =
   | ParagraphBlock
   | HeadingBlock
@@ -71,7 +78,8 @@ export type EditorBlock =
   | CodeBlock
   | CalloutBlock
   | FileBlock
-  | ImageBlock;
+  | ImageBlock
+  | TableBlock;
 
 export interface EditorDocumentV1 {
   readonly schemaVersion: 1;
@@ -274,6 +282,33 @@ function parseBlock(input: unknown, index: number): EditorBlock {
         alt: requiredPlainText(value.alt, `${path}.alt`, 1_000),
         ...(captionHtml === undefined ? {} : { captionHtml }),
       };
+    }
+    case 'table': {
+      exactKeys(value, ['id', 'type', 'caption', 'headers', 'rows'], path);
+      const caption = requiredPlainText(value.caption, `${path}.caption`);
+      if (
+        !Array.isArray(value.headers) ||
+        value.headers.length < 1 ||
+        value.headers.length > 12
+      )
+        return fail(`${path}.headers`, 'expected between 1 and 12 columns');
+      if (
+        !Array.isArray(value.rows) ||
+        value.rows.length < 1 ||
+        value.rows.length > 100
+      )
+        return fail(`${path}.rows`, 'expected between 1 and 100 rows');
+      const headers = value.headers.map((header, column) =>
+        richHtml(header, `${path}.headers[${column}]`),
+      );
+      const rows = value.rows.map((inputRow, row) => {
+        if (!Array.isArray(inputRow) || inputRow.length !== headers.length)
+          return fail(`${path}.rows[${row}]`, 'must match the header width');
+        return inputRow.map((cell, column) =>
+          richHtml(cell, `${path}.rows[${row}][${column}]`),
+        );
+      });
+      return { id, type, caption, headers, rows };
     }
     default:
       return fail(

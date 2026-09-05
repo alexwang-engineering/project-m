@@ -1,0 +1,10 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select plan(6);
+select lives_ok($$select public.assert_valid_content('{"schemaVersion":1,"blocks":[{"id":"table1","type":"table","caption":"Results","headers":["<strong>Name</strong>","Score"],"rows":[["Alex","10"],["Sam","9"]]}]}'::jsonb,1)$$,'bounded rectangular table is accepted');
+select throws_ok($$select public.assert_valid_content('{"schemaVersion":1,"blocks":[{"id":"table1","type":"table","caption":"Results","headers":["Name","Score"],"rows":[["Alex"]]}]}'::jsonb,1)$$,'22023','blocks[0] table rows must match header width','ragged rows are rejected');
+select throws_ok($$select public.assert_valid_content('{"schemaVersion":1,"blocks":[{"id":"table1","type":"table","caption":"Results","headers":["Name"],"rows":[["<script>alert(1)</script>"]]}]}'::jsonb,1)$$,'22023','blocks[0].rows contains active content','active cell content is rejected');
+select throws_ok($$select public.assert_valid_content(jsonb_build_object('schemaVersion',1,'blocks',jsonb_build_array(jsonb_build_object('id','table1','type','table','caption','Wide','headers',(select jsonb_agg(value) from generate_series(1,13)value),'rows',jsonb_build_array((select jsonb_agg(value) from generate_series(1,13)value))))),1)$$,'22023','blocks[0] is an invalid table','more than twelve columns are rejected');
+select throws_ok($$select public.assert_valid_content('{"schemaVersion":1,"blocks":[{"id":"same","type":"table","caption":"One","headers":["A"],"rows":[["1"]]},{"id":"same","type":"paragraph","html":"Two"}]}'::jsonb,1)$$,'22023','block IDs must be unique','table IDs participate in uniqueness validation');
+select throws_ok($$select public.assert_valid_content('{"schemaVersion":1,"blocks":[{"id":"table1","type":"table","caption":"Results","headers":["Name"],"rows":[["Alex"]],"extra":true}]}'::jsonb,1)$$,'22023','blocks[0] is an invalid table','unknown table fields are rejected');
+select * from finish(); rollback;
