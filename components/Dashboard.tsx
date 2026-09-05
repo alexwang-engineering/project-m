@@ -148,6 +148,12 @@ function TopNav({
         {signedIn && (
           <nav className="ml-6 hidden items-center gap-1 sm:flex">
             <Link
+              href="/resources"
+              className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+            >
+              Resources
+            </Link>
+            <Link
               href="/assignments"
               className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
             >
