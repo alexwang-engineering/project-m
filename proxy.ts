@@ -19,7 +19,13 @@ function buildCspHeader(nonce: string, supabaseOrigin: string | null): string {
   const imgSrc = ["'self'", 'blob:', 'data:', supabaseOrigin]
     .filter(Boolean)
     .join(' ');
-  const frameSrc = ["'self'", supabaseOrigin].filter(Boolean).join(' ');
+  const frameSrc = [
+    "'self'",
+    supabaseOrigin,
+    'https://www.youtube-nocookie.com',
+  ]
+    .filter(Boolean)
+    .join(' ');
   const directives = [
     `default-src 'self'`,
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${IS_DEV ? " 'unsafe-eval'" : ''}`,

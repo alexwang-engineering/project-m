@@ -87,6 +87,13 @@ async function toDraftBlocks(
             headers: [...block.headers],
             rows: block.rows.map((row) => [...row]),
           };
+        case 'youtube':
+          return {
+            id: block.id,
+            type: 'youtube',
+            videoId: block.videoId,
+            title: block.title,
+          };
       }
     }),
   );

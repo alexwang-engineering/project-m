@@ -264,6 +264,13 @@ function parseImportedBlock(raw: unknown): BlockDraft | null {
             : [],
         ),
       };
+    case 'youtube':
+      return {
+        id,
+        type: 'youtube',
+        videoId: typeof value.videoId === 'string' ? value.videoId : '',
+        title: typeof value.title === 'string' ? value.title : '',
+      };
     default:
       // Unrecognized, or an image block - images aren't part of the MPX
       // format at all, so there's nothing to import; skip rather than

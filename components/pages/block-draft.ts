@@ -59,6 +59,12 @@ export interface TableDraft {
   headers: string[];
   rows: string[][];
 }
+export interface YouTubeDraft {
+  id: string;
+  type: 'youtube';
+  videoId: string;
+  title: string;
+}
 
 export type BlockDraft =
   | ParagraphDraft
@@ -69,7 +75,8 @@ export type BlockDraft =
   | CalloutDraft
   | FileDraft
   | ImageDraft
-  | TableDraft;
+  | TableDraft
+  | YouTubeDraft;
 
 export const BLOCK_LABEL: Record<BlockDraft['type'], string> = {
   paragraph: 'Paragraph',
@@ -81,6 +88,7 @@ export const BLOCK_LABEL: Record<BlockDraft['type'], string> = {
   file: 'File (PDF/MPX)',
   image: 'Image',
   table: 'Table',
+  youtube: 'YouTube video',
 };
 
 function newId(): string {
@@ -116,6 +124,8 @@ export function newBlock(type: BlockDraft['type']): BlockDraft {
       };
     case 'table':
       return { id, type, caption: '', headers: ['', ''], rows: [['', '']] };
+    case 'youtube':
+      return { id, type, videoId: '', title: '' };
   }
 }
 
@@ -185,6 +195,13 @@ export function serializeBlock(block: BlockDraft): Record<string, unknown> {
         headers: block.headers,
         rows: block.rows,
       };
+    case 'youtube':
+      return {
+        id: block.id,
+        type: block.type,
+        videoId: block.videoId.trim(),
+        title: block.title.trim(),
+      };
   }
 }
 
@@ -211,5 +228,7 @@ export function isBlockReady(block: BlockDraft): boolean {
         block.caption.trim() !== '' &&
         block.headers.every((header) => header.trim() !== '')
       );
+    case 'youtube':
+      return block.videoId.trim() !== '' && block.title.trim() !== '';
   }
 }

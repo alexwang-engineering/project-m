@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Download, FileText, ImageOff, Pencil } from 'lucide-react';
 
 import type { EditorBlock, EditorDocumentV1 } from '@/lib/content/schema';
+import { YouTubeEmbed } from '@/components/pages/YouTubeEmbed';
 
 interface RenderablePage {
   readonly id: string;
@@ -227,6 +228,8 @@ function Block({
           </table>
         </div>
       );
+    case 'youtube':
+      return <YouTubeEmbed videoId={block.videoId} title={block.title} />;
   }
 }
 

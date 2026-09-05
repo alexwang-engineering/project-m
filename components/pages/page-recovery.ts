@@ -84,6 +84,10 @@ function validBlock(block: unknown): block is BlockDraft {
             row.every((cell) => typeof cell === 'string'),
         )
       );
+    case 'youtube':
+      return (
+        typeof value.videoId === 'string' && typeof value.title === 'string'
+      );
     default:
       return false;
   }

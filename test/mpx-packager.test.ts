@@ -45,6 +45,12 @@ describe('MPX v1', () => {
             headers: ['Name', 'Score'],
             rows: [['Alex', '10']],
           },
+          {
+            id: 'v1',
+            type: 'youtube',
+            videoId: 'dQw4w9WgXcQ',
+            title: 'Lesson video',
+          },
         ],
       },
       [pdf('worksheet.pdf'), pdf('worksheet.pdf', 'second')],
@@ -55,6 +61,10 @@ describe('MPX v1', () => {
     expect((result.page as { blocks: unknown[] }).blocks[1]).toMatchObject({
       type: 'table',
       caption: 'Results',
+    });
+    expect((result.page as { blocks: unknown[] }).blocks[2]).toMatchObject({
+      type: 'youtube',
+      videoId: 'dQw4w9WgXcQ',
     });
     expect(result.attachments.map(({ name }) => name)).toEqual([
       'worksheet.pdf',

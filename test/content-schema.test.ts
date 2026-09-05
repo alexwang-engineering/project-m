@@ -65,6 +65,39 @@ describe('parseEditorDocument', () => {
     });
   });
 
+  it('normalizes supported YouTube URLs and rejects playlists', () => {
+    const result = parseEditorDocument({
+      schemaVersion: 1,
+      blocks: [
+        {
+          id: 'v1',
+          type: 'youtube',
+          videoId: 'https://youtu.be/dQw4w9WgXcQ?t=3',
+          title: 'Lesson video',
+        },
+      ],
+    });
+    expect(result.blocks[0]).toEqual({
+      id: 'v1',
+      type: 'youtube',
+      videoId: 'dQw4w9WgXcQ',
+      title: 'Lesson video',
+    });
+    expect(() =>
+      parseEditorDocument({
+        schemaVersion: 1,
+        blocks: [
+          {
+            id: 'v1',
+            type: 'youtube',
+            videoId: 'https://youtube.com/watch?v=dQw4w9WgXcQ&list=PL1',
+            title: 'Playlist',
+          },
+        ],
+      }),
+    ).toThrow(InvalidEditorDocumentError);
+  });
+
   it.each([
     ['unknown schema version', { schemaVersion: 2, blocks: [] }],
     [

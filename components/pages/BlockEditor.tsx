@@ -494,6 +494,35 @@ export function BlockEditor({
       );
     }
 
+    case 'youtube':
+      return shell(
+        <div className="grid gap-2">
+          <input
+            aria-label="Video title"
+            value={block.title}
+            onChange={(event) =>
+              onChange({ ...block, title: event.target.value })
+            }
+            placeholder="Descriptive video title"
+            maxLength={500}
+            className={fieldClass}
+          />
+          <input
+            aria-label="YouTube video ID or URL"
+            value={block.videoId}
+            onChange={(event) =>
+              onChange({ ...block, videoId: event.target.value })
+            }
+            placeholder="https://www.youtube.com/watch?v=…"
+            className={fieldClass}
+          />
+          <p className="text-xs text-slate-600">
+            The video loads in privacy-enhanced mode only after the learner
+            chooses to play it.
+          </p>
+        </div>,
+      );
+
     case 'file':
       return shell(
         pageId === null ? (

@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { sanitizeEditorHtml } from '@/lib/html-sanitizer';
+import { normalizeYouTubeVideoId } from '@/lib/youtube';
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -70,6 +71,12 @@ export interface TableBlock extends BaseBlock {
   readonly rows: readonly (readonly string[])[];
 }
 
+export interface YouTubeBlock extends BaseBlock {
+  readonly type: 'youtube';
+  readonly videoId: string;
+  readonly title: string;
+}
+
 export type EditorBlock =
   | ParagraphBlock
   | HeadingBlock
@@ -79,7 +86,8 @@ export type EditorBlock =
   | CalloutBlock
   | FileBlock
   | ImageBlock
-  | TableBlock;
+  | TableBlock
+  | YouTubeBlock;
 
 export interface EditorDocumentV1 {
   readonly schemaVersion: 1;
@@ -309,6 +317,23 @@ function parseBlock(input: unknown, index: number): EditorBlock {
         );
       });
       return { id, type, caption, headers, rows };
+    }
+    case 'youtube': {
+      exactKeys(value, ['id', 'type', 'videoId', 'title'], path);
+      const videoId = normalizeYouTubeVideoId(
+        string(value.videoId, `${path}.videoId`, 500),
+      );
+      if (!videoId)
+        return fail(
+          `${path}.videoId`,
+          'expected a supported YouTube video ID or HTTPS URL',
+        );
+      return {
+        id,
+        type,
+        videoId,
+        title: requiredPlainText(value.title, `${path}.title`),
+      };
     }
     default:
       return fail(
