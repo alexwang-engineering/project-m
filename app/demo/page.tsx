@@ -12,7 +12,7 @@ export default async function DemoLoginPage({
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-6 py-16">
-      <p className="mb-3 text-sm font-semibold tracking-[0.2em] text-[#9c4f43] uppercase">
+      <p className="mb-3 text-sm font-semibold tracking-[0.2em] text-[#254889] uppercase">
         Project M demo
       </p>
       <h1 className="text-4xl font-semibold tracking-tight text-slate-900">
@@ -35,7 +35,7 @@ export default async function DemoLoginPage({
           <form action="/demo/login" method="post" key={role}>
             <input type="hidden" name="role" value={role} />
             <button
-              className="w-full rounded-xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#9c4f43] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9c4f43]"
+              className="w-full rounded-xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#254889] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#254889]"
               type="submit"
             >
               <span className="block text-lg font-semibold text-slate-900 capitalize">

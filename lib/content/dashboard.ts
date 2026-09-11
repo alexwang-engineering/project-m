@@ -3,6 +3,10 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/lib/database.types';
+import {
+  parseEditorDocument,
+  type EditorDocumentV1,
+} from '@/lib/content/schema';
 
 type Client = SupabaseClient<Database>;
 
@@ -54,6 +58,7 @@ export interface PageSummary {
   readonly title: string;
   readonly canonicalUrl: string;
   readonly updatedAt: string;
+  readonly content: EditorDocumentV1;
   readonly tags: readonly PageSummaryTag[];
 }
 
@@ -76,7 +81,7 @@ export async function listDashboardPages(
   const { data, error } = await client
     .from('pages')
     .select(
-      'id, title, canonical_url, updated_at, page_tags(tags!inner(tag_name, display_name))',
+      'id, title, canonical_url, content_json, updated_at, page_tags(tags!inner(tag_name, display_name))',
     )
     .eq('lifecycle', 'published')
     .order('updated_at', { ascending: false })
@@ -89,6 +94,7 @@ export async function listDashboardPages(
     title: page.title,
     canonicalUrl: page.canonical_url,
     updatedAt: page.updated_at,
+    content: parseEditorDocument(page.content_json),
     tags: page.page_tags
       .map(({ tags }) => tags)
       .filter((tag): tag is NonNullable<typeof tag> => tag !== null)

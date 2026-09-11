@@ -163,7 +163,7 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f8fa]">
+    <div className="min-h-[100dvh] bg-slate-50">
       <SkipToContentLink />
       <SubPageHeader
         backHref="/quizzes"
@@ -192,7 +192,7 @@ export function QuizEditor({ writableTags, bankItems }: QuizEditorProps) {
       <main
         id="main-content"
         tabIndex={-1}
-        className="mx-auto max-w-[760px] px-8 pt-9 pb-32"
+        className="mx-auto max-w-[960px] px-4 pt-10 pb-32 sm:px-8"
       >
         <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <input

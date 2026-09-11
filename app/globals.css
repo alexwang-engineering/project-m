@@ -1,30 +1,28 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-display: var(--font-plex-serif), ui-serif, serif;
-  --font-body: var(--font-plex-serif), ui-serif, serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  --font-display: var(--font-geist), ui-sans-serif, sans-serif;
+  --font-body: var(--font-geist), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  /* Index Rerum theme preview — carmine ink accent, replaces MTBS Navy. */
-  --color-brand-50: #f7ece8;
-  --color-brand-100: #f1ded9;
-  --color-brand-200: #e2bcb2;
-  --color-brand-500: #b56354;
-  --color-brand-600: #9c4f43;
-  --color-brand-700: #7c3c33;
+  --color-brand-50: #eef3fb;
+  --color-brand-100: #dce7f7;
+  --color-brand-200: #bacfeb;
+  --color-brand-500: #315ca6;
+  --color-brand-600: #254889;
+  --color-brand-700: #1d386c;
 
-  /* Warm ledger-paper neutrals, replacing Tailwind's default cool slate scale. */
-  --color-slate-50: #f8f4ea;
-  --color-slate-100: #f0e9d8;
-  --color-slate-200: #e2d6ba;
-  --color-slate-300: #cdbb95;
-  --color-slate-400: #a8916d;
-  --color-slate-500: #85714f;
-  --color-slate-600: #6b5a3d;
-  --color-slate-700: #52432c;
-  --color-slate-800: #3c3021;
-  --color-slate-900: #2a2015;
-  --color-slate-950: #1a140c;
+  --color-slate-50: #f7f9fc;
+  --color-slate-100: #eef2f7;
+  --color-slate-200: #dbe2ea;
+  --color-slate-300: #c2ccd8;
+  --color-slate-400: #8b99aa;
+  --color-slate-500: #647286;
+  --color-slate-600: #4a586b;
+  --color-slate-700: #354254;
+  --color-slate-800: #222e3d;
+  --color-slate-900: #17212e;
+  --color-slate-950: #0d1520;
 
   --radius-card: 1rem;
 }
@@ -42,7 +40,7 @@ html {
 }
 
 body {
-  min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
   font-family: var(--font-body);
   color: var(--color-slate-950);

@@ -370,7 +370,7 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f8fa]">
+    <div className="min-h-[100dvh] bg-slate-50">
       <SkipToContentLink />
       <SubPageHeader
         backHref="/"
@@ -454,7 +454,7 @@ export function PageEditor({ writableTags, initial }: PageEditorProps) {
       <main
         id="main-content"
         tabIndex={-1}
-        className="mx-auto max-w-[760px] px-8 pt-9 pb-32"
+        className="mx-auto max-w-[960px] px-4 pt-10 pb-32 sm:px-8"
       >
         {recovery && (
           <section

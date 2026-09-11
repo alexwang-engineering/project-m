@@ -180,5 +180,70 @@ begin
       (('51000000-0000-4000-8001-' || right(item.tag_id::text, 12))::uuid, item.q1_answer, array[item.q1_answer]),
       (('51000000-0000-4000-8002-' || right(item.tag_id::text, 12))::uuid, item.q2_answer, array[item.q2_answer]);
   end loop;
+
+  -- Keep one compact, reproducible showcase of the features added in P1-P9.
+  -- The subject loop above restores the base records first, so these updates
+  -- remain idempotent when the demo seed is run repeatedly.
+  update public.pages
+  set content_json = jsonb_set(
+    content_json,
+    '{blocks}',
+    content_json->'blocks' || jsonb_build_array(
+      jsonb_build_object(
+        'id', 'results-table', 'type', 'table',
+        'caption', 'Worked-example check',
+        'headers', jsonb_build_array('Expression', 'Factorisation', 'Roots'),
+        'rows', jsonb_build_array(
+          jsonb_build_array('x² + 5x + 6', '(x + 2)(x + 3)', '−2, −3'),
+          jsonb_build_array('x² − 9', '(x − 3)(x + 3)', '3, −3')
+        )
+      ),
+      jsonb_build_object(
+        'id', 'lesson-video', 'type', 'youtube',
+        'videoId', 'kmeL4a3lG5w',
+        'title', 'Solving quadratic equations by factorising'
+      )
+    )
+  ),
+  updated_at = now()
+  where id = '21000000-0000-4000-8000-000000000001';
+
+  update public.quizzes
+  set attempt_limit = 3, gradebook_policy = 'highest'
+  where id = '41000000-0000-4000-8000-000000000001';
+  update public.quiz_questions
+  set question_kind = 'multiple_answer', weight = 3,
+      prompt = 'Which expressions are correct factorisations of x² + 5x + 6?',
+      choices = '[{"id":"a","label":"(x + 2)(x + 3)"},{"id":"b","label":"(x + 1)(x + 6)"},{"id":"c","label":"(x + 3)(x + 2)"},{"id":"d","label":"(x - 2)(x - 3)"}]'::jsonb
+  where id = '51000000-0000-4000-8001-000000000001';
+  update public.quiz_answer_keys
+  set correct_choice_id = null, correct_choice_ids = array['a', 'c']
+  where question_id = '51000000-0000-4000-8001-000000000001';
+  update public.quiz_questions set weight = 2
+  where id = '51000000-0000-4000-8002-000000000001';
+
+  update public.assignments
+  set title = 'Maths: selected-pupil practice', audience_mode = 'selected_students'
+  where id = '21000000-0000-4000-8000-000000000001';
+  insert into public.assignment_students (assignment_id, student_id, added_by)
+  values ('21000000-0000-4000-8000-000000000001', student, teacher)
+  on conflict do nothing;
+
+  insert into public.pages (
+    id, slug, canonical_url, title, content_json, author_id,
+    lifecycle, archived_at, version
+  ) values (
+    '21000000-0000-4000-8000-000000000099',
+    'recently-deleted-demo', '/recently-deleted-demo',
+    'Recently deleted example',
+    '{"schemaVersion":1,"blocks":[{"id":"note","type":"paragraph","html":"Restore this synthetic page to demonstrate recoverable deletion."}]}'::jsonb,
+    teacher, 'archived', now(), 1
+  ) on conflict (id) do update set
+    title = excluded.title, content_json = excluded.content_json,
+    lifecycle = 'archived', archived_at = now(), updated_at = now();
+  insert into public.page_tags (page_id, tag_id, added_by)
+  values ('21000000-0000-4000-8000-000000000099',
+          '11000000-0000-4000-8000-000000000001', teacher)
+  on conflict do nothing;
 end
 $$;

@@ -180,13 +180,13 @@ export default function QuizDetailView({ quiz }: QuizDetailViewProps) {
         className="mx-auto max-w-[720px] px-8 pt-9 pb-24"
       >
         <div className="mb-6">
-          <h1 className="text-[20px] font-bold tracking-tight text-slate-900">
+          <h2 className="text-[20px] font-bold tracking-tight text-slate-900">
             {quiz.canManage
               ? 'Attempts'
               : quiz.myAttempt && !canAttempt
                 ? 'Your result'
                 : 'Take the quiz'}
-          </h1>
+          </h2>
           {quiz.dueAt && (
             <p
               className="mt-0.5 text-[13px] text-slate-500"

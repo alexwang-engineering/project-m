@@ -415,7 +415,6 @@ export default function SubmissionsView({
         tabIndex={-1}
         className="mx-auto max-w-[720px] px-8 pt-9 pb-24"
       >
-        <h1 className="sr-only">{assignment.title}</h1>
         {stateError && (
           <p role="alert" className="mb-4 text-[12px] text-red-600">
             {stateError}
@@ -538,7 +537,7 @@ export default function SubmissionsView({
                           reason: '',
                         })
                       }
-                      className="font-semibold text-[#9c4f43] disabled:opacity-50"
+                      className="font-semibold text-[#254889] disabled:opacity-50"
                     >
                       Withdraw
                     </button>

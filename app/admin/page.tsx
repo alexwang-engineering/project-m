@@ -54,9 +54,9 @@ export default async function AdminPage() {
         <MigrationImportPanel />
 
         <div className="mb-6">
-          <h1 className="text-[20px] font-bold tracking-tight text-slate-900">
+          <h2 className="text-[20px] font-bold tracking-tight text-slate-900">
             Roster
-          </h1>
+          </h2>
           <p className="mt-0.5 text-[13px] text-slate-500">
             {users.length} {users.length === 1 ? 'account' : 'accounts'}. Every
             grant, membership, and state change here is audited.

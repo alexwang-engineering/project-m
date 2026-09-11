@@ -43,7 +43,7 @@ export function ResourcesView({
   const isStaff = role !== 'student';
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-[100dvh] bg-slate-50">
       <SkipToContentLink />
       <SubPageHeader
         backHref="/"
@@ -63,7 +63,7 @@ export function ResourcesView({
       <main
         id="main-content"
         tabIndex={-1}
-        className="mx-auto max-w-6xl px-5 py-8 sm:px-8"
+        className="mx-auto max-w-[1280px] px-4 py-10 sm:px-8"
       >
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           <label className="relative block flex-1">
@@ -77,7 +77,7 @@ export function ResourcesView({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search resources"
-              className="focus:border-brand-500 w-full rounded-xl border border-slate-200 bg-white py-2 pr-3 pl-9 text-sm outline-none"
+              className="focus:border-brand-500 min-h-11 w-full rounded-lg border border-slate-200 bg-white py-2 pr-3 pl-9 text-sm outline-none"
             />
           </label>
           <label>
@@ -85,7 +85,7 @@ export function ResourcesView({
             <select
               value={tag}
               onChange={(event) => setTag(event.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm sm:w-48"
+              className="min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm sm:w-48"
             >
               <option value="">All tags</option>
               {tags.map((name) => (

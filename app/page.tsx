@@ -7,6 +7,7 @@ import {
 } from '@/lib/content/dashboard';
 import type { DashboardPage, DashboardUpdate } from '@/components/Dashboard';
 import { listAnnouncements } from '@/lib/content/announcements';
+import { listUpcoming, type CalendarItem } from '@/lib/content/calendar';
 
 /**
  * The dashboard shell must render even when Supabase isn't configured yet
@@ -16,15 +17,18 @@ import { listAnnouncements } from '@/lib/content/announcements';
 async function loadDashboardData(): Promise<{
   pages: readonly DashboardPage[];
   updates: readonly DashboardUpdate[];
+  timetable: readonly CalendarItem[];
   currentUser: CurrentUserSummary | null;
 }> {
   try {
     const supabase = await createServerClient();
     const currentUser = await getCurrentUserSummary(supabase);
-    if (!currentUser) return { pages: [], updates: [], currentUser: null };
-    const [pages, announcements] = await Promise.all([
+    if (!currentUser)
+      return { pages: [], updates: [], timetable: [], currentUser: null };
+    const [pages, announcements, timetable] = await Promise.all([
       listDashboardPages(supabase),
       listAnnouncements(supabase, 5),
+      currentUser.role === 'student' ? listUpcoming(supabase, 6) : [],
     ]);
     const updates = announcements.map((announcement) => ({
       id: announcement.id,
@@ -32,15 +36,20 @@ async function loadDashboardData(): Promise<{
       createdAt: announcement.createdAt,
       tags: announcement.tags.map((tag) => tag.name),
     }));
-    return { pages, updates, currentUser };
+    return { pages, updates, timetable, currentUser };
   } catch {
-    return { pages: [], updates: [], currentUser: null };
+    return { pages: [], updates: [], timetable: [], currentUser: null };
   }
 }
 
 export default async function HomePage() {
-  const { pages, updates, currentUser } = await loadDashboardData();
+  const { pages, updates, timetable, currentUser } = await loadDashboardData();
   return (
-    <Dashboard pages={pages} updates={updates} currentUser={currentUser} />
+    <Dashboard
+      pages={pages}
+      updates={updates}
+      timetable={timetable}
+      currentUser={currentUser}
+    />
   );
 }

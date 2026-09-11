@@ -1,12 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Bell,
+  CalendarDays,
   ChevronDown,
+  ClipboardCheck,
+  Clock3,
+  ExternalLink,
   FileText,
   FilePlus,
+  GraduationCap,
+  Megaphone,
   Plus,
   X,
 } from 'lucide-react';
@@ -17,6 +23,10 @@ import { formatRelativeTime } from '@/lib/relative-time';
 import { useClickOutside } from '@/lib/use-click-outside';
 import { SearchBox } from '@/components/search/SearchBox';
 import { clearAllPageRecoveries } from '@/components/pages/page-recovery';
+import { PrimaryNavigation } from '@/components/ui/PrimaryNavigation';
+import { PageBlocks } from '@/components/page-renderer';
+import type { EditorDocumentV1 } from '@/lib/content/schema';
+import type { CalendarItem } from '@/lib/content/calendar';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -30,6 +40,7 @@ export interface DashboardPage {
   title: string;
   canonicalUrl: string;
   updatedAt: string;
+  content?: EditorDocumentV1;
   tags: readonly { name: string; displayName: string }[];
 }
 
@@ -40,6 +51,7 @@ interface PageCard {
   breadcrumb: string[];
   tags: string[];
   updatedRelative: string;
+  content: EditorDocumentV1;
 }
 
 export interface CurrentUser {
@@ -57,6 +69,7 @@ export interface DashboardUpdate {
 interface DashboardProps {
   pages: readonly DashboardPage[];
   updates: readonly DashboardUpdate[];
+  timetable?: readonly CalendarItem[];
   currentUser: CurrentUser | null;
 }
 
@@ -109,6 +122,7 @@ function toPageCard(page: DashboardPage): PageCard {
     breadcrumb: breadcrumbFromCanonicalUrl(page.canonicalUrl),
     tags: page.tags.map((tag) => tag.name),
     updatedRelative: formatRelativeTime(page.updatedAt),
+    content: page.content ?? { schemaVersion: 1, blocks: [] },
   };
 }
 
@@ -138,61 +152,19 @@ function TopNav({
   const signedIn = currentUser !== null;
 
   return (
-    <header className="sticky top-0 z-40 flex h-[68px] items-center justify-between gap-6 border-b border-slate-200 bg-white/85 px-8 backdrop-blur">
+    <header className="bg-brand-600 sticky top-0 z-40 border-b border-brand-700 text-white shadow-sm">
+      <div className="mx-auto flex min-h-16 max-w-[1280px] items-center justify-between gap-3 px-4 sm:px-8">
       <div className="flex items-center gap-2.5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-[#9c4f43] text-[15px] font-bold text-white">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[15px] font-bold text-brand-700 shadow-sm">
           M
         </div>
-        <span className="text-[15.5px] font-semibold tracking-tight text-slate-900">
-          Project <span className="text-[#9c4f43]">M</span>
+        <span className="whitespace-nowrap text-[15.5px] font-semibold tracking-tight text-white">
+          Project M
         </span>
         {signedIn && (
-          <nav className="ml-6 hidden items-center gap-1 sm:flex">
-            <Link
-              href="/resources"
-              className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-            >
-              Resources
-            </Link>
-            <Link
-              href="/assignments"
-              className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-            >
-              Assignments
-            </Link>
-            <Link
-              href="/quizzes"
-              className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-            >
-              Quizzes
-            </Link>
-            <Link
-              href="/calendar"
-              className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-            >
-              Calendar
-            </Link>
-            <Link
-              href="/announcements"
-              className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-            >
-              Announcements
-            </Link>
-            <Link
-              href="/gradebook"
-              className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-            >
-              Gradebook
-            </Link>
-            {currentUser?.role === 'admin' && (
-              <Link
-                href="/admin"
-                className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-              >
-                Admin
-              </Link>
-            )}
-          </nav>
+          <div className="ml-4">
+            <PrimaryNavigation isAdmin={currentUser?.role === 'admin'} />
+          </div>
         )}
       </div>
 
@@ -206,7 +178,7 @@ function TopNav({
               setProfileOpen(false);
             }}
             aria-label="Notifications"
-            className="relative flex h-[38px] w-[38px] items-center justify-center rounded-lg border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-white hover:text-slate-900"
+            className="relative flex h-[38px] w-[38px] items-center justify-center rounded-lg border border-transparent text-blue-100 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
           >
             <Bell size={18} strokeWidth={2} />
           </button>
@@ -255,12 +227,12 @@ function TopNav({
             }}
             className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 transition hover:border-slate-300"
           >
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#f1ded9] text-[11.5px] font-bold text-[#9c4f43]">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#eef3fb] text-[11.5px] font-bold text-[#254889]">
               {identity.initials}
             </span>
             <span className="hidden text-left leading-tight sm:block">
               <span className="block text-[12.5px] font-semibold text-slate-900">{identity.name}</span>
-              <span className="block text-[10.5px] font-semibold uppercase tracking-wide text-[#9c4f43]">
+              <span className="block text-[10.5px] font-semibold uppercase tracking-wide text-[#254889]">
                 {identity.role}
               </span>
             </span>
@@ -282,11 +254,12 @@ function TopNav({
         ) : (
           <Link
             href="/auth/login"
-            className="rounded-lg bg-[#9c4f43] px-4 py-2 text-[12.5px] font-semibold text-white transition hover:bg-[#7c3c33]"
+            className="rounded-lg bg-[#254889] px-4 py-2 text-[12.5px] font-semibold text-white transition hover:bg-[#1d386c]"
           >
             Sign in with Microsoft
           </Link>
         )}
+      </div>
       </div>
     </header>
   );
@@ -323,7 +296,7 @@ function TagRail({
               onClick={() => onSelect(tag.id)}
               className={`flex h-[34px] flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[12.5px] font-semibold transition ${
                 active
-                  ? 'border-[#9c4f43] bg-[#9c4f43] text-white'
+                  ? 'border-[#254889] bg-[#254889] text-white'
                   : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-900'
               }`}
             >
@@ -341,14 +314,24 @@ function TagRail({
 // Page / file card
 // ---------------------------------------------------------------------------
 
-function PageCardItem({ page }: { page: PageCard }) {
+function PageCardItem({
+  page,
+  onPreview,
+}: {
+  page: PageCard;
+  onPreview: (page: PageCard) => void;
+}) {
   return (
     <Link
       href={page.canonicalUrl}
-      className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-[18px] text-left shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+      onClick={(event) => {
+        event.preventDefault();
+        onPreview(page);
+      }}
+      className="hover:border-brand-500 hover:bg-brand-50/20 flex flex-col gap-3 rounded-xl border border-t-[3px] border-slate-200 border-t-brand-500 bg-white p-5 text-left transition"
     >
       <div className="flex items-start justify-between gap-2.5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#f7ece8] text-[#9c4f43]">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-100 text-brand-700">
           <FileText size={17} strokeWidth={2} />
         </div>
       </div>
@@ -367,19 +350,340 @@ function PageCardItem({ page }: { page: PageCard }) {
 
       <div className="flex flex-wrap gap-1.5">
         {page.tags.map((t) => (
-          <span key={t} className="flex h-5 items-center rounded-md border border-slate-200 bg-slate-50 px-2 text-[10.5px] font-bold text-slate-500">
+          <span key={t} className="flex h-6 items-center rounded-md border border-slate-200 bg-slate-50 px-2 text-xs font-bold text-slate-600">
             {t}
           </span>
         ))}
       </div>
 
-      <div className="mt-auto flex items-center justify-between border-t border-slate-200 pt-2.5 text-[11.5px] text-slate-400">
+      <div className="mt-auto flex items-center justify-between border-t border-slate-200 pt-3 text-xs text-slate-500">
         <span className="flex items-center gap-1.5">
           <span suppressHydrationWarning>{page.updatedRelative}</span>
         </span>
         <span>Page</span>
       </div>
     </Link>
+  );
+}
+
+function PagePreview({ page, onClose }: { page: PageCard; onClose: () => void }) {
+  useEffect(() => {
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') onClose();
+    }
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950/20" role="dialog" aria-modal="true" aria-label={`Preview ${page.title}`}>
+      <button
+        type="button"
+        className="absolute inset-0 cursor-default"
+        onClick={onClose}
+        tabIndex={-1}
+        aria-hidden="true"
+      />
+      <section className="absolute inset-y-0 right-0 flex w-full flex-col border-l border-slate-200 bg-white shadow-2xl md:w-1/2">
+        <header className="flex min-h-16 items-center justify-between gap-4 border-b border-slate-200 px-4 sm:px-6">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-brand-600">Page preview</p>
+            <h2 className="truncate text-base font-semibold text-slate-950">{page.title}</h2>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href={page.canonicalUrl}
+              className="flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-700 hover:border-slate-300"
+            >
+              <ExternalLink size={16} aria-hidden="true" />
+              <span className="hidden sm:inline">Open full page</span>
+            </Link>
+            <button
+              type="button"
+              onClick={onClose}
+              autoFocus
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-950"
+              aria-label="Close page preview"
+            >
+              <X size={18} aria-hidden="true" />
+            </button>
+          </div>
+        </header>
+        <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-4 sm:p-8">
+          <article className="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 sm:p-8">
+            <h1 className="mb-8 text-3xl font-semibold tracking-tight text-slate-950">
+              {page.title}
+            </h1>
+            <PageBlocks content={page.content} files={{}} />
+          </article>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+const timetableDate = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Europe/London',
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+});
+
+const timetableTime = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Europe/London',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+const lessonPeriods = [
+  '08:45–09:35',
+  '09:40–10:30',
+  '10:50–11:40',
+  '11:45–12:35',
+  '13:35–14:25',
+  '14:30–15:20',
+] as const;
+
+const schoolDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] as const;
+
+const lessonDetails = {
+  MA: { subject: 'Mathematics', room: 'M12', href: '/maths-quadratic-equations', tone: 'bg-brand-50 hover:bg-brand-100' },
+  EN: { subject: 'English', room: 'E4', href: '/english-persuasive-writing', tone: 'bg-brand-50 hover:bg-brand-100' },
+  CH: { subject: 'Chemistry', room: 'Lab 3', href: '/chemistry-atomic-structure', tone: 'bg-teal-50 hover:bg-teal-100' },
+  HI: { subject: 'History', room: 'H7', href: '/history-industrial-revolution', tone: 'bg-amber-50 hover:bg-amber-100' },
+  GE: { subject: 'Geography', room: 'G5', href: '/geography-river-landscapes', tone: 'bg-amber-50 hover:bg-amber-100' },
+  PH: { subject: 'Physics', room: 'Lab 1', href: '/physics-forces-motion', tone: 'bg-teal-50 hover:bg-teal-100' },
+  BI: { subject: 'Biology', room: 'Lab 5', href: '/biology-cell-division', tone: 'bg-teal-50 hover:bg-teal-100' },
+  FR: { subject: 'French', room: 'L8', href: '/french-perfect-tense', tone: 'bg-brand-50 hover:bg-brand-100' },
+  CS: { subject: 'Computer Science', room: 'ICT 2', href: '/computer-science-algorithms', tone: 'bg-brand-50 hover:bg-brand-100' },
+  PE: { subject: 'PE', room: 'Sports Hall', href: '/calendar', tone: 'bg-slate-100 hover:bg-slate-200' },
+  AR: { subject: 'Art', room: 'Art 2', href: '/calendar', tone: 'bg-slate-100 hover:bg-slate-200' },
+  PS: { subject: 'PSHE', room: 'Form room', href: '/calendar', tone: 'bg-slate-100 hover:bg-slate-200' },
+} as const;
+
+type LessonCode = keyof typeof lessonDetails;
+type TimetableWeek = 'A' | 'B';
+type WeekSchedule = readonly [
+  readonly LessonCode[],
+  readonly LessonCode[],
+  readonly LessonCode[],
+  readonly LessonCode[],
+  readonly LessonCode[],
+];
+
+const fixedTimetable: Record<TimetableWeek, WeekSchedule> = {
+  A: [
+    ['MA', 'EN', 'CH', 'HI', 'FR', 'PE'],
+    ['BI', 'MA', 'GE', 'EN', 'CS', 'AR'],
+    ['PH', 'FR', 'MA', 'CH', 'EN', 'PS'],
+    ['HI', 'CS', 'BI', 'MA', 'GE', 'PE'],
+    ['EN', 'PH', 'FR', 'HI', 'MA', 'CH'],
+  ],
+  B: [
+    ['EN', 'MA', 'BI', 'GE', 'CS', 'AR'],
+    ['CH', 'FR', 'HI', 'MA', 'PE', 'EN'],
+    ['MA', 'PH', 'CS', 'FR', 'BI', 'PS'],
+    ['GE', 'EN', 'MA', 'CH', 'HI', 'PE'],
+    ['FR', 'BI', 'PH', 'EN', 'CS', 'MA'],
+  ],
+};
+
+function StudentTimetable({ items }: { items: readonly CalendarItem[] }) {
+  const [week, setWeek] = useState<TimetableWeek>('A');
+
+  return (
+    <section className="mt-12 border-t border-slate-200 pt-8" aria-labelledby="timetable-heading">
+      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-bold tracking-wide text-brand-600 uppercase">Lessons and deadlines</p>
+          <h2 id="timetable-heading" className="mt-1 text-xl font-bold tracking-tight text-slate-950">
+            Your timetable
+          </h2>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex rounded-lg border border-slate-200 bg-white p-1" aria-label="Timetable week">
+            {(['A', 'B'] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setWeek(value)}
+                aria-pressed={week === value}
+                className={`min-h-9 rounded-md px-4 text-sm font-semibold ${week === value ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+              >
+                Week {value}
+              </button>
+            ))}
+          </div>
+          <Link href="/calendar" className="text-sm font-semibold text-brand-600 hover:text-brand-700">
+            View calendar
+          </Link>
+        </div>
+      </div>
+
+      <div
+        className="overflow-x-auto rounded-xl border border-slate-200 bg-white"
+        role="region"
+        aria-label={`Week ${week} timetable, scrollable horizontally`}
+        tabIndex={0}
+      >
+        <table className="w-full min-w-[1050px] table-fixed border-collapse text-left">
+          <caption className="sr-only">Week {week} timetable with weekdays as rows and lesson times as columns</caption>
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-100">
+              <th scope="col" className="w-28 px-4 py-3 text-xs font-bold tracking-wide text-slate-600 uppercase">
+                Day
+              </th>
+              {lessonPeriods.map((period, index) => (
+                <th key={period} scope="col" className="border-l border-slate-200 px-3 py-3 text-xs font-semibold text-slate-600">
+                  <span className="block text-slate-950">Period {index + 1}</span>
+                  <span className="mt-0.5 block font-medium">{period}</span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-200">
+            {schoolDays.map((day, dayIndex) => (
+              <tr key={day}>
+                <th scope="row" className="bg-slate-50 px-4 py-4 text-sm font-bold text-slate-950">
+                  {day}
+                </th>
+                {fixedTimetable[week][dayIndex]!.map((code, periodIndex) => {
+                  const lesson = lessonDetails[code];
+                  return (
+                    <td key={`${day}-${periodIndex}`} className="border-l border-slate-200 p-1.5 align-top">
+                      <Link href={lesson.href} className={`block min-h-20 rounded-lg p-2.5 transition ${lesson.tone}`}>
+                        <span className="block text-sm font-semibold text-slate-950">{lesson.subject}</span>
+                        <span className="mt-1 block text-xs text-slate-500">{lesson.room}</span>
+                      </Link>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="mt-8 flex items-center justify-between gap-4">
+        <h3 className="text-base font-bold text-slate-950">Upcoming deadlines</h3>
+        <Link href="/calendar" className="text-sm font-semibold text-brand-600 hover:text-brand-700">
+          View all
+        </Link>
+      </div>
+      {items.length === 0 ? (
+        <div className="mt-3 rounded-xl border border-dashed border-slate-300 bg-white px-5 py-6 text-sm text-slate-600">
+          No deadlines are scheduled yet.
+        </div>
+      ) : (
+        <div className="mt-3 grid gap-px overflow-hidden rounded-xl border border-slate-200 bg-slate-200 md:grid-cols-2 xl:grid-cols-3">
+          {items.map((item) => {
+            const href =
+              item.kind === 'assignment'
+                ? `/assignments/${item.id}`
+                : item.kind === 'quiz'
+                  ? `/quizzes/${item.id}`
+                  : '/calendar';
+            const starts = new Date(item.at);
+            return (
+              <Link key={`${item.kind}:${item.id}`} href={href} className="group bg-white p-5 hover:bg-brand-50/40">
+                <div className="flex items-center justify-between gap-3 text-xs font-semibold text-slate-500">
+                  <span className="flex items-center gap-1.5">
+                    <CalendarDays size={15} aria-hidden="true" />
+                    {timetableDate.format(starts)}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Clock3 size={15} aria-hidden="true" />
+                    {timetableTime.format(starts)}
+                  </span>
+                </div>
+                <h3 className="mt-4 font-semibold text-slate-950 group-hover:text-brand-700">{item.title}</h3>
+                <p className="mt-1 text-xs font-semibold text-slate-500 capitalize">
+                  {item.kind === 'event' ? 'Lesson or event' : item.kind}
+                  {item.tags.length > 0 ? ` · ${item.tags.map((tag) => tag.name).join(', ')}` : ''}
+                </p>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ClassConnection({ role }: { role: CurrentUser['role'] }) {
+  const actions =
+    role === 'student'
+      ? [
+          {
+            href: '/assignments',
+            title: 'Send work and a note',
+            description: 'Submit your work with a message for your teacher.',
+            icon: ClipboardCheck,
+            tone: 'bg-blue-100 text-blue-700',
+          },
+          {
+            href: '/gradebook',
+            title: 'Review teacher feedback',
+            description: 'See released marks and guidance on your work.',
+            icon: GraduationCap,
+            tone: 'bg-emerald-100 text-emerald-700',
+          },
+          {
+            href: '/announcements',
+            title: 'Read class updates',
+            description: 'Keep up with announcements for your tags.',
+            icon: Megaphone,
+            tone: 'bg-amber-100 text-amber-800',
+          },
+        ]
+      : [
+          {
+            href: '/assignments',
+            title: 'Review student work',
+            description: 'Open submissions and respond with clear feedback.',
+            icon: ClipboardCheck,
+            tone: 'bg-blue-100 text-blue-700',
+          },
+          {
+            href: '/gradebook',
+            title: 'Give marks and feedback',
+            description: 'Track progress and release feedback to pupils.',
+            icon: GraduationCap,
+            tone: 'bg-emerald-100 text-emerald-700',
+          },
+          {
+            href: '/announcements',
+            title: 'Post a class update',
+            description: 'Share a tag-scoped update with the right pupils.',
+            icon: Megaphone,
+            tone: 'bg-amber-100 text-amber-800',
+          },
+        ];
+
+  return (
+    <section className="mt-12 border-t border-slate-200 pt-8" aria-labelledby="connection-heading">
+      <p className="text-xs font-bold tracking-wide text-brand-600 uppercase">Student and teacher interaction</p>
+      <h2 id="connection-heading" className="mt-1 text-xl font-bold tracking-tight text-slate-950">
+        Class connection
+      </h2>
+      <div className="mt-5 grid gap-3 md:grid-cols-3">
+        {actions.map(({ href, title, description, icon: Icon, tone }) => (
+          <Link
+            key={title}
+            href={href}
+            className="group flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-5 transition hover:border-brand-500 hover:bg-brand-50/30"
+          >
+            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${tone}`}>
+              <Icon size={19} aria-hidden="true" />
+            </span>
+            <span>
+              <span className="block font-semibold text-slate-950 group-hover:text-brand-700">{title}</span>
+              <span className="mt-1 block text-sm leading-5 text-slate-600">{description}</span>
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -399,7 +703,7 @@ function FloatingActionButton() {
             href="/pages/new"
             className="flex w-full items-center gap-3 px-[15px] py-3.5 text-left hover:bg-slate-50"
           >
-            <span className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-lg bg-[#f7ece8] text-[#9c4f43]">
+            <span className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-lg bg-[#eef3fb] text-[#254889]">
               <FilePlus size={16} strokeWidth={2} />
             </span>
             <span className="flex flex-col">
@@ -413,7 +717,7 @@ function FloatingActionButton() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Create"
-        className="flex h-14 w-14 items-center justify-center rounded-full bg-[#9c4f43] text-white shadow-[0_10px_24px_rgba(37,72,137,0.38)] transition hover:bg-[#7c3c33] active:scale-95"
+        className="flex h-14 w-14 items-center justify-center rounded-full bg-[#254889] text-white shadow-[0_10px_24px_rgba(37,72,137,0.28)] transition hover:bg-[#1d386c] active:scale-95"
       >
         {open ? <X size={22} strokeWidth={2.4} /> : <Plus size={22} strokeWidth={2.4} />}
       </button>
@@ -428,9 +732,11 @@ function FloatingActionButton() {
 export default function Dashboard({
   pages,
   updates,
+  timetable = [],
   currentUser,
 }: DashboardProps) {
   const [activeTag, setActiveTag] = useState('all');
+  const [previewPage, setPreviewPage] = useState<PageCard | null>(null);
 
   const identity = useMemo(
     () => deriveDisplayIdentity(currentUser),
@@ -455,7 +761,7 @@ export default function Dashboard({
   const visiblePages = cards.filter((p) => activeTag === 'all' || p.tags.includes(activeTag));
 
   return (
-    <div className="min-h-screen bg-[#f3ecd8]">
+    <div className="min-h-[100dvh] bg-slate-50">
       <SkipToContentLink />
       <TopNav
         identity={identity}
@@ -463,16 +769,16 @@ export default function Dashboard({
         updates={updates}
       />
 
-      <main id="main-content" tabIndex={-1} className="mx-auto max-w-[1180px] px-8 pb-32 pt-9">
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-[1280px] px-4 pt-10 pb-32 sm:px-8">
         <div className="mb-6">
-          <h1 className="text-[23px] font-bold tracking-tight text-slate-900">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-950">
             {currentUser
               ? `Good afternoon, ${identity.name.split(' ')[0]}`
               : 'Welcome to Project M'}
           </h1>
-          <p className="mt-0.5 text-[13px] text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-slate-600">
             {currentUser
-              ? 'Here’s what’s moving across your tags today.'
+              ? 'Recent pages, files and assignments from your tags.'
               : 'Sign in with your school Microsoft account to access your pages and files.'}
           </p>
         </div>
@@ -496,14 +802,21 @@ export default function Dashboard({
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
             {visiblePages.map((page) => (
-              <PageCardItem key={page.id} page={page} />
+              <PageCardItem key={page.id} page={page} onPreview={setPreviewPage} />
             ))}
           </div>
         )}
+
+        {currentUser && <ClassConnection role={currentUser.role} />}
+
+        {currentUser?.role === 'student' && <StudentTimetable items={timetable} />}
       </main>
 
       {(currentUser?.role === 'teacher' || currentUser?.role === 'admin') && (
         <FloatingActionButton />
+      )}
+      {previewPage && (
+        <PagePreview page={previewPage} onClose={() => setPreviewPage(null)} />
       )}
     </div>
   );
