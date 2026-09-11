@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ArrowUpRight,
   Bell,
   CalendarDays,
   ChevronDown,
@@ -147,120 +148,145 @@ function TopNav({
   const [profileOpen, setProfileOpen] = useState(false);
 
   const notifRef = useClickOutside<HTMLDivElement>(() => setNotifOpen(false));
-  const profileRef = useClickOutside<HTMLDivElement>(() => setProfileOpen(false));
+  const profileRef = useClickOutside<HTMLDivElement>(() =>
+    setProfileOpen(false),
+  );
 
   const signedIn = currentUser !== null;
 
   return (
-    <header className="bg-brand-600 sticky top-0 z-40 border-b border-brand-700 text-white shadow-sm">
-      <div className="mx-auto flex min-h-16 max-w-[1280px] items-center justify-between gap-3 px-4 sm:px-8">
-      <div className="flex items-center gap-2.5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[15px] font-bold text-brand-700 shadow-sm">
-          M
-        </div>
-        <span className="whitespace-nowrap text-[15.5px] font-semibold tracking-tight text-white">
-          Project M
-        </span>
-        {signedIn && (
-          <div className="ml-4">
-            <PrimaryNavigation isAdmin={currentUser?.role === 'admin'} />
+    <header className="border-brand-700 bg-brand-700 sticky top-0 z-40 border-b text-white">
+      <div className="mx-auto flex min-h-20 max-w-[1280px] flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-8">
+        <div className="flex items-center gap-2.5">
+          <div className="text-brand-700 flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[15px] font-bold shadow-sm">
+            M
           </div>
-        )}
-      </div>
+          <span className="text-[15.5px] font-semibold tracking-tight whitespace-nowrap text-white">
+            Project M
+          </span>
+        </div>
 
-      <div className="flex items-center gap-2">
-        {signedIn && <SearchBox />}
-        {/* Notifications */}
-        <div className="relative" ref={notifRef}>
-          <button
-            onClick={() => {
-              setNotifOpen((v) => !v);
-              setProfileOpen(false);
-            }}
-            aria-label="Notifications"
-            className="relative flex h-[38px] w-[38px] items-center justify-center rounded-lg border border-transparent text-blue-100 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
-          >
-            <Bell size={18} strokeWidth={2} />
-          </button>
+        <div className="flex items-center gap-2">
+          {/* Notifications */}
+          <div className="relative" ref={notifRef}>
+            <button
+              onClick={() => {
+                setNotifOpen((v) => !v);
+                setProfileOpen(false);
+              }}
+              aria-label="Notifications"
+              aria-expanded={notifOpen}
+              className="relative flex h-[38px] w-[38px] items-center justify-center rounded-lg border border-transparent text-blue-100 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
+            >
+              <Bell size={18} strokeWidth={2} />
+            </button>
 
-          {notifOpen && (
-            <div className="absolute right-0 top-[calc(100%+10px)] w-[340px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
-              <div className="border-b border-slate-200 px-4 py-3 text-[12.5px] font-bold text-slate-900">
-                Tag updates
+            {notifOpen && (
+              <div className="fixed top-20 right-4 left-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl sm:absolute sm:top-[calc(100%+10px)] sm:right-0 sm:left-auto sm:w-[340px]">
+                <div className="border-b border-slate-200 px-4 py-3 text-[12.5px] font-bold text-slate-900">
+                  Tag updates
+                </div>
+                {updates.length === 0 ? (
+                  <p className="px-4 py-5 text-[12.5px] text-slate-500">
+                    No new tag updates.
+                  </p>
+                ) : (
+                  <div className="divide-y divide-slate-100">
+                    {updates.map((update) => (
+                      <Link
+                        key={update.id}
+                        href="/announcements"
+                        className="block px-4 py-3 hover:bg-slate-50"
+                      >
+                        <span className="block text-[12.5px] font-semibold text-slate-900">
+                          {update.title}
+                        </span>
+                        <span className="mt-1 block text-[11px] text-slate-400">
+                          {update.tags.length > 0
+                            ? update.tags.join(', ')
+                            : 'Whole school'}{' '}
+                          · {formatRelativeTime(update.createdAt)}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
-              {updates.length === 0 ? (
-                <p className="px-4 py-5 text-[12.5px] text-slate-500">
-                  No new tag updates.
-                </p>
-              ) : (
-                <div className="divide-y divide-slate-100">
-                  {updates.map((update) => (
-                    <Link
-                      key={update.id}
-                      href="/announcements"
-                      className="block px-4 py-3 hover:bg-slate-50"
-                    >
-                      <span className="block text-[12.5px] font-semibold text-slate-900">
-                        {update.title}
-                      </span>
-                      <span className="mt-1 block text-[11px] text-slate-400">
-                        {update.tags.length > 0
-                          ? update.tags.join(', ')
-                          : 'Whole school'}{' '}
-                        · {formatRelativeTime(update.createdAt)}
-                      </span>
-                    </Link>
-                  ))}
+            )}
+          </div>
+
+          {/* Profile — Outlook-style role chip */}
+          {signedIn ? (
+            <div className="relative" ref={profileRef}>
+              <button
+                onClick={() => {
+                  setProfileOpen((v) => !v);
+                  setNotifOpen(false);
+                }}
+                aria-label={`Account for ${identity.name}`}
+                aria-expanded={profileOpen}
+                className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-white py-1 pr-3 pl-1 transition hover:border-slate-300"
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#eef3fb] text-[11.5px] font-bold text-[#254889]">
+                  {identity.initials}
+                </span>
+                <span className="hidden text-left leading-tight sm:block">
+                  <span className="block text-[12.5px] font-semibold text-slate-900">
+                    {identity.name}
+                  </span>
+                  <span className="block text-[10.5px] font-semibold tracking-wide text-[#254889] uppercase">
+                    {identity.role}
+                  </span>
+                </span>
+                <ChevronDown
+                  size={13}
+                  strokeWidth={2.4}
+                  className="text-slate-400"
+                />
+              </button>
+
+              {profileOpen && (
+                <div className="absolute top-[calc(100%+10px)] right-0 w-[220px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
+                  <div className="px-4 pt-3 pb-1 text-[12.5px] font-bold text-slate-900">
+                    {identity.name}
+                  </div>
+                  <div className="px-4 pb-3 text-[11.5px] text-slate-500">
+                    {currentUser.email}
+                  </div>
+                  <form
+                    action="/auth/logout"
+                    method="post"
+                    onSubmit={clearAllPageRecoveries}
+                    className="border-t border-slate-200"
+                  >
+                    <button className="w-full px-4 py-2.5 text-left text-[12.5px] font-medium text-[#a8402f] hover:bg-slate-50">
+                      Sign out
+                    </button>
+                  </form>
                 </div>
               )}
             </div>
+          ) : (
+            <Link
+              href="/auth/login"
+              className="rounded-lg bg-[#254889] px-4 py-2 text-[12.5px] font-semibold text-white transition hover:bg-[#1d386c]"
+            >
+              Sign in with Microsoft
+            </Link>
           )}
         </div>
-
-        {/* Profile — Outlook-style role chip */}
-        {signedIn ? (
-          <div className="relative" ref={profileRef}>
-          <button
-            onClick={() => {
-              setProfileOpen((v) => !v);
-              setNotifOpen(false);
-            }}
-            className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 transition hover:border-slate-300"
-          >
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#eef3fb] text-[11.5px] font-bold text-[#254889]">
-              {identity.initials}
-            </span>
-            <span className="hidden text-left leading-tight sm:block">
-              <span className="block text-[12.5px] font-semibold text-slate-900">{identity.name}</span>
-              <span className="block text-[10.5px] font-semibold uppercase tracking-wide text-[#254889]">
-                {identity.role}
-              </span>
-            </span>
-            <ChevronDown size={13} strokeWidth={2.4} className="text-slate-400" />
-          </button>
-
-          {profileOpen && (
-            <div className="absolute right-0 top-[calc(100%+10px)] w-[220px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
-              <div className="px-4 pb-1 pt-3 text-[12.5px] font-bold text-slate-900">{identity.name}</div>
-              <div className="px-4 pb-3 text-[11.5px] text-slate-500">{currentUser.email}</div>
-              <form action="/auth/logout" method="post" onSubmit={clearAllPageRecoveries} className="border-t border-slate-200">
-                <button className="w-full px-4 py-2.5 text-left text-[12.5px] font-medium text-[#a8402f] hover:bg-slate-50">
-                  Sign out
-                </button>
-              </form>
-            </div>
-          )}
+      </div>
+      {signedIn && (
+        <div className="border-t border-white/15">
+          <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-3 px-4 py-3 sm:px-8">
+            <PrimaryNavigation
+              isAdmin={currentUser.role === 'admin'}
+              align="left"
+            />
+            <SearchBox />
           </div>
-        ) : (
-          <Link
-            href="/auth/login"
-            className="rounded-lg bg-[#254889] px-4 py-2 text-[12.5px] font-semibold text-white transition hover:bg-[#1d386c]"
-          >
-            Sign in with Microsoft
-          </Link>
-        )}
-      </div>
-      </div>
+        </div>
+      )}
     </header>
   );
 }
@@ -285,23 +311,28 @@ function TagRail({
   onSelect: (id: string) => void;
 }) {
   return (
-    <div className="mb-8">
-      <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">Your tags</p>
-      <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
+    <div className="mb-6">
+      <p className="mb-2.5 text-[11px] font-bold tracking-wider text-slate-600 uppercase">
+        Filter by tag
+      </p>
+      <div className="flex [scrollbar-width:thin] gap-2 overflow-x-auto pb-1">
         {tags.map((tag) => {
           const active = tag.id === activeTag;
           return (
             <button
               key={tag.id}
               onClick={() => onSelect(tag.id)}
-              className={`flex h-[34px] flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[12.5px] font-semibold transition ${
+              aria-pressed={active}
+              className={`flex min-h-10 flex-shrink-0 items-center gap-1.5 rounded-lg border px-3.5 text-[12.5px] font-semibold whitespace-nowrap transition ${
                 active
                   ? 'border-[#254889] bg-[#254889] text-white'
                   : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-900'
               }`}
             >
               {tag.name}
-              <span className={active ? 'opacity-70' : 'text-slate-400'}>{tag.pageCount}</span>
+              <span className={active ? 'opacity-70' : 'text-slate-500'}>
+                {tag.pageCount}
+              </span>
             </button>
           );
         })}
@@ -325,24 +356,41 @@ function PageCardItem({
     <Link
       href={page.canonicalUrl}
       onClick={(event) => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+          return;
         event.preventDefault();
         onPreview(page);
       }}
-      className="hover:border-brand-500 hover:bg-brand-50/20 flex flex-col gap-3 rounded-xl border border-t-[3px] border-slate-200 border-t-brand-500 bg-white p-5 text-left transition"
+      className="group hover:border-brand-200 flex min-w-0 flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 text-left transition duration-200 hover:shadow-[0_8px_24px_-12px_rgba(37,72,137,0.22)]"
     >
       <div className="flex items-start justify-between gap-2.5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-100 text-brand-700">
+        <div className="bg-brand-100 text-brand-700 flex h-9 w-9 items-center justify-center rounded-lg">
           <FileText size={17} strokeWidth={2} />
         </div>
+        <ArrowUpRight
+          size={18}
+          aria-hidden="true"
+          className="group-hover:text-brand-600 text-slate-400 transition"
+        />
       </div>
 
       <div>
-        <p className="text-[14px] font-semibold leading-snug tracking-tight text-slate-900">{page.title}</p>
-        <div className="mt-1.5 flex flex-wrap items-center gap-1 text-[11.5px] text-slate-400">
+        <p className="text-base leading-snug font-semibold tracking-tight text-slate-900">
+          {page.title}
+        </p>
+        <div className="mt-1.5 flex flex-wrap items-center gap-1 text-xs text-slate-500">
           {page.breadcrumb.map((crumb, i) => (
             <span key={i} className="flex items-center gap-1">
               {i > 0 && <span className="opacity-60">/</span>}
-              <span className={i === page.breadcrumb.length - 1 ? 'font-semibold text-slate-500' : ''}>{crumb}</span>
+              <span
+                className={
+                  i === page.breadcrumb.length - 1
+                    ? 'font-semibold text-slate-500'
+                    : ''
+                }
+              >
+                {crumb}
+              </span>
             </span>
           ))}
         </div>
@@ -350,7 +398,10 @@ function PageCardItem({
 
       <div className="flex flex-wrap gap-1.5">
         {page.tags.map((t) => (
-          <span key={t} className="flex h-6 items-center rounded-md border border-slate-200 bg-slate-50 px-2 text-xs font-bold text-slate-600">
+          <span
+            key={t}
+            className="flex h-6 items-center rounded-md border border-slate-200 bg-slate-50 px-2 text-xs font-bold text-slate-600"
+          >
             {t}
           </span>
         ))}
@@ -360,23 +411,38 @@ function PageCardItem({
         <span className="flex items-center gap-1.5">
           <span suppressHydrationWarning>{page.updatedRelative}</span>
         </span>
-        <span>Page</span>
+        <span className="text-brand-600 font-medium">Preview page</span>
       </div>
     </Link>
   );
 }
 
-function PagePreview({ page, onClose }: { page: PageCard; onClose: () => void }) {
+function PagePreview({
+  page,
+  onClose,
+}: {
+  page: PageCard;
+  onClose: () => void;
+}) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose();
-    }
-    window.addEventListener('keydown', closeOnEscape);
-    return () => window.removeEventListener('keydown', closeOnEscape);
-  }, [onClose]);
+    const dialog = dialogRef.current;
+    dialog?.showModal();
+    closeRef.current?.focus();
+    return () => dialog?.close();
+  }, []);
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/20" role="dialog" aria-modal="true" aria-label={`Preview ${page.title}`}>
+    <dialog
+      ref={dialogRef}
+      aria-modal="true"
+      onClose={(event) => {
+        if (!event.currentTarget.open) onClose();
+      }}
+      className="fixed inset-0 m-0 h-dvh max-h-none w-screen max-w-none border-0 bg-transparent p-0 backdrop:bg-slate-950/30"
+      aria-label={`Preview ${page.title}`}
+    >
       <button
         type="button"
         className="absolute inset-0 cursor-default"
@@ -387,12 +453,15 @@ function PagePreview({ page, onClose }: { page: PageCard; onClose: () => void })
       <section className="absolute inset-y-0 right-0 flex w-full flex-col border-l border-slate-200 bg-white shadow-2xl md:w-1/2">
         <header className="flex min-h-16 items-center justify-between gap-4 border-b border-slate-200 px-4 sm:px-6">
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-brand-600">Page preview</p>
-            <h2 className="truncate text-base font-semibold text-slate-950">{page.title}</h2>
+            <p className="text-brand-600 text-xs font-semibold">Page preview</p>
+            <h2 className="truncate text-base font-semibold text-slate-950">
+              {page.title}
+            </h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <Link
               href={page.canonicalUrl}
+              aria-label="Open full page"
               className="flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-700 hover:border-slate-300"
             >
               <ExternalLink size={16} aria-hidden="true" />
@@ -401,8 +470,8 @@ function PagePreview({ page, onClose }: { page: PageCard; onClose: () => void })
             <button
               type="button"
               onClick={onClose}
-              autoFocus
               className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-950"
+              ref={closeRef}
               aria-label="Close page preview"
             >
               <X size={18} aria-hidden="true" />
@@ -418,7 +487,7 @@ function PagePreview({ page, onClose }: { page: PageCard; onClose: () => void })
           </article>
         </div>
       </section>
-    </div>
+    </dialog>
   );
 }
 
@@ -444,21 +513,87 @@ const lessonPeriods = [
   '14:30–15:20',
 ] as const;
 
-const schoolDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] as const;
+const schoolDays = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+] as const;
 
 const lessonDetails = {
-  MA: { subject: 'Mathematics', room: 'M12', href: '/maths-quadratic-equations', tone: 'bg-brand-50 hover:bg-brand-100' },
-  EN: { subject: 'English', room: 'E4', href: '/english-persuasive-writing', tone: 'bg-brand-50 hover:bg-brand-100' },
-  CH: { subject: 'Chemistry', room: 'Lab 3', href: '/chemistry-atomic-structure', tone: 'bg-teal-50 hover:bg-teal-100' },
-  HI: { subject: 'History', room: 'H7', href: '/history-industrial-revolution', tone: 'bg-amber-50 hover:bg-amber-100' },
-  GE: { subject: 'Geography', room: 'G5', href: '/geography-river-landscapes', tone: 'bg-amber-50 hover:bg-amber-100' },
-  PH: { subject: 'Physics', room: 'Lab 1', href: '/physics-forces-motion', tone: 'bg-teal-50 hover:bg-teal-100' },
-  BI: { subject: 'Biology', room: 'Lab 5', href: '/biology-cell-division', tone: 'bg-teal-50 hover:bg-teal-100' },
-  FR: { subject: 'French', room: 'L8', href: '/french-perfect-tense', tone: 'bg-brand-50 hover:bg-brand-100' },
-  CS: { subject: 'Computer Science', room: 'ICT 2', href: '/computer-science-algorithms', tone: 'bg-brand-50 hover:bg-brand-100' },
-  PE: { subject: 'PE', room: 'Sports Hall', href: '/calendar', tone: 'bg-slate-100 hover:bg-slate-200' },
-  AR: { subject: 'Art', room: 'Art 2', href: '/calendar', tone: 'bg-slate-100 hover:bg-slate-200' },
-  PS: { subject: 'PSHE', room: 'Form room', href: '/calendar', tone: 'bg-slate-100 hover:bg-slate-200' },
+  MA: {
+    subject: 'Mathematics',
+    room: 'M12',
+    href: '/maths-quadratic-equations',
+    tone: 'bg-brand-50 hover:bg-brand-100',
+  },
+  EN: {
+    subject: 'English',
+    room: 'E4',
+    href: '/english-persuasive-writing',
+    tone: 'bg-brand-50 hover:bg-brand-100',
+  },
+  CH: {
+    subject: 'Chemistry',
+    room: 'Lab 3',
+    href: '/chemistry-atomic-structure',
+    tone: 'bg-brand-50 hover:bg-brand-100',
+  },
+  HI: {
+    subject: 'History',
+    room: 'H7',
+    href: '/history-industrial-revolution',
+    tone: 'bg-brand-50 hover:bg-brand-100',
+  },
+  GE: {
+    subject: 'Geography',
+    room: 'G5',
+    href: '/geography-river-landscapes',
+    tone: 'bg-brand-50 hover:bg-brand-100',
+  },
+  PH: {
+    subject: 'Physics',
+    room: 'Lab 1',
+    href: '/physics-forces-motion',
+    tone: 'bg-brand-50 hover:bg-brand-100',
+  },
+  BI: {
+    subject: 'Biology',
+    room: 'Lab 5',
+    href: '/biology-cell-division',
+    tone: 'bg-brand-50 hover:bg-brand-100',
+  },
+  FR: {
+    subject: 'French',
+    room: 'L8',
+    href: '/french-perfect-tense',
+    tone: 'bg-brand-50 hover:bg-brand-100',
+  },
+  CS: {
+    subject: 'Computer Science',
+    room: 'ICT 2',
+    href: '/computer-science-algorithms',
+    tone: 'bg-brand-50 hover:bg-brand-100',
+  },
+  PE: {
+    subject: 'PE',
+    room: 'Sports Hall',
+    href: '/calendar',
+    tone: 'bg-slate-100 hover:bg-slate-200',
+  },
+  AR: {
+    subject: 'Art',
+    room: 'Art 2',
+    href: '/calendar',
+    tone: 'bg-slate-100 hover:bg-slate-200',
+  },
+  PS: {
+    subject: 'PSHE',
+    room: 'Form room',
+    href: '/calendar',
+    tone: 'bg-slate-100 hover:bg-slate-200',
+  },
 } as const;
 
 type LessonCode = keyof typeof lessonDetails;
@@ -492,16 +627,27 @@ function StudentTimetable({ items }: { items: readonly CalendarItem[] }) {
   const [week, setWeek] = useState<TimetableWeek>('A');
 
   return (
-    <section className="mt-12 border-t border-slate-200 pt-8" aria-labelledby="timetable-heading">
+    <section
+      className="mt-12 border-t border-slate-200 pt-8"
+      aria-labelledby="timetable-heading"
+    >
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-bold tracking-wide text-brand-600 uppercase">Lessons and deadlines</p>
-          <h2 id="timetable-heading" className="mt-1 text-xl font-bold tracking-tight text-slate-950">
-            Your timetable
+          <p className="text-brand-600 text-xs font-bold tracking-wide uppercase">
+            Plan your week
+          </p>
+          <h2
+            id="timetable-heading"
+            className="mt-1 text-xl font-bold tracking-tight text-slate-950"
+          >
+            Example timetable
           </h2>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex rounded-lg border border-slate-200 bg-white p-1" aria-label="Timetable week">
+          <div
+            className="flex rounded-lg border border-slate-200 bg-white p-1"
+            aria-label="Timetable week"
+          >
             {(['A', 'B'] as const).map((value) => (
               <button
                 key={value}
@@ -514,7 +660,10 @@ function StudentTimetable({ items }: { items: readonly CalendarItem[] }) {
               </button>
             ))}
           </div>
-          <Link href="/calendar" className="text-sm font-semibold text-brand-600 hover:text-brand-700">
+          <Link
+            href="/calendar"
+            className="text-brand-600 hover:text-brand-700 text-sm font-semibold"
+          >
             View calendar
           </Link>
         </div>
@@ -527,15 +676,27 @@ function StudentTimetable({ items }: { items: readonly CalendarItem[] }) {
         tabIndex={0}
       >
         <table className="w-full min-w-[1050px] table-fixed border-collapse text-left">
-          <caption className="sr-only">Week {week} timetable with weekdays as rows and lesson times as columns</caption>
+          <caption className="sr-only">
+            Week {week} timetable with weekdays as rows and lesson times as
+            columns
+          </caption>
           <thead>
             <tr className="border-b border-slate-200 bg-slate-100">
-              <th scope="col" className="w-28 px-4 py-3 text-xs font-bold tracking-wide text-slate-600 uppercase">
+              <th
+                scope="col"
+                className="w-28 px-4 py-3 text-xs font-bold tracking-wide text-slate-600 uppercase"
+              >
                 Day
               </th>
               {lessonPeriods.map((period, index) => (
-                <th key={period} scope="col" className="border-l border-slate-200 px-3 py-3 text-xs font-semibold text-slate-600">
-                  <span className="block text-slate-950">Period {index + 1}</span>
+                <th
+                  key={period}
+                  scope="col"
+                  className="border-l border-slate-200 px-3 py-3 text-xs font-semibold text-slate-600"
+                >
+                  <span className="block text-slate-950">
+                    Period {index + 1}
+                  </span>
                   <span className="mt-0.5 block font-medium">{period}</span>
                 </th>
               ))}
@@ -544,16 +705,29 @@ function StudentTimetable({ items }: { items: readonly CalendarItem[] }) {
           <tbody className="divide-y divide-slate-200">
             {schoolDays.map((day, dayIndex) => (
               <tr key={day}>
-                <th scope="row" className="bg-slate-50 px-4 py-4 text-sm font-bold text-slate-950">
+                <th
+                  scope="row"
+                  className="bg-slate-50 px-4 py-4 text-sm font-bold text-slate-950"
+                >
                   {day}
                 </th>
                 {fixedTimetable[week][dayIndex]!.map((code, periodIndex) => {
                   const lesson = lessonDetails[code];
                   return (
-                    <td key={`${day}-${periodIndex}`} className="border-l border-slate-200 p-1.5 align-top">
-                      <Link href={lesson.href} className={`block min-h-20 rounded-lg p-2.5 transition ${lesson.tone}`}>
-                        <span className="block text-sm font-semibold text-slate-950">{lesson.subject}</span>
-                        <span className="mt-1 block text-xs text-slate-500">{lesson.room}</span>
+                    <td
+                      key={`${day}-${periodIndex}`}
+                      className="border-l border-slate-200 p-1.5 align-top"
+                    >
+                      <Link
+                        href={lesson.href}
+                        className={`block min-h-20 rounded-lg p-2.5 transition ${lesson.tone}`}
+                      >
+                        <span className="block text-sm font-semibold text-slate-950">
+                          {lesson.subject}
+                        </span>
+                        <span className="mt-1 block text-xs text-slate-500">
+                          {lesson.room}
+                        </span>
                       </Link>
                     </td>
                   );
@@ -565,8 +739,13 @@ function StudentTimetable({ items }: { items: readonly CalendarItem[] }) {
       </div>
 
       <div className="mt-8 flex items-center justify-between gap-4">
-        <h3 className="text-base font-bold text-slate-950">Upcoming deadlines</h3>
-        <Link href="/calendar" className="text-sm font-semibold text-brand-600 hover:text-brand-700">
+        <h3 className="text-base font-bold text-slate-950">
+          Upcoming deadlines
+        </h3>
+        <Link
+          href="/calendar"
+          className="text-brand-600 hover:text-brand-700 text-sm font-semibold"
+        >
           View all
         </Link>
       </div>
@@ -585,7 +764,11 @@ function StudentTimetable({ items }: { items: readonly CalendarItem[] }) {
                   : '/calendar';
             const starts = new Date(item.at);
             return (
-              <Link key={`${item.kind}:${item.id}`} href={href} className="group bg-white p-5 hover:bg-brand-50/40">
+              <Link
+                key={`${item.kind}:${item.id}`}
+                href={href}
+                className="group hover:bg-brand-50/40 bg-white p-5"
+              >
                 <div className="flex items-center justify-between gap-3 text-xs font-semibold text-slate-500">
                   <span className="flex items-center gap-1.5">
                     <CalendarDays size={15} aria-hidden="true" />
@@ -596,10 +779,14 @@ function StudentTimetable({ items }: { items: readonly CalendarItem[] }) {
                     {timetableTime.format(starts)}
                   </span>
                 </div>
-                <h3 className="mt-4 font-semibold text-slate-950 group-hover:text-brand-700">{item.title}</h3>
+                <h3 className="group-hover:text-brand-700 mt-4 font-semibold text-slate-950">
+                  {item.title}
+                </h3>
                 <p className="mt-1 text-xs font-semibold text-slate-500 capitalize">
                   {item.kind === 'event' ? 'Lesson or event' : item.kind}
-                  {item.tags.length > 0 ? ` · ${item.tags.map((tag) => tag.name).join(', ')}` : ''}
+                  {item.tags.length > 0
+                    ? ` · ${item.tags.map((tag) => tag.name).join(', ')}`
+                    : ''}
                 </p>
               </Link>
             );
@@ -619,21 +806,18 @@ function ClassConnection({ role }: { role: CurrentUser['role'] }) {
             title: 'Send work and a note',
             description: 'Submit your work with a message for your teacher.',
             icon: ClipboardCheck,
-            tone: 'bg-blue-100 text-blue-700',
           },
           {
             href: '/gradebook',
             title: 'Review teacher feedback',
             description: 'See released marks and guidance on your work.',
             icon: GraduationCap,
-            tone: 'bg-emerald-100 text-emerald-700',
           },
           {
             href: '/announcements',
             title: 'Read class updates',
             description: 'Keep up with announcements for your tags.',
             icon: Megaphone,
-            tone: 'bg-amber-100 text-amber-800',
           },
         ]
       : [
@@ -642,43 +826,52 @@ function ClassConnection({ role }: { role: CurrentUser['role'] }) {
             title: 'Review student work',
             description: 'Open submissions and respond with clear feedback.',
             icon: ClipboardCheck,
-            tone: 'bg-blue-100 text-blue-700',
           },
           {
             href: '/gradebook',
             title: 'Give marks and feedback',
             description: 'Track progress and release feedback to pupils.',
             icon: GraduationCap,
-            tone: 'bg-emerald-100 text-emerald-700',
           },
           {
             href: '/announcements',
             title: 'Post a class update',
             description: 'Share a tag-scoped update with the right pupils.',
             icon: Megaphone,
-            tone: 'bg-amber-100 text-amber-800',
           },
         ];
 
   return (
-    <section className="mt-12 border-t border-slate-200 pt-8" aria-labelledby="connection-heading">
-      <p className="text-xs font-bold tracking-wide text-brand-600 uppercase">Student and teacher interaction</p>
-      <h2 id="connection-heading" className="mt-1 text-xl font-bold tracking-tight text-slate-950">
-        Class connection
+    <section
+      className="rounded-xl border border-slate-200 bg-white p-6"
+      aria-labelledby="connection-heading"
+    >
+      <p className="text-brand-600 text-xs font-bold tracking-wide uppercase">
+        Your workspace
+      </p>
+      <h2
+        id="connection-heading"
+        className="mt-1 text-xl font-bold tracking-tight text-slate-950"
+      >
+        Class tools
       </h2>
-      <div className="mt-5 grid gap-3 md:grid-cols-3">
-        {actions.map(({ href, title, description, icon: Icon, tone }) => (
+      <div className="mt-5 grid divide-y divide-slate-100">
+        {actions.map(({ href, title, description, icon: Icon }) => (
           <Link
             key={title}
             href={href}
-            className="group flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-5 transition hover:border-brand-500 hover:bg-brand-50/30"
+            className="group flex items-start gap-3 py-5 first:pt-0 last:pb-0"
           >
-            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${tone}`}>
+            <span className="bg-brand-50 text-brand-600 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
               <Icon size={19} aria-hidden="true" />
             </span>
             <span>
-              <span className="block font-semibold text-slate-950 group-hover:text-brand-700">{title}</span>
-              <span className="mt-1 block text-sm leading-5 text-slate-600">{description}</span>
+              <span className="group-hover:text-brand-700 block font-semibold text-slate-950">
+                {title}
+              </span>
+              <span className="mt-1 block text-sm leading-5 text-slate-600">
+                {description}
+              </span>
             </span>
           </Link>
         ))}
@@ -696,7 +889,10 @@ function FloatingActionButton() {
   const menuRef = useClickOutside<HTMLDivElement>(() => setOpen(false));
 
   return (
-    <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-3" ref={menuRef}>
+    <div
+      className="fixed right-8 bottom-8 z-50 flex flex-col items-end gap-3"
+      ref={menuRef}
+    >
       {open && (
         <div className="w-[240px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
           <Link
@@ -707,7 +903,9 @@ function FloatingActionButton() {
               <FilePlus size={16} strokeWidth={2} />
             </span>
             <span className="flex flex-col">
-              <span className="text-[12.5px] font-semibold text-slate-900">New page</span>
+              <span className="text-[12.5px] font-semibold text-slate-900">
+                New page
+              </span>
               <span className="text-[10.5px] text-slate-400">Block editor</span>
             </span>
           </Link>
@@ -717,9 +915,14 @@ function FloatingActionButton() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Create"
+        aria-expanded={open}
         className="flex h-14 w-14 items-center justify-center rounded-full bg-[#254889] text-white shadow-[0_10px_24px_rgba(37,72,137,0.28)] transition hover:bg-[#1d386c] active:scale-95"
       >
-        {open ? <X size={22} strokeWidth={2.4} /> : <Plus size={22} strokeWidth={2.4} />}
+        {open ? (
+          <X size={22} strokeWidth={2.4} />
+        ) : (
+          <Plus size={22} strokeWidth={2.4} />
+        )}
       </button>
     </div>
   );
@@ -752,64 +955,191 @@ export default function Dashboard({
     }
     return [
       { id: 'all', name: 'All pages', pageCount: cards.length },
-      ...Array.from(counts, ([name, pageCount]) => ({ id: name, name, pageCount })).sort(
-        (a, b) => a.name.localeCompare(b.name),
-      ),
+      ...Array.from(counts, ([name, pageCount]) => ({
+        id: name,
+        name,
+        pageCount,
+      })).sort((a, b) => a.name.localeCompare(b.name)),
     ];
   }, [cards]);
 
-  const visiblePages = cards.filter((p) => activeTag === 'all' || p.tags.includes(activeTag));
+  const visiblePages = cards.filter(
+    (p) => activeTag === 'all' || p.tags.includes(activeTag),
+  );
 
   return (
     <div className="min-h-[100dvh] bg-slate-50">
       <SkipToContentLink />
-      <TopNav
-        identity={identity}
-        currentUser={currentUser}
-        updates={updates}
-      />
+      <TopNav identity={identity} currentUser={currentUser} updates={updates} />
 
-      <main id="main-content" tabIndex={-1} className="mx-auto max-w-[1280px] px-4 pt-10 pb-32 sm:px-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-950">
-            {currentUser
-              ? `Good afternoon, ${identity.name.split(' ')[0]}`
-              : 'Welcome to Project M'}
-          </h1>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            {currentUser
-              ? 'Recent pages, files and assignments from your tags.'
-              : 'Sign in with your school Microsoft account to access your pages and files.'}
-          </p>
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto max-w-[1280px] px-4 pt-10 pb-32 sm:px-8"
+      >
+        <div className="mb-9 flex flex-col justify-between gap-6 border-b border-slate-200 pb-8 sm:flex-row sm:items-end">
+          <div>
+            <p className="text-brand-600 mb-3 text-xs font-semibold tracking-[0.16em] uppercase">
+              Merchant Taylors’ School
+            </p>
+            <h1 className="text-3xl font-semibold tracking-[-0.035em] text-slate-950 sm:text-4xl">
+              {currentUser
+                ? `Welcome back, ${identity.name.split(' ')[0]}`
+                : 'Welcome to Project M'}
+            </h1>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              {currentUser
+                ? 'Pick up where you left off. Your learning starts here.'
+                : 'Sign in with your school Microsoft account to access your pages and files.'}
+            </p>
+          </div>
+          {currentUser && (
+            <Link
+              href="/calendar"
+              className="hover:border-brand-200 hover:text-brand-700 flex min-h-11 shrink-0 items-center gap-2 self-start rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition sm:self-auto"
+            >
+              <CalendarDays size={17} aria-hidden="true" />
+              View calendar
+              <ArrowUpRight size={15} aria-hidden="true" />
+            </Link>
+          )}
         </div>
 
-        <TagRail tags={tags} activeTag={activeTag} onSelect={setActiveTag} />
-
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-[14.5px] font-bold text-slate-900">Pages &amp; files</h2>
-        </div>
-
-        {visiblePages.length === 0 ? (
-          <EmptyState
-            icon={<FileText size={20} strokeWidth={2} />}
-            title={cards.length === 0 ? 'No pages yet' : 'No pages match this tag'}
-            description={
-              cards.length === 0
-                ? 'Published pages you can access will appear here once teachers start publishing content.'
-                : 'Try a different tag, or select "All pages" to see everything you have access to.'
-            }
-          />
+        {!currentUser ? (
+          <section
+            className="grid overflow-hidden rounded-2xl border border-slate-200 bg-white md:grid-cols-[1.2fr_1fr]"
+            aria-labelledby="welcome-heading"
+          >
+            <div className="p-8 sm:p-12">
+              <div className="bg-brand-50 text-brand-600 mb-8 flex h-12 w-12 items-center justify-center rounded-xl">
+                <GraduationCap size={25} aria-hidden="true" />
+              </div>
+              <h2
+                id="welcome-heading"
+                className="max-w-sm text-3xl leading-tight font-semibold tracking-tight text-slate-950 sm:text-4xl"
+              >
+                A little more focus.
+                <br />A lot more learning.
+              </h2>
+              <p className="mt-5 max-w-md text-base leading-7 text-slate-600">
+                Your lessons, coursework and class updates, together in one
+                place.
+              </p>
+              <Link
+                href="/auth/login"
+                className="bg-brand-600 hover:bg-brand-700 mt-8 inline-flex min-h-12 items-center gap-6 rounded-lg px-5 text-sm font-semibold text-white transition"
+              >
+                Access your workspace
+                <ArrowUpRight size={18} aria-hidden="true" />
+              </Link>
+              <p className="mt-4 text-xs leading-5 text-slate-500">
+                Use your school Microsoft account to get started.
+              </p>
+            </div>
+            <div className="flex flex-col justify-center border-t border-slate-200 bg-slate-50 p-8 sm:p-12 md:border-t-0 md:border-l">
+              <p className="text-brand-600 mb-6 text-xs font-semibold tracking-[0.16em] uppercase">
+                One place for your school day
+              </p>
+              <div className="divide-y divide-slate-200">
+                <div className="py-5">
+                  <FileText
+                    size={20}
+                    className="text-brand-600 mb-3"
+                    aria-hidden="true"
+                  />
+                  <h3 className="font-semibold">Find your next lesson</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Pages and resources organised around your class tags.
+                  </p>
+                </div>
+                <div className="py-5">
+                  <ClipboardCheck
+                    size={20}
+                    className="text-brand-600 mb-3"
+                    aria-hidden="true"
+                  />
+                  <h3 className="font-semibold">Keep your work moving</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Assignments, deadlines and feedback in your workspace.
+                  </p>
+                </div>
+                <div className="pt-5">
+                  <Megaphone
+                    size={20}
+                    className="text-brand-600 mb-3"
+                    aria-hidden="true"
+                  />
+                  <h3 className="font-semibold">Stay in the loop</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Read the latest updates shared with your classes.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
-            {visiblePages.map((page) => (
-              <PageCardItem key={page.id} page={page} onPreview={setPreviewPage} />
-            ))}
+          <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+            <section className="min-w-0" aria-labelledby="pages-heading">
+              <div className="mb-5 flex items-end justify-between gap-3">
+                <div>
+                  <h2
+                    id="pages-heading"
+                    className="text-xl font-semibold tracking-tight text-slate-950"
+                  >
+                    Pages &amp; files
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Recently updated in your tags
+                  </p>
+                </div>
+                {currentUser && (
+                  <Link
+                    href="/resources"
+                    className="text-brand-600 shrink-0 text-sm font-semibold hover:underline"
+                  >
+                    View all <span aria-hidden="true">→</span>
+                  </Link>
+                )}
+              </div>
+              <TagRail
+                tags={tags}
+                activeTag={activeTag}
+                onSelect={setActiveTag}
+              />
+
+              {visiblePages.length === 0 ? (
+                <EmptyState
+                  icon={<FileText size={20} strokeWidth={2} />}
+                  title={
+                    cards.length === 0
+                      ? 'No pages yet'
+                      : 'No pages match this tag'
+                  }
+                  description={
+                    cards.length === 0
+                      ? 'Published pages you can access will appear here once teachers start publishing content.'
+                      : 'Try a different tag, or select "All pages" to see everything you have access to.'
+                  }
+                />
+              ) : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {visiblePages.map((page) => (
+                    <PageCardItem
+                      key={page.id}
+                      page={page}
+                      onPreview={setPreviewPage}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+            {currentUser && <ClassConnection role={currentUser.role} />}
           </div>
         )}
 
-        {currentUser && <ClassConnection role={currentUser.role} />}
-
-        {currentUser?.role === 'student' && <StudentTimetable items={timetable} />}
+        {currentUser?.role === 'student' && (
+          <StudentTimetable items={timetable} />
+        )}
       </main>
 
       {(currentUser?.role === 'teacher' || currentUser?.role === 'admin') && (

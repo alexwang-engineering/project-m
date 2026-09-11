@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { StrictMode } from 'react';
 
 import Dashboard, { type DashboardPage } from '@/components/Dashboard';
 
@@ -26,6 +27,63 @@ const SAMPLE_USER = {
 };
 
 describe('Dashboard', () => {
+  it('keeps previews open after strict-mode setup and closes them on dismissal', () => {
+    Object.defineProperties(HTMLDialogElement.prototype, {
+      showModal: {
+        configurable: true,
+        value() {
+          this.open = true;
+        },
+      },
+      close: {
+        configurable: true,
+        value() {
+          this.open = false;
+        },
+      },
+    });
+    try {
+      render(
+        <StrictMode>
+          <Dashboard
+            pages={SAMPLE_PAGES}
+            updates={[]}
+            currentUser={SAMPLE_USER}
+          />
+        </StrictMode>,
+      );
+      fireEvent.click(screen.getByRole('link', { name: /Organic Mechanisms/ }));
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toHaveAttribute('open');
+      // A queued close event from Strict Mode cleanup must not dismiss a reopened dialog.
+      fireEvent(dialog, new Event('close'));
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Close page preview' }),
+      ).toHaveFocus();
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Close page preview' }),
+      );
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    } finally {
+      Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
+      Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
+    }
+  });
+
+  it('filters authorized pages and announces the selected tag', () => {
+    render(
+      <Dashboard pages={SAMPLE_PAGES} updates={[]} currentUser={SAMPLE_USER} />,
+    );
+    const tag = screen.getByRole('button', { name: /Y9MA1/ });
+    fireEvent.click(tag);
+    expect(tag).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByText(SAMPLE_PAGES[0]!.title)).not.toBeInTheDocument();
+    expect(screen.getByText(SAMPLE_PAGES[1]!.title)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /All pages/ }));
+    expect(screen.getByText(SAMPLE_PAGES[0]!.title)).toBeInTheDocument();
+  });
+
   it('renders the primary navigation and tag feed', () => {
     render(
       <Dashboard pages={SAMPLE_PAGES} updates={[]} currentUser={SAMPLE_USER} />,

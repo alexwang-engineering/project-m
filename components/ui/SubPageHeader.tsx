@@ -23,7 +23,7 @@ export function SubPageHeader({
 }: SubPageHeaderProps) {
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="bg-brand-600 border-brand-700 border-b">
+      <div className="bg-brand-700 border-brand-700 border-b">
         <div className="mx-auto flex min-h-16 max-w-[1280px] items-center justify-between gap-4 px-4 sm:px-8">
           <Link
             href="/"
@@ -55,7 +55,7 @@ export function SubPageHeader({
           {backHref && (
             <span className="h-5 w-px bg-slate-200" aria-hidden="true" />
           )}
-          <h1 className="truncate text-lg font-semibold tracking-tight text-slate-950">
+          <h1 className="truncate text-xl font-semibold tracking-tight text-slate-950">
             {title}
           </h1>
           {badge}
