@@ -62,7 +62,7 @@ export function SearchBox() {
 
   return (
     <div className="relative" ref={containerRef}>
-      <div className="focus-within:border-brand-500 flex h-10 w-[190px] items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 focus-within:bg-white xl:w-[240px]">
+      <div className="focus-within:border-brand-400 flex h-8 w-[200px] items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 focus-within:bg-white">
         <Search
           size={13}
           strokeWidth={2.4}
@@ -79,7 +79,7 @@ export function SearchBox() {
           }}
           onFocus={() => setOpen(true)}
           placeholder="Search"
-          className="w-full min-w-0 bg-transparent text-[12.5px] text-slate-800 outline-none placeholder:text-slate-500"
+          className="w-full bg-transparent text-[12.5px] text-slate-800 outline-none placeholder:text-slate-400"
         />
         {loading && (
           <Loader2 size={12} className="shrink-0 animate-spin text-slate-400" />
@@ -90,7 +90,7 @@ export function SearchBox() {
         <div
           role="status"
           aria-live="polite"
-          className="absolute top-12 right-0 z-50 max-h-[360px] w-[min(320px,calc(100vw-2rem))] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg"
+          className="absolute top-9 right-0 z-50 max-h-[360px] w-[320px] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg"
         >
           {results.length === 0 && !loading ? (
             <p className="px-2.5 py-3 text-[12.5px] text-slate-400">
