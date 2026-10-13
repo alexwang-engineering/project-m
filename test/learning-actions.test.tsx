@@ -61,6 +61,7 @@ describe('role-sensitive learning actions', () => {
         writableTags={[]}
         currentUserId="00000000-0000-4000-8000-000000000001"
         isAdmin={false}
+        nowIso={'2026-08-13T09:00:00.000Z'}
       />,
     );
     expect(screen.queryByText('Create an event')).not.toBeInTheDocument();

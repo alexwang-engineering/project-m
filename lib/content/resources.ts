@@ -25,27 +25,35 @@ export async function listResources(
   client: Client,
   role: 'admin' | 'teacher' | 'student',
   managedTagIds: ReadonlySet<string>,
+  classTagIds: readonly string[] | null,
 ): Promise<readonly ResourceSummary[]> {
+  if (classTagIds?.length === 0) return [];
+  let pageQuery = client
+    .from('pages')
+    .select(
+      'id,title,canonical_url,lifecycle,updated_at,page_tags(tag_id,tags(tag_name,display_name)),class_scope:page_tags(tag_id)',
+    )
+    .neq('lifecycle', 'archived');
+  let quizQuery = client
+    .from('quizzes')
+    .select(
+      'id,title,created_at,quiz_tags(tag_id,tags(tag_name,display_name)),class_scope:quiz_tags(tag_id)',
+    )
+    .is('archived_at', null);
+  if (classTagIds !== null) {
+    pageQuery = pageQuery
+      .in('class_scope.tag_id', classTagIds)
+      .not('class_scope', 'is', null);
+    quizQuery = quizQuery
+      .in('class_scope.tag_id', classTagIds)
+      .not('class_scope', 'is', null);
+  }
   const [
     { data: pages, error: pageError },
     { data: quizzes, error: quizError },
   ] = await Promise.all([
-    client
-      .from('pages')
-      .select(
-        'id,title,canonical_url,lifecycle,updated_at,page_tags(tag_id,tags!inner(tag_name,display_name))',
-      )
-      .neq('lifecycle', 'archived')
-      .order('updated_at', { ascending: false })
-      .limit(100),
-    client
-      .from('quizzes')
-      .select(
-        'id,title,created_at,quiz_tags(tag_id,tags!inner(tag_name,display_name))',
-      )
-      .is('archived_at', null)
-      .order('created_at', { ascending: false })
-      .limit(100),
+    pageQuery.order('updated_at', { ascending: false }).limit(100),
+    quizQuery.order('created_at', { ascending: false }).limit(100),
   ]);
   if (pageError) throw pageError;
   if (quizError) throw quizError;
@@ -62,7 +70,7 @@ export async function listResources(
     }[],
   ) =>
     rows.flatMap((row) =>
-      row.tags
+      row.tags && (classTagIds === null || classTagIds.includes(row.tag_id))
         ? [{ name: row.tags.tag_name, displayName: row.tags.display_name }]
         : [],
     );

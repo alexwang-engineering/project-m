@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Manrope } from 'next/font/google';
 
 import './globals.css';
 
@@ -15,6 +15,13 @@ const geistMono = Geist_Mono({
   display: 'swap',
 });
 
+const manrope = Manrope({
+  subsets: ['latin'],
+  variable: '--font-manrope',
+  display: 'swap',
+  weight: ['700', '800'],
+});
+
 export const metadata: Metadata = {
   title: {
     default: 'Project M',
@@ -25,14 +32,17 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'light',
-  themeColor: '#254889',
+  themeColor: '#182c4d',
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en-GB" className={`${geist.variable} ${geistMono.variable}`}>
+    <html
+      lang="en-GB"
+      className={`${geist.variable} ${geistMono.variable} ${manrope.variable}`}
+    >
       <body>{children}</body>
     </html>
   );

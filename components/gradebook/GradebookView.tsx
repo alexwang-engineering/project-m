@@ -22,14 +22,14 @@ export default function GradebookView({ data }: GradebookViewProps) {
     data.studentRows.length === 0 && data.teacherRows.length === 0;
 
   return (
-    <div className="min-h-screen bg-[#f7f8fa]">
+    <div className="min-h-screen bg-[#e7e5ec]">
       <SkipToContentLink />
       <SubPageHeader backHref="/" backLabel="Dashboard" title="Gradebook" />
 
       <main
         id="main-content"
         tabIndex={-1}
-        className="mx-auto max-w-[820px] px-8 pt-9 pb-24"
+        className="mx-auto max-w-[1040px] px-4 pt-8 pb-24 sm:px-8"
       >
         {isEmpty ? (
           <EmptyState

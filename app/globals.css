@@ -1,28 +1,39 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-display: var(--font-geist), ui-sans-serif, sans-serif;
+  /* font-school retained only for legacy references during rollout; prefer font-display. */
+  --font-school: var(--font-display);
+  --font-display: var(--font-manrope), ui-sans-serif, sans-serif;
   --font-body: var(--font-geist), ui-sans-serif, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
+  /* Header/ink navy - sampled from reference screenshots (landing-page-dashboard.png, grade-book.png). */
   --color-brand-50: #eef3fb;
-  --color-brand-100: #dce7f7;
-  --color-brand-200: #bacfeb;
-  --color-brand-500: #315ca6;
-  --color-brand-600: #254889;
-  --color-brand-700: #1d386c;
+  --color-brand-100: #dfe8f7;
+  --color-brand-200: #c9d8f4;
+  --color-brand-500: #1f4c95;
+  --color-brand-600: #182c4d;
+  --color-brand-700: #16233d;
 
-  --color-slate-50: #f7f9fc;
-  --color-slate-100: #eef2f7;
-  --color-slate-200: #dbe2ea;
-  --color-slate-300: #c2ccd8;
-  --color-slate-400: #8b99aa;
-  --color-slate-500: #647286;
-  --color-slate-600: #4a586b;
-  --color-slate-700: #354254;
-  --color-slate-800: #222e3d;
-  --color-slate-900: #17212e;
-  --color-slate-950: #0d1520;
+  /* Page surface - sampled lavender background + white cards, replaces the old cool-gray slate scale. */
+  --color-slate-50: #f1edf9;
+  --color-slate-100: #ece7f6;
+  --color-slate-200: #dcd5ea;
+  --color-slate-300: #c3b9d9;
+  --color-slate-400: #9c8fb3;
+  --color-slate-500: #766a8c;
+  --color-slate-600: #5b5170;
+  --color-slate-700: #453d58;
+  --color-slate-800: #302a3d;
+  --color-slate-900: #1e1258;
+  --color-slate-950: #150c3d;
+
+  /* Semantic accents - sampled from the reference (class color-coding, status pills, calendar keys). */
+  --color-accent-purple: #4b2389;
+  --color-accent-violet: #7a5fd1;
+  --color-accent-teal: #2f7a6b;
+  --color-accent-amber: #e2a63b;
+  --color-accent-coral: #d65f5f;
 
   --radius-card: 1rem;
 }
@@ -45,23 +56,31 @@ body {
   font-family: var(--font-body);
   color: var(--color-slate-950);
   background: var(--color-slate-50);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 h1,
 h2,
-h3 {
-  font-family: var(--font-display);
+h3,
+h4 {
   text-wrap: balance;
+  letter-spacing: -0.02em;
 }
 
 button,
 input,
 textarea,
 select {
-  font: inherit;
+  font-family: inherit;
 }
 
 :focus-visible {
   outline: 2px solid var(--color-brand-500);
   outline-offset: 2px;
+}
+
+::selection {
+  background: rgba(31, 76, 149, 0.14);
+  color: var(--color-brand-700);
 }

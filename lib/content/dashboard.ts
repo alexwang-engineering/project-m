@@ -39,6 +39,7 @@ export async function getCurrentUserSummary(
   const { data } = await client
     .from('role_assignments')
     .select('role')
+    .eq('profile_id', user.id)
     .lte('valid_from', nowIso)
     .or(`valid_until.is.null,valid_until.gt.${nowIso}`);
   const roles = new Set((data ?? []).map((row) => row.role));
@@ -68,6 +69,7 @@ export interface PageSummary {
  */
 export async function listDashboardPages(
   client: Client,
+  classTagIds: readonly string[] | null,
   requestedLimit = 12,
 ): Promise<readonly PageSummary[]> {
   if (
@@ -78,12 +80,19 @@ export async function listDashboardPages(
     throw new RangeError('Dashboard page limit must be between 1 and 24.');
   }
 
-  const { data, error } = await client
+  if (classTagIds?.length === 0) return [];
+  let query = client
     .from('pages')
     .select(
-      'id, title, canonical_url, content_json, updated_at, page_tags(tags!inner(tag_name, display_name))',
+      'id,title,canonical_url,content_json,updated_at,page_tags(tag_id,tags(tag_name,display_name)),class_scope:page_tags(tag_id)',
     )
-    .eq('lifecycle', 'published')
+    .eq('lifecycle', 'published');
+  if (classTagIds !== null) {
+    query = query
+      .in('class_scope.tag_id', classTagIds)
+      .not('class_scope', 'is', null);
+  }
+  const { data, error } = await query
     .order('updated_at', { ascending: false })
     .limit(requestedLimit);
   if (error) throw error;
@@ -96,6 +105,9 @@ export async function listDashboardPages(
     updatedAt: page.updated_at,
     content: parseEditorDocument(page.content_json),
     tags: page.page_tags
+      .filter(
+        ({ tag_id }) => classTagIds === null || classTagIds.includes(tag_id),
+      )
       .map(({ tags }) => tags)
       .filter((tag): tag is NonNullable<typeof tag> => tag !== null)
       .map((tag) => ({ name: tag.tag_name, displayName: tag.display_name })),

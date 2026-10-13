@@ -3,6 +3,7 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/lib/database.types';
+import { startOfSchoolToday } from '@/lib/school-time';
 
 type Client = SupabaseClient<Database>;
 const UUID =
@@ -35,22 +36,32 @@ export interface CalendarItem {
 export async function listUpcoming(
   client: Client,
   limit = 50,
+  /**
+   * Lower bound, defaulting to the start of today. Without one this returned
+   * the *earliest* `limit` rows the caller could read, so once a school has any
+   * history the result is last year's work rather than what is coming up - and
+   * today's lessons get pushed out of the window entirely.
+   */
+  from: Date = startOfSchoolToday(),
 ): Promise<readonly CalendarItem[]> {
   const {
     data: { user },
   } = await client.auth.getUser();
+  const fromIso = from.toISOString();
   const [assignments, quizzes, events] = await Promise.all([
     client
       .from('assignments')
       .select(
         'id, title, due_at, assignment_exceptions(student_id, extended_due_at)',
       )
+      .gte('due_at', fromIso)
       .order('due_at', { ascending: true })
       .limit(limit),
     client
       .from('quizzes')
       .select('id, title, due_at')
       .not('due_at', 'is', null)
+      .gte('due_at', fromIso)
       .order('due_at', { ascending: true })
       .limit(limit),
     client
@@ -58,6 +69,7 @@ export async function listUpcoming(
       .select(
         'id, title, starts_at, ends_at, is_broadcast, created_by, calendar_event_tags(tag_id, tags!inner(tag_name))',
       )
+      .gte('starts_at', fromIso)
       .order('starts_at', { ascending: true })
       .limit(limit),
   ]);

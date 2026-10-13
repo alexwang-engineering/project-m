@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import { SchoolBrand } from '@/components/ui/SchoolBrand';
 import { PrimaryNavigation } from '@/components/ui/PrimaryNavigation';
 
 interface SubPageHeaderProps {
@@ -22,49 +23,54 @@ export function SubPageHeader({
   actions,
 }: SubPageHeaderProps) {
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="bg-brand-600 border-brand-700 border-b">
-        <div className="mx-auto flex min-h-16 max-w-[1280px] items-center justify-between gap-4 px-4 sm:px-8">
-          <Link
-            href="/"
-            className="flex items-center gap-2.5"
-            aria-label="Project M dashboard"
+    <header className="border-brand-700 bg-brand-600 sticky top-0 z-40 border-b">
+      <div className="mx-auto flex min-h-[58px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-8">
+        <SchoolBrand />
+        {backHref && (
+          <div className="hidden items-center gap-5 xl:flex">
+            <PrimaryNavigation />
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-[11px] font-semibold text-white"
+            aria-label="Profile"
           >
-            <span className="text-brand-700 flex h-9 w-9 items-center justify-center rounded-xl bg-white text-base font-bold shadow-sm">
-              M
-            </span>
-            <span className="text-base font-semibold tracking-tight whitespace-nowrap text-white">
-              Project M
-            </span>
-          </Link>
-          {backHref && <PrimaryNavigation />}
+            SI
+          </button>
         </div>
       </div>
 
-      <div className="mx-auto flex min-h-16 max-w-[1280px] flex-col justify-center gap-3 px-4 py-3 sm:px-8 md:flex-row md:items-center md:justify-between">
-        <div className="flex min-w-0 items-center gap-3">
-          {backHref && (
-            <Link
-              href={backHref}
-              className="flex shrink-0 items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-slate-950"
-            >
-              <ArrowLeft size={16} strokeWidth={2.4} aria-hidden="true" />
-              <span className="hidden sm:inline">{backLabel}</span>
-            </Link>
-          )}
-          {backHref && (
-            <span className="h-5 w-px bg-slate-200" aria-hidden="true" />
-          )}
-          <h1 className="truncate text-lg font-semibold tracking-tight text-slate-950">
-            {title}
-          </h1>
-          {badge}
-        </div>
-        {actions && (
-          <div className="flex flex-wrap items-center gap-2 md:justify-end">
-            {actions}
+      <div className="border-t border-white/10 bg-slate-50">
+        <div className="mx-auto max-w-[1280px] px-4 py-5 sm:px-8">
+          <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div className="min-w-0">
+              {backHref && (
+                <div className="mb-2 flex items-center gap-2 text-[11px] font-medium tracking-[0.18em] text-slate-500 uppercase">
+                  <Link
+                    href={backHref}
+                    className="inline-flex items-center gap-1 text-slate-600"
+                  >
+                    <ArrowLeft size={12} strokeWidth={2.4} aria-hidden="true" />
+                    {backLabel}
+                  </Link>
+                </div>
+              )}
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="font-display text-[32px] font-extrabold tracking-[-0.02em] text-slate-900 sm:text-[40px]">
+                  {title}
+                </h1>
+                {badge}
+              </div>
+            </div>
+            {actions && (
+              <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                {actions}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </header>
   );

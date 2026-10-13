@@ -135,9 +135,18 @@ begin
       update public.tags set display_name = item.display_name, is_active = true, archived_at = null where id = current_tag;
     end if;
 
-    if not exists (select 1 from public.tag_memberships where profile_id = teacher and tag_id = current_tag and membership_role = 'teacher' and valid_until is null) then
-      insert into public.tag_memberships (profile_id, tag_id, membership_role, source, reason, granted_by)
-      values (teacher, current_tag, 'teacher', 'demo-seed', 'Synthetic subject demo', teacher);
+    -- The demo teacher teaches three groups; the pupil takes all nine subjects.
+    if item.tag_name in ('Y9MA1', 'Y9PH1', 'Y9CS1') then
+      if not exists (select 1 from public.tag_memberships where profile_id = teacher and tag_id = current_tag and membership_role = 'teacher' and valid_until is null) then
+        insert into public.tag_memberships (profile_id, tag_id, membership_role, source, reason, granted_by)
+        values (teacher, current_tag, 'teacher', 'demo-seed', 'Synthetic subject demo', teacher);
+      end if;
+    else
+      -- Only expire this fixture's old grants; preserve manually assigned groups.
+      update public.tag_memberships set valid_until = greatest(valid_from, now())
+      where profile_id = teacher and tag_id = item.tag_id
+        and membership_role = 'teacher' and source = 'demo-seed'
+        and (valid_until is null or valid_until > now());
     end if;
     if not exists (select 1 from public.tag_memberships where profile_id = student and tag_id = current_tag and membership_role = 'member' and valid_until is null) then
       insert into public.tag_memberships (profile_id, tag_id, membership_role, source, reason, granted_by)

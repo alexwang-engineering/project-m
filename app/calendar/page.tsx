@@ -25,6 +25,7 @@ export default async function CalendarPage() {
       writableTags={writableTags}
       currentUserId={data.user.id}
       isAdmin={admin}
+      nowIso={new Date().toISOString()}
     />
   );
 }
