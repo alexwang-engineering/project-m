@@ -67,7 +67,19 @@ jobs:
           version: latest
 
       - name: Start local Supabase stack (applies every migration to a fresh DB)
-        run: supabase start
+        # Only start what the migrations and pgTAP suite need: Postgres, Auth
+        # (auth schema + before_user_created hook), Storage (storage schema)
+        # and the API gateway. Pulling the full stack from public.ecr.aws hits
+        # its anonymous pull rate limit ("toomanyrequests: Rate exceeded"), so
+        # skip the unused images and retry with backoff on a transient limit.
+        run: |
+          for attempt in 1 2 3; do
+            supabase start -x studio,postgres-meta,logflare,vector,edge-runtime,realtime,mailpit,imgproxy,supavisor && exit 0
+            supabase stop --no-backup || true
+            echo "supabase start failed (attempt $attempt); retrying in $((attempt * 30))s"
+            sleep $((attempt * 30))
+          done
+          exit 1
 
       - name: Run pgTAP suite
         run: supabase test db
